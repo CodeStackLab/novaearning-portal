@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA - Admin Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css?v=1.3">
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+</head>
+<body class="dashboard-body">
+
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar" style="border-right-color: #1e2538; background-color: #111622;">
+        <div class="sidebar-logo">
+            <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold" style="width: 28px; height: 28px;">
+            <span class="font-display">NOVA ADMIN</span>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/" class="sidebar-item-link" style="color: #3b82f6; border-bottom: 1px solid #1e2538; padding-bottom: 0.75rem; margin-bottom: 0.5rem;">
+                    <span class="material-symbols-outlined sidebar-icon" style="color: #3b82f6;">arrow_back</span>
+                    <span style="font-weight: 700;">Return to Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="#overview" class="sidebar-item-link active" data-tab="overview">
+                    <span class="material-symbols-outlined sidebar-icon">admin_panel_settings</span>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li>
+                <a href="#users" class="sidebar-item-link" data-tab="users">
+                    <span class="material-symbols-outlined sidebar-icon">group</span>
+                    <span>Manage Users</span>
+                </a>
+            </li>
+            <li>
+                <a href="#deposits" class="sidebar-item-link" data-tab="deposits">
+                    <span class="material-symbols-outlined sidebar-icon">playlist_add_check</span>
+                    <span>Verify Deposits</span>
+                </a>
+            </li>
+            <li>
+                <a href="#payouts" class="sidebar-item-link" data-tab="payouts">
+                    <span class="material-symbols-outlined sidebar-icon">payments</span>
+                    <span>Manage Payouts</span>
+                </a>
+            </li>
+            <li>
+                <a href="#tickets" class="sidebar-item-link" data-tab="tickets">
+                    <span class="material-symbols-outlined sidebar-icon">question_answer</span>
+                    <span>Support Tickets</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-item-link logout">
+                    <span class="material-symbols-outlined sidebar-icon">logout</span>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+    
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Main Container -->
+    <div class="dashboard-wrapper">
+        
+        <!-- Header Bar -->
+        <header class="dashboard-header" style="background-color: #111622; border-bottom-color: #1e2538;">
+            <button class="header-left-toggle" aria-label="Toggle Menu">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            
+            <div class="header-right-user">
+                <div class="user-card-info" id="admin-profile-menu-btn" style="cursor: pointer; position: relative; background-color: #1e2538; border-color: #2e384e;">
+                    <div class="user-avatar-circle" style="background-color: #eab308; color: #0f172a;">AD</div>
+                    <div class="user-text-details">
+                        <span class="user-name-label">Admin Portal</span>
+                        <span class="user-balance-value" style="color: #cbd5e1;">Role: Admin</span>
+                    </div>
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #cbd5e1; display: flex; align-items: center;">keyboard_arrow_down</span>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="profile-dropdown-menu" id="admin-dropdown-menu" style="display: none; position: absolute; top: 115%; right: 0; background-color: #1e2538; border: 1px solid #2e384e; border-radius: 8px; width: 140px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); z-index: 1000; padding: 0.5rem 0;">
+                        <a href="/" class="dropdown-item logout-action-btn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #f87171; font-size: 0.85rem; text-decoration: none; font-weight: 500;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">logout</span>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Content -->
+        <main class="dashboard-main-content">
+            
+            <!-- PANEL: OVERVIEW -->
+            <section id="panel-overview" class="dashboard-panel-view active">
+                <h1 class="panel-title font-display">System Overview</h1>
+                <p class="panel-desc">Operational statistics and metrics of the Nova portal.</p>
+                
+                <div class="dashboard-metrics-row">
+                    <div class="metric-card-box">
+                        <div class="metric-card-label">Total Users</div>
+                        <div class="metric-card-val-row">
+                            <span class="metric-card-value-txt" id="stat-users">0</span>
+                            <div class="metric-card-icon-box">
+                                <span class="material-symbols-outlined">group</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card-box">
+                        <div class="metric-card-label">Total Deposits Confirmed</div>
+                        <div class="metric-card-val-row">
+                            <span class="metric-card-value-txt" id="stat-deposits">$0.00</span>
+                            <div class="metric-card-icon-box" style="color: #10b981; background-color: rgba(16, 185, 129, 0.1);">
+                                <span class="material-symbols-outlined">payments</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card-box">
+                        <div class="metric-card-label">Pending Payouts</div>
+                        <div class="metric-card-val-row">
+                            <span class="metric-card-value-txt" id="stat-payouts">0</span>
+                            <div class="metric-card-icon-box" style="color: #f59e0b; background-color: rgba(245, 158, 11, 0.1);">
+                                <span class="material-symbols-outlined">schedule</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recent-deposits-section" style="margin-top: 2rem;">
+                    <h3 class="recent-deposits-title">System Status Log</h3>
+                    <p style="color: #94a3b8; font-size: 0.85rem; line-height: 1.6;">
+                        Database engine is fully initialized and listening for requests. Background schedules for compiling movie plan payout metrics are executing at 15-second intervals.
+                    </p>
+                </div>
+            </section>
+
+            <!-- PANEL: MANAGE USERS -->
+            <section id="panel-users" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Manage Users</h1>
+                <p class="panel-desc">Edit user balances, adjust account settings, and review client roles.</p>
+                
+                <div class="recent-deposits-section">
+                    <div class="table-responsive-box">
+                        <table class="deposits-table-list">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Balance</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL: VERIFY DEPOSITS -->
+            <section id="panel-deposits" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Verify Deposits</h1>
+                <p class="panel-desc">Approve or reject pending TRON USDT (TRC20) transaction hashes submitted by clients.</p>
+                
+                <div class="recent-deposits-section">
+                    <div class="table-responsive-box">
+                        <table class="deposits-table-list">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Amount</th>
+                                    <th>Receipt Screenshot</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-deposits-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL: MANAGE PAYOUTS -->
+            <section id="panel-payouts" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Manage Payouts</h1>
+                <p class="panel-desc">Process, verify, and complete pending user withdrawals.</p>
+                
+                <div class="recent-deposits-section">
+                    <div class="table-responsive-box">
+                        <table class="deposits-table-list">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Amount</th>
+                                    <th>Tx Reference</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-payouts-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL: SUPPORT TICKETS -->
+            <section id="panel-tickets" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Support Tickets</h1>
+                <p class="panel-desc">Reply to support tickets and manage resolving client issues.</p>
+                
+                <div class="recent-deposits-section" style="margin-bottom: 2rem;">
+                    <div class="table-responsive-box">
+                        <table class="deposits-table-list">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User</th>
+                                    <th>Ticket ID</th>
+                                    <th>Subject</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-tickets-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reply Panel Container (Hidden by default) -->
+                <div id="admin-reply-box-container" class="deposit-step-box" style="display: none;">
+                    <h3 class="step-title-number font-display" id="reply-ticket-header">Reply to Ticket #47291</h3>
+                    
+                    <div style="margin-bottom: 1.25rem;">
+                        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">User Query Message:</p>
+                        <p id="reply-ticket-user-msg" style="font-size: 0.9rem; color: #cbd5e1; background-color: #0b0e14; border: 1px solid #1e2538; padding: 1rem; border-radius: 8px; line-height: 1.5;"></p>
+                    </div>
+
+                    <div class="form-group-db">
+                        <label class="form-label-db">Admin Reply Message</label>
+                        <textarea id="reply-ticket-text" rows="4" placeholder="Enter reply message..." class="form-input-db" style="font-family: inherit; resize: none;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="submitAdminTicketReply()" class="form-btn-db" style="background-color: #10b981;">Send Reply & Resolve</button>
+                        <button onclick="closeAdminReplyBox()" class="form-btn-db" style="background-color: #1e2538; border: 1px solid #2e384e; color: #cbd5e1;">Cancel</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer" style="background-color: #111622; border-top-color: #1e2538;">
+            <p>&copy; 2024 NOVA ADMIN. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-notif" class="toast-notification">
+        <span class="material-symbols-outlined toast-icon">check_circle</span>
+        <span id="toast-text-msg">Action processed!</span>
+    </div>
+
+    <!-- MODAL OVERLAY: EDIT BALANCE -->
+    <div id="edit-balance-modal" class="modal-overlay">
+        <div class="modal-content-box">
+            <div class="modal-header">
+                <h3 class="modal-title font-display">Edit User Balance</h3>
+                <button class="modal-close-btn" onclick="closeEditBalanceModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="modal-form-group">
+                <p id="edit-balance-user-info" style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.75rem;"></p>
+                <label class="modal-input-label">Enter New Balance (USD)</label>
+                <input type="number" id="edit-balance-val" step="0.01" min="0" placeholder="e.g. 500.00" class="modal-text-input">
+            </div>
+            
+            <button onclick="applyEditBalance()" class="modal-submit-btn">Save Balance</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel Javascript -->
+    <script src="admin-app.js?v=1.3"></script>
+</body>
+</html>

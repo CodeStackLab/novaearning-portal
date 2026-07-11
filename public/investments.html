@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Investments - Nova</title>
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="style.css?v=1.3">
+    <!-- Custom Vector Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        /* High-End investments listing visual upgrades */
+        .category-filters-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 3.5rem;
+            flex-wrap: wrap;
+            margin-top: -1rem;
+        }
+        
+        .filter-btn {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            padding: 0.65rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .filter-btn:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            transform: translateY(-1.5px);
+        }
+        
+        .filter-btn.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+        }
+        
+        /* Dark theme overrides for filters */
+
+        body.dark-theme .filter-btn {
+            background-color: #1f2937;
+            border-color: #374151;
+            color: #cbd5e1;
+        }
+        
+        body.dark-theme .filter-btn:hover {
+            background-color: #374151;
+            color: #f8fafc;
+        }
+        
+        body.dark-theme .filter-btn.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body class="light-theme">
+
+    <!-- Header Navigation -->
+    <header class="landing-header">
+        <div class="container-header">
+            <a href="/" class="logo-container">
+                <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold">
+                <span>Nova</span>
+            </a>
+            
+            <nav class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/investments" class="nav-link active">Investments</a>
+                <a href="/dashboard?tab=my-investments" class="nav-link">My Investments</a>
+                <a href="/dashboard?tab=withdraw" class="nav-link">Withdraw</a>
+                <a href="/dashboard?tab=support" class="nav-link">Help</a>
+            </nav>
+            
+            <div class="header-right">
+                <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Theme" style="margin-right: 0.25rem;">
+                    <span class="material-symbols-outlined theme-icon">dark_mode</span>
+                </button>
+                <div style="position: relative;">
+                    <a href="/dashboard" class="profile-dropdown-btn" id="landing-profile-btn">
+                        <div class="profile-avatar-u">U</div>
+                        <span>User</span>
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #64748b;">keyboard_arrow_down</span>
+                    </a>
+                    
+                    <!-- Landing Dropdown Menu -->
+                    <div class="profile-dropdown-menu" id="landing-profile-dropdown" style="display: none; position: absolute; top: 115%; right: 0; background-color: white; border: 1px solid #e2e8f0; border-radius: 8px; width: 140px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 1000; padding: 0.5rem 0;">
+                        <a href="/dashboard" class="dropdown-item" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #334155; font-size: 0.85rem; text-decoration: none; font-weight: 500;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">dashboard</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item logout-action-btn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #ef4444; font-size: 0.85rem; text-decoration: none; font-weight: 500; border-top: 1px solid #f1f5f9;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">logout</span>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <button class="nav-toggle-btn" aria-label="Toggle Navigation">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Banner -->
+    <section class="hero-section browse-hero" style="padding: 3rem 0 1.5rem 0; min-height: auto; background: var(--gradient-hero); border-bottom: 1px solid var(--border-color); transition: all 0.3s ease;">
+        <div class="hero-container" style="display: block; text-align: center; max-width: 800px; margin: 0 auto; padding: 0 1rem;">
+            <h1 class="font-display" style="font-size: 1.8rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.75rem; line-height: 1.2;">Browse <span class="gradient-text">Investment Plans</span></h1>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; line-height: 1.6;">View our curated selection of high-yield investment options. Invest with flat rates and automatic compounding yields.</p>
+        </div>
+    </section>
+
+    <!-- Main Listing Grid -->
+    <section class="section-container" style="padding-bottom: 6rem;">
+        <!-- Category Filters -->
+        <div class="category-filters-wrapper">
+            <button class="filter-btn active" onclick="filterPlans('all')">All Options</button>
+            <button class="filter-btn" onclick="filterPlans('movies')">Movies & Tickets</button>
+            <button class="filter-btn" onclick="filterPlans('products')">Cinema Products</button>
+        </div>
+
+        <div id="investments-container-grid" class="investment-grid">
+            <!-- Rendered dynamically -->
+        </div>
+        
+        <!-- Pagination Controls -->
+        <div id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 3.5rem;">
+            <!-- Rendered dynamically -->
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-brand-col">
+                    <a href="/" class="logo-container">
+                        <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold">
+                        <span>Nova</span>
+                    </a>
+                    <p class="footer-brand-desc">Invest in movies and products you love and earn daily profits with complete security.</p>
+                </div>
+                
+                <div>
+                    <h4 class="footer-col-title font-display">Quick Links</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="/" class="footer-link-item">Home</a></li>
+                        <li><a href="/investments" class="footer-link-item">Investments</a></li>
+                        <li><a href="/dashboard?tab=my-investments" class="footer-link-item">My Investments</a></li>
+                        <li><a href="/dashboard?tab=profile" class="footer-link-item">About Us</a></li>
+                        <li><a href="/dashboard?tab=support" class="footer-link-item">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="footer-col-title font-display">Support</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="/dashboard?tab=support" class="footer-link-item">Help Center</a></li>
+                        <li><a href="/dashboard?tab=support" class="footer-link-item">Terms & Conditions</a></li>
+                        <li><a href="/dashboard?tab=support" class="footer-link-item">Privacy Policy</a></li>
+                        <li><a href="/dashboard?tab=support" class="footer-link-item">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-newsletter-col">
+                    <h4 class="footer-col-title font-display">Stay Connected</h4>
+                    <p class="newsletter-desc">Subscribe to get updates on new projects and offers.</p>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Subscribed!'); this.reset();">
+                        <input type="email" placeholder="Enter your email" required class="newsletter-input">
+                        <button type="submit" class="newsletter-btn">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Nova. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const plans = [
+            {
+                id: 'amc',
+                name: 'AMC Movie Ticket',
+                category: 'movies',
+                image: 'images/amc_theater.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'avengers',
+                name: 'Avengers: Endgame',
+                category: 'movies',
+                image: 'images/avengers_theme.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'combo',
+                name: 'Movie Combo',
+                category: 'movies',
+                image: 'images/movie_combo.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'netflix',
+                name: 'Netflix Gift Card',
+                category: 'movies',
+                image: 'images/netflix_card.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'popcorn_machine',
+                name: 'Cinema Popcorn Machine',
+                category: 'products',
+                image: 'images/popcorn_machine.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'imax_projector',
+                name: 'IMAX Projector Lens',
+                category: 'products',
+                image: 'images/imax_projector.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'dolby_soundbar',
+                name: 'Dolby Atmos Soundbar',
+                category: 'products',
+                image: 'images/dolby_soundbar.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            },
+            {
+                id: 'vip_recliner',
+                name: 'VIP Leather Recliner',
+                category: 'products',
+                image: 'images/vip_recliner.png',
+                profit: '2.5%',
+                price: 100,
+                duration: '24 Hours'
+            }
+        ];
+
+        let currentPage = 1;
+        const itemsPerPage = 6;
+
+        let activeCategory = 'all';
+
+        function filterPlans(category) {
+            activeCategory = category;
+            currentPage = 1;
+            
+            // Update active state in category buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            renderPlans();
+        }
+
+        function renderPlans() {
+            const grid = document.getElementById('investments-container-grid');
+            if (!grid) return;
+
+            // Filter plans by category
+            const filteredPlans = activeCategory === 'all' 
+                ? plans 
+                : plans.filter(p => p.category === activeCategory);
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedPlans = filteredPlans.slice(startIndex, endIndex);
+
+            grid.innerHTML = paginatedPlans.map(plan => `
+                <div class="investment-card">
+                    <div class="investment-img-container">
+                        <img src="${plan.image}" alt="${plan.name}" class="investment-img">
+                    </div>
+                    <div class="investment-content">
+                        <h3 class="investment-title font-display">${plan.name}</h3>
+                        <div class="daily-profit-badge">Daily Profit ${plan.profit}</div>
+                        
+                        <div class="investment-meta-grid">
+                            <div>
+                                <div class="meta-item-label">Price</div>
+                                <div class="meta-item-value highlight">$${plan.price.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div class="meta-item-label">Duration</div>
+                                <div class="meta-item-value">${plan.duration}</div>
+                            </div>
+                        </div>
+                        
+                        <a href="/dashboard?tab=invest&plan=${plan.id}" class="invest-btn" onclick="handleInvestClick(event, '${plan.id}')">Invest Now</a>
+                    </div>
+                </div>
+            `).join('');
+
+            renderPagination(filteredPlans.length);
+        }
+
+        function renderPagination(totalItems) {
+            const controls = document.getElementById('pagination-controls');
+            if (!controls) return;
+
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            if (totalPages <= 1) {
+                controls.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous Button
+            html += `
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center; background-color: ${currentPage === 1 ? '#e2e8f0' : 'white'}; border: 1px solid #cbd5e1; color: ${currentPage === 1 ? '#94a3b8' : '#334155'}; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 0.25rem;">chevron_left</span>
+                    <span>Prev</span>
+                </button>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                html += `
+                    <button onclick="changePage(${i})" style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; background-color: ${currentPage === i ? '#3b82f6' : 'white'}; border: 1px solid ${currentPage === i ? '#3b82f6' : '#cbd5e1'}; color: ${currentPage === i ? 'white' : '#334155'}; border-radius: 6px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Next Button
+            html += `
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center; background-color: ${currentPage === totalPages ? '#e2e8f0' : 'white'}; border: 1px solid #cbd5e1; color: ${currentPage === totalPages ? '#94a3b8' : '#334155'}; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease;">
+                    <span>Next</span>
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-left: 0.25rem;">chevron_right</span>
+                </button>
+            `;
+
+            controls.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const filteredPlans = activeCategory === 'all' 
+                ? plans 
+                : plans.filter(p => p.category === activeCategory);
+            const totalPages = Math.ceil(filteredPlans.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderPlans();
+            document.getElementById('investments-container-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Featured Investment CTA logic
+        function handleInvestClick(event, plan) {
+            event.preventDefault();
+            const token = localStorage.getItem('nova_token');
+            if (!token) {
+                window.location.href = "/login";
+            } else {
+                window.location.href = `/dashboard?tab=invest&plan=${plan}`;
+            }
+        }
+
+        // Mobile Nav Toggle logic
+        const navToggleBtn = document.querySelector('.nav-toggle-btn');
+        const navLinks = document.querySelector('.nav-links');
+        if (navToggleBtn && navLinks) {
+            navToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        // Theme toggle logic
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        if (themeToggleBtn) {
+            const savedTheme = localStorage.getItem('nova_theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeToggleBtn.querySelector('.theme-icon').textContent = 'light_mode';
+            }
+            
+            themeToggleBtn.addEventListener('click', () => {
+                const isDark = document.body.classList.toggle('dark-theme');
+                localStorage.setItem('nova_theme', isDark ? 'dark' : 'light');
+                themeToggleBtn.querySelector('.theme-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
+            });
+        }
+
+        // User Profile Dropdown logic on landing page
+        const profileBtn = document.getElementById('landing-profile-btn');
+        const profileDropdown = document.getElementById('landing-profile-dropdown');
+        if (profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', (e) => {
+                const token = localStorage.getItem('nova_token');
+                if (token) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('show');
+                }
+            });
+
+            // Logout action inside landing dropdown
+            const logoutLink = profileDropdown.querySelector('.logout-action-btn');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('nova_token');
+                    localStorage.removeItem('nova_role');
+                    window.location.href = '/login';
+                });
+            }
+        }
+
+        // Global click-away handler to close open menus
+        document.addEventListener('click', () => {
+            if (navLinks) navLinks.classList.remove('active');
+            if (profileDropdown) profileDropdown.classList.remove('show');
+        });
+
+        // Dynamic User Profile Update in Header (Landing Page)
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('nova_token');
+
+            // Intercept restricted /dashboard links for guests
+            if (!token) {
+                const restrictedLinks = document.querySelectorAll('a[href*="/dashboard"]');
+                restrictedLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.location.href = '/login';
+                    });
+                });
+            }
+
+            renderPlans();
+            if (token) {
+                // If logged in, fetch user details to display name in header
+                fetch('/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(res => {
+                    if (res.status === 401 || res.status === 403) {
+                        localStorage.removeItem('nova_token');
+                        localStorage.removeItem('nova_role');
+                        window.location.reload();
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(profile => {
+                    if (profile && profile.name) {
+                        const profileBtn = document.getElementById('landing-profile-btn');
+                        if (profileBtn) profileBtn.classList.add('logged-in');
+                        const avatarU = document.querySelector('.profile-avatar-u');
+                        if (avatarU) {
+                            // Initials for avatar
+                            avatarU.textContent = profile.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                        }
+                        const nameSpan = document.querySelector('.profile-dropdown-btn > span:not(.material-symbols-outlined)');
+                        if (nameSpan) {
+                            nameSpan.textContent = profile.name;
+                        }
+                    }
+                })
+                .catch(err => console.error("Error loading user profile on landing page:", err));
+            } else {
+                // If not logged in, show Register CTA pointing to registration tab
+                const profileBtn = document.getElementById('landing-profile-btn');
+                if (profileBtn) {
+                    profileBtn.classList.remove('logged-in');
+                    profileBtn.href = '/login?tab=signup';
+                    const avatarU = document.querySelector('.profile-avatar-u');
+                    if (avatarU) avatarU.style.display = 'none';
+                    const nameSpan = document.querySelector('.profile-dropdown-btn > span:not(.material-symbols-outlined)');
+                    if (nameSpan) nameSpan.textContent = 'Register';
+                    const arrow = profileBtn.querySelector('.material-symbols-outlined:not(.logo-icon-purple)');
+                    if (arrow) arrow.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
