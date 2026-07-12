@@ -179,6 +179,13 @@
                         window.location.href = '/login';
                     });
                 });
+
+                // Change profile button to Login for guests
+                const profileBtn = document.getElementById('landing-profile-btn');
+                if (profileBtn) {
+                    profileBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.2rem;">login</span><span>Login</span>';
+                    profileBtn.href = '/login';
+                }
             }
 
             if (token) {
