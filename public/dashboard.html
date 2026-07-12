@@ -13,17 +13,14 @@
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css?v=1.3">
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
 <body class="dashboard-body">
 
     <!-- Sidebar Navigation -->
     <aside class="dashboard-sidebar">
         <div class="sidebar-logo">
-            <div style="width: 24px; height: 24px; background-color: #3b82f6; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-right: 0.25rem;">
-                <span class="material-symbols-outlined" style="color: white; font-size: 14px; transform: rotate(45deg);">crop_square</span>
-            </div>
-            <span class="font-display" style="letter-spacing: 1px; color: #f1f5f9; font-size: 1.15rem; font-weight: 800;">TRONINVEST</span>
+            <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold" style="height: 38px; width: auto;">
         </div>
         
         <ul class="sidebar-menu">
@@ -145,6 +142,70 @@
                 <h1 class="panel-title font-display">My Profile</h1>
                 <p class="panel-desc">Manage your account credentials, view balance, and track invitation referrals.</p>
                 
+                <!-- VIP Cinema Club Tier Banner -->
+                <div class="vip-club-badge-banner">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #DFC15D, #8B6508); display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">👑</div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">MEMBERSHIP STATUS</div>
+                            <div style="font-size: 1.25rem; font-weight: 900; color: #fff;">Gold VIP Investor Member</div>
+                            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.2rem;">Enjoy 2.5% Daily Compound Return + Instant Priority Withdrawals</div>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="#invest" class="invest-btn" onclick="switchDashboardTab('invest')" style="font-weight: 800; padding: 0.6rem 1.2rem; font-size: 0.88rem;">Upgrade Tier</a>
+                    </div>
+                </div>
+
+                <!-- Daily Check-In & Loyalty Reward Card -->
+                <div class="daily-checkin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem;">Daily Check-In Streak 🎁</h3>
+                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">Check in every 24 hours to earn free loyalty cash bonuses!</p>
+                        </div>
+                        <button id="claim-checkin-btn" onclick="claimDailyCheckin()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.1rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: all 0.2s ease;">Claim Today's $0.50 Bonus</button>
+                    </div>
+
+                    <div class="checkin-days-grid">
+                        <div class="checkin-day-pill claimed">
+                            <span class="checkin-day-num">Day 1</span>
+                            <span class="checkin-day-reward">+$0.50</span>
+                            <span style="font-size: 0.75rem; color: #10B981;">✓ Claimed</span>
+                        </div>
+                        <div class="checkin-day-pill claimed">
+                            <span class="checkin-day-num">Day 2</span>
+                            <span class="checkin-day-reward">+$0.50</span>
+                            <span style="font-size: 0.75rem; color: #10B981;">✓ Claimed</span>
+                        </div>
+                        <div class="checkin-day-pill today">
+                            <span class="checkin-day-num">Day 3</span>
+                            <span class="checkin-day-reward">+$0.50</span>
+                            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">★ Today</span>
+                        </div>
+                        <div class="checkin-day-pill">
+                            <span class="checkin-day-num">Day 4</span>
+                            <span class="checkin-day-reward">+$0.75</span>
+                            <span style="font-size: 0.7rem; color: #64748b;">Locked</span>
+                        </div>
+                        <div class="checkin-day-pill">
+                            <span class="checkin-day-num">Day 5</span>
+                            <span class="checkin-day-reward">+$0.75</span>
+                            <span style="font-size: 0.7rem; color: #64748b;">Locked</span>
+                        </div>
+                        <div class="checkin-day-pill">
+                            <span class="checkin-day-num">Day 6</span>
+                            <span class="checkin-day-reward">+$1.00</span>
+                            <span style="font-size: 0.7rem; color: #64748b;">Locked</span>
+                        </div>
+                        <div class="checkin-day-pill">
+                            <span class="checkin-day-num">Day 7 👑</span>
+                            <span class="checkin-day-reward">+$3.00</span>
+                            <span style="font-size: 0.7rem; color: #10B981; font-weight: 600;">Mystery Box</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-metrics-row">
                     <div class="metric-card-box">
                         <div class="metric-card-label">Total Balance</div>
@@ -161,7 +222,7 @@
                         <div class="metric-card-val-row">
                             <span class="metric-card-value-txt" id="db-referral-code" style="color: #fbbf24; font-family: monospace; letter-spacing: 1px;">-</span>
                             <div class="metric-card-icon-box" style="color: #fbbf24; background-color: rgba(251, 191, 36, 0.1);">
-                                <span class="material-symbols-outlined">qr_code</span>
+                    <span class="material-symbols-outlined">qr_code</span>
                             </div>
                         </div>
                     </div>
@@ -172,131 +233,114 @@
             <section id="panel-invest" class="dashboard-panel-view">
                 <h1 class="panel-title font-display">Investment Plans</h1>
                 <p class="panel-desc">Choose a plan from our featured selection and start earning daily returns.</p>
-                
-                <div class="investment-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem;">
-                    <!-- AMC Movie Ticket Card -->
-                    <div class="investment-card">
-                        <div class="investment-img-container">
-                            <img src="images/amc_theater.png" alt="AMC Movie Ticket" class="investment-img">
-                        </div>
-                        <div class="investment-content">
-                            <h3 class="investment-title font-display">AMC Movie Ticket</h3>
-                            <div class="daily-profit-badge">Daily Profit 2.5%</div>
-                            
-                            <div class="investment-meta-grid">
-                                <div>
-                                    <div class="meta-item-label">Price</div>
-                                    <div class="meta-item-value highlight">$100.00</div>
-                                </div>
-                                <div>
-                                    <div class="meta-item-label">Duration</div>
-                                    <div class="meta-item-value">24 Hours</div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; justify-content: space-between; width: 100%;">
-                                <div style="display: flex; align-items: center; gap: 0.25rem; background-color: #0b0e14; border: 1px solid #1e2538; border-radius: 6px; padding: 0.25rem 0.5rem; width: 85px; flex-shrink: 0;">
-                                    <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Qty:</span>
-                                    <input type="number" id="qty-amc" min="1" value="1" style="background: none; border: none; outline: none; color: #f1f5f9; font-weight: 700; width: 100%; text-align: center; font-size: 0.85rem;">
-                                </div>
-                                <button onclick="purchasePlan('AMC Movie Ticket', 'qty-amc')" style="background-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; flex-grow: 1; border: none; cursor: pointer;">Buy Plan</button>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Avengers -->
-                    <div class="investment-card">
-                        <div class="investment-img-container">
-                            <img src="images/avengers_theme.png" alt="Avengers: Endgame" class="investment-img">
-                        </div>
-                        <div class="investment-content">
-                            <h3 class="investment-title font-display">Avengers: Endgame</h3>
-                            <div class="daily-profit-badge">Daily Profit 2.5%</div>
-                            
-                            <div class="investment-meta-grid">
-                                <div>
-                                    <div class="meta-item-label">Price</div>
-                                    <div class="meta-item-value highlight">$100.00</div>
-                                </div>
-                                <div>
-                                    <div class="meta-item-label">Duration</div>
-                                    <div class="meta-item-value">24 Hours</div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; justify-content: space-between; width: 100%;">
-                                <div style="display: flex; align-items: center; gap: 0.25rem; background-color: #0b0e14; border: 1px solid #1e2538; border-radius: 6px; padding: 0.25rem 0.5rem; width: 85px; flex-shrink: 0;">
-                                    <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Qty:</span>
-                                    <input type="number" id="qty-avengers" min="1" value="1" style="background: none; border: none; outline: none; color: #f1f5f9; font-weight: 700; width: 100%; text-align: center; font-size: 0.85rem;">
-                                </div>
-                                <button onclick="purchasePlan('Avengers: Endgame', 'qty-avengers')" style="background-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; flex-grow: 1; border: none; cursor: pointer;">Buy Plan</button>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Category Filters -->
+                <div class="category-filters-wrapper" style="margin-top:1.5rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+                    <button class="filter-btn active" id="db-filter-all" onclick="filterDashboardPlans('all')">All Plans</button>
+                    <button class="filter-btn" id="db-filter-movies" onclick="filterDashboardPlans('movies')">Movies &amp; Tickets</button>
+                    <button class="filter-btn" id="db-filter-products" onclick="filterDashboardPlans('products')">Cinema Products</button>
+                    <button class="filter-btn" id="db-filter-giftcards" onclick="filterDashboardPlans('giftcards')">Gift Cards</button>
+                </div>
 
-                    <!-- Combo -->
-                    <div class="investment-card">
-                        <div class="investment-img-container">
-                            <img src="images/movie_combo.png" alt="Movie Combo" class="investment-img">
-                        </div>
-                        <div class="investment-content">
-                            <h3 class="investment-title font-display">Movie Combo</h3>
-                            <div class="daily-profit-badge">Daily Profit 2.5%</div>
-                            
-                            <div class="investment-meta-grid">
-                                <div>
-                                    <div class="meta-item-label">Price</div>
-                                    <div class="meta-item-value highlight">$100.00</div>
-                                </div>
-                                <div>
-                                    <div class="meta-item-label">Duration</div>
-                                    <div class="meta-item-value">24 Hours</div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; justify-content: space-between; width: 100%;">
-                                <div style="display: flex; align-items: center; gap: 0.25rem; background-color: #0b0e14; border: 1px solid #1e2538; border-radius: 6px; padding: 0.25rem 0.5rem; width: 85px; flex-shrink: 0;">
-                                    <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Qty:</span>
-                                    <input type="number" id="qty-combo" min="1" value="1" style="background: none; border: none; outline: none; color: #f1f5f9; font-weight: 700; width: 100%; text-align: center; font-size: 0.85rem;">
-                                </div>
-                                <button onclick="purchasePlan('Movie Combo', 'qty-combo')" style="background-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; flex-grow: 1; border: none; cursor: pointer;">Buy Plan</button>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Dynamic Grid -->
+                <div id="db-investments-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:2rem; margin-top:2rem; min-height:200px;">
+                    <!-- Populated by JS -->
+                </div>
 
-                    <!-- Netflix -->
-                    <div class="investment-card">
-                        <div class="investment-img-container">
-                            <img src="images/netflix_card.png" alt="Netflix Gift Card" class="investment-img">
-                        </div>
-                        <div class="investment-content">
-                            <h3 class="investment-title font-display">Netflix Gift Card</h3>
-                            <div class="daily-profit-badge">Daily Profit 2.5%</div>
-                            
-                            <div class="investment-meta-grid">
-                                <div>
-                                    <div class="meta-item-label">Price</div>
-                                    <div class="meta-item-value highlight">$100.00</div>
-                                </div>
-                                <div>
-                                    <div class="meta-item-label">Duration</div>
-                                    <div class="meta-item-value">24 Hours</div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; align-items: center; justify-content: space-between; width: 100%;">
-                                <div style="display: flex; align-items: center; gap: 0.25rem; background-color: #0b0e14; border: 1px solid #1e2538; border-radius: 6px; padding: 0.25rem 0.5rem; width: 85px; flex-shrink: 0;">
-                                    <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Qty:</span>
-                                    <input type="number" id="qty-netflix" min="1" value="1" style="background: none; border: none; outline: none; color: #f1f5f9; font-weight: 700; width: 100%; text-align: center; font-size: 0.85rem;">
-                                </div>
-                                <button onclick="purchasePlan('Netflix Gift Card', 'qty-netflix')" style="background-color: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; flex-grow: 1; border: none; cursor: pointer;">Buy Plan</button>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Pagination -->
+                <div id="db-pagination-wrap" style="display:flex; justify-content:center; align-items:center; gap:0.75rem; margin-top:2.5rem; padding-bottom:1rem;">
+                    <button class="filter-btn" id="db-prev-btn" onclick="changeDashboardPage(-1)" style="padding:0.4rem 1rem;">&#8592; Prev</button>
+                    <div id="db-page-info" style="font-size:0.85rem; color:#94a3b8; font-weight:600;">Page 1</div>
+                    <button class="filter-btn" id="db-next-btn" onclick="changeDashboardPage(1)" style="padding:0.4rem 1rem;">Next &#8594;</button>
                 </div>
             </section>
 
+            <!-- PANEL: MY INVESTMENTS -->
+            <section id="panel-myinvestments" class="dashboard-panel-view">
 
+                <h1 class="panel-title font-display">My Investments</h1>
+                <p class="panel-desc">Track your active compounding investment plans and live 24-hour return countdowns.</p>
+                
+                <div class="dashboard-metrics-row" style="margin-bottom: 2rem;">
+                    <div class="metric-card-box">
+                        <div class="metric-lbl">TOTAL ACTIVE PRINCIPAL</div>
+                        <div class="metric-val" id="myinv-total-principal">$350.00</div>
+                        <div class="metric-sub">Compounding daily</div>
+                    </div>
+                    <div class="metric-card-box">
+                        <div class="metric-lbl">ESTIMATED 24H PROFIT</div>
+                        <div class="metric-val" style="color: #10b981;">+$8.75</div>
+                        <div class="metric-sub">Guaranteed 2.5% Flat Rate</div>
+                    </div>
+                    <div class="metric-card-box">
+                        <div class="metric-lbl">COMPLETED PLANS</div>
+                        <div class="metric-val">14</div>
+                        <div class="metric-sub">100% On-time Payouts</div>
+                    </div>
+                </div>
+
+                <div class="recent-deposits-section">
+                    <h2 class="recent-deposits-title font-display" style="font-size: 1.2rem; margin-bottom: 1rem;">Active & Completed Investment Plans</h2>
+                    <div class="table-responsive-box" style="background-color: #111622; border: 1px solid #1e2538; border-radius: 8px; overflow-x: auto;">
+                        <table class="deposits-table-list" style="width: 100%; border-collapse: collapse; min-width: 650px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #1e2538;">
+                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Plan Name</th>
+                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Invested Amount</th>
+                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Daily Return</th>
+                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Maturity Payout</th>
+                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Status & Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myinvestments-table-body">
+                                <tr style="border-bottom: 1px solid #1e2538;">
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700; font-size: 0.88rem;">AMC Movie Ticket</td>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700;">$100.00</td>
+                                    <td style="padding: 1rem 1.25rem; color: #10b981; font-weight: 700;">+2.5% ($2.50)</td>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700;">$102.50</td>
+                                    <td style="padding: 1rem 1.25rem;">
+                                        <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 140px;">
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8;">
+                                                <span style="color: #3b82f6; font-weight: 600;">Active</span>
+                                                <span>18h 42m left</span>
+                                            </div>
+                                            <div style="width: 100%; height: 6px; background-color: #1e2538; border-radius: 4px; overflow: hidden;">
+                                                <div style="width: 65%; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 4px;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #1e2538;">
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700; font-size: 0.88rem;">Avengers Movie Plan</td>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700;">$150.00</td>
+                                    <td style="padding: 1rem 1.25rem; color: #10b981; font-weight: 700;">+2.5% ($3.75)</td>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700;">$153.75</td>
+                                    <td style="padding: 1rem 1.25rem;">
+                                        <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 140px;">
+                                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8;">
+                                                <span style="color: #3b82f6; font-weight: 600;">Active</span>
+                                                <span>07h 15m left</span>
+                                            </div>
+                                            <div style="width: 100%; height: 6px; background-color: #1e2538; border-radius: 4px; overflow: hidden;">
+                                                <div style="width: 82%; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 4px;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700; font-size: 0.88rem;">Apple Gift Card Plan</td>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700;">$100.00</td>
+                                    <td style="padding: 1rem 1.25rem; color: #10b981; font-weight: 700;">+2.5% ($2.50)</td>
+                                    <td style="padding: 1rem 1.25rem; color: #f8fafc; font-weight: 700;">$102.50</td>
+                                    <td style="padding: 1rem 1.25rem;">
+                                        <span style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">Completed ✓</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
 
             <!-- PANEL: TRANSACTIONS -->
             <section id="panel-transactions" class="dashboard-panel-view">
@@ -331,11 +375,10 @@
                 <!-- 1. Choose Deposit Amount -->
                 <div class="deposit-step-box" style="background-color: #111622; border: 1px solid #1e2538; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
                     <h2 class="step-title-number font-display" style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 1.25rem;">1. Choose Deposit Amount</h2>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                         <!-- $50 Card -->
-                        <div class="amount-card-opt active-card" style="background-color: #0c0f1a; border: 1px solid #3b82f6; border-radius: 8px; padding: 1.5rem 1rem; text-align: center; position: relative; cursor: pointer;">
-                            <div style="position: absolute; top: 0; right: 0; background-color: #3b82f6; color: white; border-bottom-left-radius: 6px; border-top-right-radius: 7px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+                        <div class="amount-card-opt active-card" onclick="selectDepositAmountCard(this, 50)" style="background-color: #0c0f1a; border: 1px solid #3b82f6; border-radius: 8px; padding: 1.5rem 1rem; text-align: center; position: relative; cursor: pointer;">
+                            <div class="card-check-badge" style="position: absolute; top: 0; right: 0; background-color: #3b82f6; color: white; border-bottom-left-radius: 6px; border-top-right-radius: 7px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
                                 <span class="material-symbols-outlined" style="font-size: 14px;">check</span>
                             </div>
                             <div style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(59, 130, 246, 0.5); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto;">
@@ -343,36 +386,42 @@
                             </div>
                             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">Deposit</div>
                             <div style="font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">$50</div>
-                            <button style="background-color: #3b82f6; color: white; border: none; border-radius: 6px; padding: 0.4rem 0; width: 80%; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Select</button>
+                            <button class="amount-select-btn" style="background-color: #3b82f6; color: white; border: none; border-radius: 6px; padding: 0.4rem 0; width: 80%; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Select</button>
                         </div>
                         
                         <!-- $100 Card -->
-                        <div class="amount-card-opt" style="background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 8px; padding: 1.5rem 1rem; text-align: center; cursor: pointer;">
+                        <div class="amount-card-opt" onclick="selectDepositAmountCard(this, 100)" style="background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 8px; padding: 1.5rem 1rem; text-align: center; position: relative; cursor: pointer;">
+                            <div class="card-check-badge" style="position: absolute; top: 0; right: 0; background-color: #3b82f6; color: white; border-bottom-left-radius: 6px; border-top-right-radius: 7px; width: 24px; height: 24px; display: none; align-items: center; justify-content: center;">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">check</span>
+                            </div>
                             <div style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(168, 85, 247, 0.5); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto;">
                                 <span style="color: #a855f7; font-size: 1.25rem; font-weight: 600;">$</span>
                             </div>
                             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">Deposit</div>
                             <div style="font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">$100</div>
-                            <button style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7; border: none; border-radius: 6px; padding: 0.4rem 0; width: 80%; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Select</button>
+                            <button class="amount-select-btn" style="background-color: rgba(168, 85, 247, 0.1); color: #a855f7; border: none; border-radius: 6px; padding: 0.4rem 0; width: 80%; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Select</button>
                         </div>
                         
                         <!-- $200 Card -->
-                        <div class="amount-card-opt" style="background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 8px; padding: 1.5rem 1rem; text-align: center; cursor: pointer;">
+                        <div class="amount-card-opt" onclick="selectDepositAmountCard(this, 200)" style="background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 8px; padding: 1.5rem 1rem; text-align: center; position: relative; cursor: pointer;">
+                            <div class="card-check-badge" style="position: absolute; top: 0; right: 0; background-color: #3b82f6; color: white; border-bottom-left-radius: 6px; border-top-right-radius: 7px; width: 24px; height: 24px; display: none; align-items: center; justify-content: center;">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">check</span>
+                            </div>
                             <div style="width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(16, 185, 129, 0.5); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto;">
                                 <span style="color: #10b981; font-size: 1.25rem; font-weight: 600;">$</span>
                             </div>
                             <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">Deposit</div>
                             <div style="font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem;">$200</div>
-                            <button style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: none; border-radius: 6px; padding: 0.4rem 0; width: 80%; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Select</button>
+                            <button class="amount-select-btn" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: none; border-radius: 6px; padding: 0.4rem 0; width: 80%; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Select</button>
                         </div>
                     </div>
                     
                     <div style="background-color: #141b2d; border: 1px solid #1e2538; border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.75rem; color: #cbd5e1; font-size: 0.85rem;">
                             <div style="width: 24px; height: 24px; border-radius: 50%; background-color: #e2e8f0; color: #0f172a; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: serif; font-size: 12px; flex-shrink: 0;">i</div>
-                            <span>Select an amount or enter a custom amount to deposit.</span>
+                            <span id="deposit-selected-hint">Select an amount or enter a custom amount to deposit. Selected: <strong>$50</strong></span>
                         </div>
-                        <button style="background: none; border: 1px solid #242e47; border-radius: 6px; color: #3b82f6; font-size: 0.85rem; font-weight: 500; padding: 0.5rem 1.25rem; cursor: pointer; white-space: nowrap;">Custom Amount</button>
+                        <button onclick="openCustomDepositPrompt()" style="background: none; border: 1px solid #242e47; border-radius: 6px; color: #3b82f6; font-size: 0.85rem; font-weight: 500; padding: 0.5rem 1.25rem; cursor: pointer; white-space: nowrap;">Custom Amount</button>
                     </div>
                 </div>
                 
@@ -392,7 +441,7 @@
                             </div>
                             <div style="flex-grow: 1; display: flex; align-items: center; background-color: #111622; border: 1px solid #1e2538; border-radius: 6px; padding: 0.5rem; padding-left: 1rem; overflow: hidden;">
                                 <input type="text" readonly value="TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX" id="tron-wallet-address" style="background: none; border: none; color: #f8fafc; font-size: 0.95rem; font-family: monospace; flex-grow: 1; outline: none; min-width: 0;">
-                                <button onclick="copyWalletAddress()" style="background-color: #3b82f6; color: white; border: none; border-radius: 4px; padding: 0.4rem 1rem; display: flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; margin-left: 0.5rem;">
+                                <button onclick="copyWalletAddress()" id="copy-tron-btn" style="background-color: #3b82f6; color: white; border: none; border-radius: 4px; padding: 0.4rem 1rem; display: flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; margin-left: 0.5rem;">
                                     <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span>
                                     <span>Copy</span>
                                 </button>
@@ -422,10 +471,21 @@
                         <div style="width: 36px; height: 36px; border-radius: 50%; background-color: #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             <span class="material-symbols-outlined" style="color: #0f172a; font-size: 20px;">schedule</span>
                         </div>
-                        <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+                        <p style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
                             After sending your payment, please wait while we verify your transaction.<br>
                             Once confirmed, the amount will be added to your account balance automatically.
                         </p>
+                    </div>
+
+                    <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 8px; padding: 1.25rem;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: #f8fafc;">Submit your TRON (TRC20) Transaction ID for instant verification:</span>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <input type="text" id="deposit-tx-hash-input" placeholder="e.g. TXN7f3e8d9c2a1b4f..." style="flex-grow: 1; background-color: #111622; border: 1px solid #1e2538; border-radius: 6px; padding: 0.65rem 1rem; color: #f8fafc; font-size: 0.9rem; outline: none;">
+                            <button onclick="submitNewDeposit()" style="background-color: #3b82f6; color: white; border: none; border-radius: 6px; padding: 0.65rem 1.5rem; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+                                <span>Submit Deposit</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -494,7 +554,47 @@
                 </div>
             </section>
 
+            <!-- PANEL: WALLET -->
+            <section id="panel-wallet" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">My Wallet & Balance Overview</h1>
+                <p class="panel-desc">Manage your available USDT funds, check payout history, and transfer between balances.</p>
+                
+                <div class="dashboard-metrics-row" style="margin-bottom: 2rem;">
+                    <div class="metric-card-box" style="background: linear-gradient(135deg, #0f172a, #1e1b4b); border: 1px solid #3b82f6;">
+                        <div class="metric-lbl">AVAILABLE WALLET BALANCE</div>
+                        <div class="metric-val" id="wallet-balance-main" style="color: #60a5fa;">$350.00</div>
+                        <div class="metric-sub">Ready to Invest or Withdraw</div>
+                    </div>
+                    <div class="metric-card-box">
+                        <div class="metric-lbl">TOTAL EARNED PROFIT</div>
+                        <div class="metric-val" style="color: #10b981;">$1,240.50</div>
+                        <div class="metric-sub">All-time 2.5% daily compounding</div>
+                    </div>
+                    <div class="metric-card-box">
+                        <div class="metric-lbl">TOTAL WITHDRAWN</div>
+                        <div class="metric-val">$890.00</div>
+                        <div class="metric-sub">Processed to TRON wallet</div>
+                    </div>
+                </div>
 
+                <div style="background-color: #111622; border: 1px solid #1e2538; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h2 class="step-title-number font-display" style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 1rem;">Quick Actions</h2>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button onclick="switchDashboardTab('deposit')" style="background-color: #3b82f6; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="material-symbols-outlined">add_circle</span>
+                            <span>Deposit USDT</span>
+                        </button>
+                        <button onclick="switchDashboardTab('withdraw')" style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="material-symbols-outlined">account_balance_wallet</span>
+                            <span>Withdraw Funds</span>
+                        </button>
+                        <button onclick="switchDashboardTab('invest')" style="background-color: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="material-symbols-outlined">trending_up</span>
+                            <span>Browse Compounding Plans</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
 
             <!-- PANEL: REFERRALS -->
             <section id="panel-referrals" class="dashboard-panel-view">
@@ -504,8 +604,8 @@
                 <div class="deposit-step-box" style="margin-bottom: 2rem;">
                     <h3 class="step-title-number font-display">Your Invitation Link</h3>
                     <div style="display: flex; gap: 0.5rem;">
-                        <input type="text" readonly id="referral-link-input" value="Loading..." style="background-color: #0b0e14; border: 1px solid #1e2538; color: #94a3b8; padding: 0.75rem; border-radius: 8px; flex-grow: 1; font-size: 0.85rem;">
-                        <button onclick="copyReferralLink()" style="background-color: #3b82f6; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem;">Copy Link</button>
+                        <input type="text" readonly id="referral-link-input" value="http://napp.vjgp.online/register?ref=DEMO889" style="background-color: #0b0e14; border: 1px solid #1e2538; color: #f8fafc; padding: 0.75rem; border-radius: 8px; flex-grow: 1; font-size: 0.85rem; font-family: monospace;">
+                        <button onclick="copyReferralLink()" id="copy-ref-btn" style="background-color: #3b82f6; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">Copy Link</button>
                     </div>
                 </div>
 
@@ -549,6 +649,48 @@
                     </div>
                 </div>
             </section>
+
+            <!-- PANEL: PROFILE -->
+            <section id="panel-profile" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Account Settings & Security</h1>
+                <p class="panel-desc">Update your personal profile, contact information, and TRON payout wallet details.</p>
+                
+                <div style="background-color: #111622; border: 1px solid #1e2538; border-radius: 12px; padding: 2rem; max-width: 650px;">
+                    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; border-bottom: 1px solid #1e2538; padding-bottom: 1.5rem;">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: white;">
+                            DU
+                        </div>
+                        <div>
+                            <h3 style="color: #f8fafc; font-size: 1.15rem; font-weight: 700; margin: 0 0 0.25rem 0;">Demo User</h3>
+                            <span style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 600;">Verified VIP Member</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem;">Full Name</label>
+                            <input type="text" id="profile-name-input" value="Demo User" style="width: 100%; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 0.9rem; outline: none;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem;">Email Address</label>
+                            <input type="email" id="profile-email-input" value="demo@novainvest.com" style="width: 100%; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 0.9rem; outline: none;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem;">Phone Number</label>
+                            <input type="text" id="profile-phone-input" value="+1 (555) 234-5678" style="width: 100%; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 0.9rem; outline: none;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.82rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.4rem;">TRON (TRC20) USDT Payout Address</label>
+                            <input type="text" id="profile-wallet-input" value="TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX" style="width: 100%; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 0.88rem; font-family: monospace; outline: none;">
+                        </div>
+
+                        <div style="margin-top: 0.5rem;">
+                            <button onclick="saveProfileChanges()" style="background-color: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0.75rem 2rem; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- PANEL: SUPPORT -->
             <section id="panel-support" class="dashboard-panel-view">
                 <h1 class="panel-title font-display">Support Center</h1>

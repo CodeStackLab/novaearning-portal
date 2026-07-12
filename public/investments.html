@@ -75,9 +75,8 @@
     <!-- Header Navigation -->
     <header class="landing-header">
         <div class="container-header">
-            <a href="/" class="logo-container">
-                <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold">
-                <span>Nova</span>
+            <a href="/" class="logo-container" aria-label="Nova Home">
+                <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold">
             </a>
             
             <nav class="nav-links">
@@ -127,6 +126,48 @@
         </div>
     </section>
 
+    <!-- Popular Categories Section -->
+    <section class="section-container" style="padding-top: 2rem; padding-bottom: 0.5rem;">
+        <h2 class="section-title font-display" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.25rem;">Popular Categories</h2>
+        <div class="popular-categories-grid">
+            <!-- Card 1: Movie Tickets -->
+            <a href="#" onclick="filterPlans('movies'); return false;" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">confirmation_number</span>
+                </div>
+                <h3 class="pop-cat-title">Movie Tickets</h3>
+                <p class="pop-cat-desc">Invest in cinema tickets and earn daily.</p>
+            </a>
+
+            <!-- Card 2: Movies -->
+            <a href="#" onclick="filterPlans('movies'); return false;" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">movie</span>
+                </div>
+                <h3 class="pop-cat-title">Movies</h3>
+                <p class="pop-cat-desc">Invest in upcoming and ongoing movies.</p>
+            </a>
+
+            <!-- Card 3: Products -->
+            <a href="#" onclick="filterPlans('products'); return false;" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">shopping_bag</span>
+                </div>
+                <h3 class="pop-cat-title">Products</h3>
+                <p class="pop-cat-desc">Invest in useful products and earn returns.</p>
+            </a>
+
+            <!-- Card 4: Gift Cards -->
+            <a href="#" onclick="filterPlans('products'); return false;" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">card_giftcard</span>
+                </div>
+                <h3 class="pop-cat-title">Gift Cards</h3>
+                <p class="pop-cat-desc">Invest in gift cards and earn daily.</p>
+            </a>
+        </div>
+    </section>
+
     <!-- Main Listing Grid -->
     <section class="section-container" style="padding-bottom: 6rem;">
         <!-- Category Filters -->
@@ -151,9 +192,8 @@
         <div class="footer-container">
             <div class="footer-grid">
                 <div class="footer-brand-col">
-                    <a href="/" class="logo-container">
-                        <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold">
-                        <span>Nova</span>
+                    <a href="/" class="logo-container" aria-label="Nova Home">
+                        <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold">
                     </a>
                     <p class="footer-brand-desc">Invest in movies and products you love and earn daily profits with complete security.</p>
                 </div>
@@ -203,7 +243,7 @@
                 category: 'movies',
                 image: 'images/amc_theater.png',
                 profit: '2.5%',
-                price: 100,
+                price: 50,
                 duration: '24 Hours'
             },
             {
@@ -221,7 +261,7 @@
                 category: 'movies',
                 image: 'images/movie_combo.png',
                 profit: '2.5%',
-                price: 100,
+                price: 60,
                 duration: '24 Hours'
             },
             {
@@ -230,7 +270,7 @@
                 category: 'movies',
                 image: 'images/netflix_card.png',
                 profit: '2.5%',
-                price: 100,
+                price: 50,
                 duration: '24 Hours'
             },
             {
@@ -262,7 +302,7 @@
             },
             {
                 id: 'vip_recliner',
-                name: 'VIP Leather Recliner',
+                name: 'VIP Cinema Recliner Chair',
                 category: 'products',
                 image: 'images/vip_recliner.png',
                 profit: '2.5%',
@@ -295,10 +335,30 @@
             const grid = document.getElementById('investments-container-grid');
             if (!grid) return;
 
+            let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
+            let deletedDefault = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
+            let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
+
+            const activeDefault = plans
+                .filter(p => !deletedDefault.includes(p.name))
+                .map(p => editedPlans[p.name] ? { ...p, ...editedPlans[p.name], price: Number(editedPlans[p.name].price || p.price) } : p);
+
+            const customMapped = customPlans.map((cp, idx) => ({
+                id: 'custom_' + idx,
+                name: cp.name,
+                category: (cp.category || 'products').toLowerCase().replace(' ', ''),
+                image: 'images/amc_theater.png',
+                profit: cp.roi || '2.5%',
+                price: Number(cp.price || 100),
+                duration: cp.duration || '24 Hours'
+            }));
+
+            const combinedPlans = [...activeDefault, ...customMapped];
+
             // Filter plans by category
             const filteredPlans = activeCategory === 'all' 
-                ? plans 
-                : plans.filter(p => p.category === activeCategory);
+                ? combinedPlans 
+                : combinedPlans.filter(p => p.category === activeCategory || (activeCategory === 'products' && !['movies','featured'].includes(p.category)));
 
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
@@ -314,11 +374,11 @@
                         <div class="daily-profit-badge">Daily Profit ${plan.profit}</div>
                         
                         <div class="investment-meta-grid">
-                            <div>
+                            <div class="meta-col-left">
                                 <div class="meta-item-label">Price</div>
-                                <div class="meta-item-value highlight">$${plan.price.toFixed(2)}</div>
+                                <div class="meta-item-value">$${plan.price.toFixed(2)}</div>
                             </div>
-                            <div>
+                            <div class="meta-col-right">
                                 <div class="meta-item-label">Duration</div>
                                 <div class="meta-item-value">${plan.duration}</div>
                             </div>
@@ -383,14 +443,42 @@
             document.getElementById('investments-container-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Featured Investment CTA logic
+        // Featured Investment CTA logic (Direct Invest or Direct Deposit)
         function handleInvestClick(event, plan) {
             event.preventDefault();
-            const token = localStorage.getItem('nova_token');
-            if (!token) {
-                window.location.href = "/login";
+            const planPrices = {
+                'amc': { name: 'AMC Movie Ticket', price: 100 },
+                'avengers': { name: 'Avengers Movie Plan', price: 150 },
+                'movie_combo': { name: 'Cinema VIP Combo', price: 250 },
+                'netflix_card': { name: 'Netflix Share Pass', price: 50 }
+            };
+            const info = planPrices[plan] || { name: 'Compounding Investment Plan', price: 100 };
+            
+            let currentBalance = parseFloat(localStorage.getItem('nova_balance') || '350.00');
+            const choice = confirm(`✨ ${info.name} ($${info.price})\n\nYour Available Wallet Balance: $${currentBalance.toFixed(2)}\n\nClick [OK] to Invest instantly using your Wallet Balance.\nClick [Cancel] to go directly to Deposit $${info.price} USDT for this plan.`);
+            
+            if (choice) {
+                if (currentBalance >= info.price) {
+                    currentBalance -= info.price;
+                    localStorage.setItem('nova_balance', currentBalance.toFixed(2));
+                    let myPlans = JSON.parse(localStorage.getItem('nova_my_plans') || '[]');
+                    myPlans.push({
+                        name: info.name,
+                        principal: info.price,
+                        returnRate: '2.5% Daily',
+                        expectedPayout: (info.price * 1.025).toFixed(2),
+                        status: 'Active',
+                        timeLeft: '23h 59m left'
+                    });
+                    localStorage.setItem('nova_my_plans', JSON.stringify(myPlans));
+                    alert(`🎉 Congratulations! You successfully invested $${info.price} in ${info.name}!\n\nRemaining Wallet Balance: $${currentBalance.toFixed(2)}\nYour 2.5% daily compounding return starts immediately.`);
+                    window.location.href = '/dashboard?tab=myinvestments';
+                } else {
+                    alert(`Insufficient Wallet Balance ($${currentBalance.toFixed(2)}).\n\nTaking you directly to Deposit $${info.price} USDT to activate ${info.name}...`);
+                    window.location.href = `/dashboard?tab=deposit&amount=${info.price}&plan=${encodeURIComponent(info.name)}`;
+                }
             } else {
-                window.location.href = `/dashboard?tab=invest&plan=${plan}`;
+                window.location.href = `/dashboard?tab=deposit&amount=${info.price}&plan=${encodeURIComponent(info.name)}`;
             }
         }
 

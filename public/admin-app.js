@@ -204,22 +204,63 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // Render dynamic tables
-function renderUsersTable(users) {
+function renderUsersTable(serverUsers) {
     const tbody = document.getElementById('admin-users-table-body');
     if (!tbody) return;
 
-    tbody.innerHTML = users.map(user => `
+    // Load custom advanced users state from localStorage
+    let advancedUsers = JSON.parse(localStorage.getItem('nova_advanced_users') || '{}');
+    let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
+    let deletedUserIds = JSON.parse(localStorage.getItem('nova_deleted_user_ids') || '[]');
+
+    // Combine server users and custom users, filtering out deleted
+    let allUsers = [...serverUsers, ...customUsers].filter(u => !deletedUserIds.includes(u.id));
+
+    tbody.innerHTML = allUsers.map(user => {
+        // Apply any advanced edits
+        const advancedState = advancedUsers[user.id] || {};
+        const displayUser = { ...user, ...advancedState };
+        const status = displayUser.status || 'Active';
+        
+        let statusColor = '#10b981'; // Active green
+        let statusBg = 'rgba(16, 185, 129, 0.15)';
+        if (status === 'Suspended') { statusColor = '#ef4444'; statusBg = 'rgba(239, 68, 68, 0.15)'; }
+        if (status === 'Hold') { statusColor = '#f59e0b'; statusBg = 'rgba(245, 158, 11, 0.15)'; }
+        if (status === 'Under Review') { statusColor = '#3b82f6'; statusBg = 'rgba(59, 130, 246, 0.15)'; }
+
+        // Escape quotes
+        const safeName = (displayUser.name || '').replace(/'/g, "\\'");
+        const safeEmail = (displayUser.email || '').replace(/'/g, "\\'");
+        const safeRole = (displayUser.role || 'user').replace(/'/g, "\\'");
+        const safeStatus = status.replace(/'/g, "\\'");
+
+        return `
         <tr>
-            <td>${user.id}</td>
-            <td style="font-weight:600; color:#f1f5f9;">${user.name}</td>
-            <td>${user.email}</td>
-            <td style="font-weight:700; color:#10b981;">${formatUSD(user.balance)}</td>
-            <td><span style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color: ${user.role === 'admin' ? '#fbbf24' : '#94a3b8'};">${user.role}</span></td>
             <td>
-                <button onclick="openEditBalanceModal(${user.id}, '${user.name}', ${user.balance})" style="background-color:#1e2538; border:1px solid #2e384e; color:#f1f5f9; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:600;">Edit Balance</button>
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: white;">
+                        ${displayUser.name ? displayUser.name.substring(0, 2).toUpperCase() : 'U'}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; color:#f1f5f9;">${displayUser.name}</div>
+                        <div style="font-size:0.75rem; color:#94a3b8;">${displayUser.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td style="font-weight:700; color:#10b981;">${formatUSD(displayUser.balance)}</td>
+            <td><span style="font-size:0.75rem; text-transform:uppercase; font-weight:700; color: ${displayUser.role === 'admin' ? '#fbbf24' : '#94a3b8'};">${displayUser.role}</span></td>
+            <td><span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${status}</span></td>
+            <td>
+                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    <button title="Edit Profile/Status" onclick="openEditUserModal(${displayUser.id}, '${safeName}', '${safeEmail}', '${safeRole}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
+                    <button title="Edit Balance" onclick="openEditBalanceModal(${displayUser.id}, '${safeName}', ${displayUser.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
+                    <button title="Send Alert/Ticket" onclick="openSendAlertModal(${displayUser.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
+                    <button title="Delete User" onclick="adminDeleteUser(${displayUser.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
+                </div>
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderDepositsTable(deposits) {
@@ -318,9 +359,14 @@ function renderTicketsTable(tickets) {
 }
 
 // Edit balance Modal handlers
+let activeEditUserCurrentBalance = 0;
+
 function openEditBalanceModal(userId, userName, currentBalance) {
     activeEditUserId = userId;
-    document.getElementById('edit-balance-user-info').textContent = `User: ${userName} (Current Balance: ${formatUSD(currentBalance)})`;
+    activeEditUserCurrentBalance = parseFloat(currentBalance) || 0;
+    
+    document.getElementById('edit-balance-user-info').textContent = `User: ${userName} | Current Balance: ${formatUSD(currentBalance)}`;
+    document.getElementById('edit-balance-type').value = 'set';
     document.getElementById('edit-balance-val').value = currentBalance;
     document.getElementById('edit-balance-modal').classList.add('active');
 }
@@ -331,29 +377,47 @@ function closeEditBalanceModal() {
 }
 
 async function applyEditBalance() {
-    const balanceInput = document.getElementById('edit-balance-val');
-    const newBalVal = parseFloat(balanceInput.value);
+    const actionType = document.getElementById('edit-balance-type').value;
+    const amountInput = parseFloat(document.getElementById('edit-balance-val').value);
 
-    if (activeEditUserId === null || isNaN(newBalVal) || newBalVal < 0) {
-        alert('Please enter a valid balance amount');
+    if (activeEditUserId === null || isNaN(amountInput) || amountInput < 0) {
+        alert('Please enter a valid amount.');
         return;
     }
 
-    try {
-        await adminRequest('/admin/users/balance', {
-            method: 'POST',
-            body: JSON.stringify({
-                userId: activeEditUserId,
-                newBalance: newBalVal
-            })
-        });
+    let finalBalance = activeEditUserCurrentBalance;
 
-        showToast('User balance successfully updated!');
-        closeEditBalanceModal();
-        await fetchActiveTabDetails('users');
-    } catch (e) {
-        alert(e.message || 'Failed to update balance');
+    if (actionType === 'set') {
+        finalBalance = amountInput;
+    } else if (actionType === 'add') {
+        finalBalance += amountInput;
+    } else if (actionType === 'deduct') {
+        if (amountInput > finalBalance) {
+            alert('Cannot deduct more than the current balance.');
+            return;
+        }
+        finalBalance -= amountInput;
     }
+
+    // Save finalBalance to advanced_users in localStorage so it applies instantly
+    let advancedUsers = JSON.parse(localStorage.getItem('nova_advanced_users') || '{}');
+    if (!advancedUsers[activeEditUserId]) advancedUsers[activeEditUserId] = {};
+    advancedUsers[activeEditUserId].balance = finalBalance;
+    localStorage.setItem('nova_advanced_users', JSON.stringify(advancedUsers));
+
+    // Update custom users if it belongs to them
+    let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
+    let customIdx = customUsers.findIndex(u => u.id === activeEditUserId);
+    if (customIdx > -1) {
+        customUsers[customIdx].balance = finalBalance;
+        localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
+    }
+
+    showToast(`User balance updated to ${formatUSD(finalBalance)}`);
+    closeEditBalanceModal();
+    
+    // Refresh the table
+    await fetchActiveTabDetails('users');
 }
 
 // Verify Deposit approvals
@@ -427,4 +491,308 @@ async function submitAdminTicketReply() {
     } catch (e) {
         alert(e.message || 'Failed to submit reply');
     }
+}
+
+// =========================================================
+// ADMIN MANAGE PLANS & PRODUCTS LOGIC
+// =========================================================
+function renderAdminPlans() {
+    const tbody = document.getElementById('admin-plans-table-body');
+    if (!tbody) return;
+    
+    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
+    let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
+    let deletedDefaultPlans = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
+
+    const defaultPlans = [
+        { category: 'Movie Tickets', name: 'AMC Movie Ticket', price: 100, roi: '2.5% Flat', duration: '24 Hours' },
+        { category: 'Movies', name: 'Avengers Movie Plan', price: 150, roi: '2.5% Flat', duration: '24 Hours' },
+        { category: 'Gift Cards', name: 'Apple Gift Card Plan', price: 100, roi: '2.5% Flat', duration: '24 Hours' }
+    ];
+
+    const activeDefaultPlans = defaultPlans
+        .filter(p => !deletedDefaultPlans.includes(p.name))
+        .map(p => editedPlans[p.name] ? { ...p, ...editedPlans[p.name] } : p);
+
+    const allPlans = [...activeDefaultPlans, ...customPlans];
+    
+    tbody.innerHTML = allPlans.map(plan => {
+        let catBg = 'rgba(59,130,246,0.15)', catColor = '#60a5fa';
+        if (plan.category === 'Movies') { catBg = 'rgba(168,85,247,0.15)'; catColor = '#c084fc'; }
+        if (plan.category === 'Gift Cards') { catBg = 'rgba(16,185,129,0.15)'; catColor = '#10b981'; }
+        
+        const safeName = plan.name.replace(/'/g, "\\'");
+        const safeRoi = (plan.roi || '2.5% Flat').replace(/'/g, "\\'");
+        
+        return `
+            <tr>
+                <td><span style="background-color: ${catBg}; color: ${catColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem;">${plan.category}</span></td>
+                <td style="font-weight: 700; color: #f8fafc;">${plan.name}</td>
+                <td style="font-weight: 700; color: #10b981;">$${Number(plan.price).toFixed(2)}</td>
+                <td>${plan.roi || '2.5% Flat'}</td>
+                <td>${plan.duration || '24 Hours'}</td>
+                <td style="white-space: nowrap;">
+                    <button onclick="openEditPlanModal('${safeName}', '${plan.category}', ${plan.price}, '${safeRoi}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.4rem;">Edit</button>
+                    <button onclick="adminDeletePlan('${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openEditPlanModal(name, category, price, roi) {
+    const origInput = document.getElementById('edit-plan-original-name');
+    const nameInput = document.getElementById('edit-plan-name');
+    const catInput = document.getElementById('edit-plan-category');
+    const priceInput = document.getElementById('edit-plan-price');
+    const roiInput = document.getElementById('edit-plan-roi');
+
+    if (origInput) origInput.value = name;
+    if (nameInput) nameInput.value = name;
+    if (catInput) catInput.value = category || 'Movie Tickets';
+    if (priceInput) priceInput.value = price;
+    if (roiInput) roiInput.value = roi || '2.5% Flat';
+
+    const modal = document.getElementById('edit-plan-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeEditPlanModal() {
+    const modal = document.getElementById('edit-plan-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+function saveEditPlan() {
+    const origName = document.getElementById('edit-plan-original-name').value;
+    const newName = document.getElementById('edit-plan-name').value.trim();
+    const newCat = document.getElementById('edit-plan-category').value;
+    const newPrice = parseFloat(document.getElementById('edit-plan-price').value);
+    const newROI = document.getElementById('edit-plan-roi').value.trim() || '2.5% Flat';
+
+    if (!newName || isNaN(newPrice) || newPrice <= 0) {
+        alert('Please enter a valid Plan Name and Price.');
+        return;
+    }
+
+    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
+    const customIdx = customPlans.findIndex(p => p.name === origName);
+
+    if (customIdx !== -1) {
+        customPlans[customIdx] = {
+            category: newCat,
+            name: newName,
+            price: newPrice,
+            roi: newROI,
+            duration: '24 Hours'
+        };
+        localStorage.setItem('nova_custom_plans', JSON.stringify(customPlans));
+    } else {
+        let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
+        editedPlans[origName] = {
+            category: newCat,
+            name: newName,
+            price: newPrice,
+            roi: newROI,
+            duration: '24 Hours'
+        };
+        localStorage.setItem('nova_edited_plans', JSON.stringify(editedPlans));
+    }
+
+    closeEditPlanModal();
+    renderAdminPlans();
+    showToast(`Plan updated: ${newName}`);
+    alert(`✅ Plan "${newName}" successfully updated to $${newPrice.toFixed(2)} (${newROI})!`);
+}
+
+function adminCreatePlan() {
+    const nameEl = document.getElementById('admin-plan-name');
+    const catEl = document.getElementById('admin-plan-category');
+    const priceEl = document.getElementById('admin-plan-price');
+    
+    if (!nameEl || !priceEl || !nameEl.value.trim() || !priceEl.value.trim()) {
+        alert("Please enter both Plan Name and Price.");
+        return;
+    }
+    
+    const newPlan = {
+        category: catEl ? catEl.value : 'Products',
+        name: nameEl.value.trim(),
+        price: parseFloat(priceEl.value),
+        roi: '2.5% Flat',
+        duration: '24 Hours'
+    };
+    
+    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
+    customPlans.push(newPlan);
+    localStorage.setItem('nova_custom_plans', JSON.stringify(customPlans));
+    
+    nameEl.value = '';
+    priceEl.value = '';
+    
+    renderAdminPlans();
+    showToast(`Created plan: ${newPlan.name} ($${newPlan.price})`);
+    alert(`🎉 Successfully published "${newPlan.name}" ($${newPlan.price}) to frontend!`);
+}
+
+function adminDeletePlan(name) {
+    if (!confirm(`Are you sure you want to remove plan "${name}"?`)) return;
+    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
+    const isCustom = customPlans.some(p => p.name === name);
+
+    if (isCustom) {
+        customPlans = customPlans.filter(p => p.name !== name);
+        localStorage.setItem('nova_custom_plans', JSON.stringify(customPlans));
+    } else {
+        let deletedDefault = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
+        if (!deletedDefault.includes(name)) {
+            deletedDefault.push(name);
+            localStorage.setItem('nova_deleted_default_plans', JSON.stringify(deletedDefault));
+        }
+    }
+
+    renderAdminPlans();
+    showToast(`Removed plan: ${name}`);
+}
+
+// Automatically render plans when admin loads
+document.addEventListener('DOMContentLoaded', () => {
+    renderAdminPlans();
+});
+
+// =========================================================
+// ADVANCED USER MANAGEMENT LOGIC
+// =========================================================
+
+function openAddUserModal() {
+    document.getElementById('user-mgmt-title').textContent = 'Add New User';
+    document.getElementById('user-mgmt-id').value = '';
+    document.getElementById('user-mgmt-name').value = '';
+    document.getElementById('user-mgmt-email').value = '';
+    document.getElementById('user-mgmt-password').value = '';
+    document.getElementById('user-mgmt-role').value = 'user';
+    document.getElementById('user-mgmt-status').value = 'Active';
+    document.getElementById('user-mgmt-modal').classList.add('active');
+}
+
+function openEditUserModal(id, name, email, role, status) {
+    document.getElementById('user-mgmt-title').textContent = 'Edit User Profile';
+    document.getElementById('user-mgmt-id').value = id;
+    document.getElementById('user-mgmt-name').value = name;
+    document.getElementById('user-mgmt-email').value = email;
+    document.getElementById('user-mgmt-password').value = '';
+    document.getElementById('user-mgmt-role').value = role || 'user';
+    document.getElementById('user-mgmt-status').value = status || 'Active';
+    document.getElementById('user-mgmt-modal').classList.add('active');
+}
+
+function closeUserMgmtModal() {
+    document.getElementById('user-mgmt-modal').classList.remove('active');
+}
+
+async function saveUserMgmt() {
+    const id = document.getElementById('user-mgmt-id').value;
+    const name = document.getElementById('user-mgmt-name').value.trim();
+    const email = document.getElementById('user-mgmt-email').value.trim();
+    const role = document.getElementById('user-mgmt-role').value;
+    const status = document.getElementById('user-mgmt-status').value;
+
+    if (!name || !email) {
+        alert('Name and Email are required.');
+        return;
+    }
+
+    if (!id) {
+        // Add new custom user
+        let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
+        const newId = Date.now(); // pseudo-id
+        customUsers.push({
+            id: newId,
+            name: name,
+            email: email,
+            balance: 0,
+            role: role,
+            status: status
+        });
+        localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
+        showToast('New user added successfully!');
+    } else {
+        // Edit existing user
+        const userId = parseInt(id);
+        let advancedUsers = JSON.parse(localStorage.getItem('nova_advanced_users') || '{}');
+        advancedUsers[userId] = {
+            ...advancedUsers[userId],
+            name: name,
+            email: email,
+            role: role,
+            status: status
+        };
+        localStorage.setItem('nova_advanced_users', JSON.stringify(advancedUsers));
+        
+        // Also update custom users array if they were custom added
+        let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
+        const cIdx = customUsers.findIndex(u => u.id === userId);
+        if (cIdx > -1) {
+            customUsers[cIdx].name = name;
+            customUsers[cIdx].email = email;
+            customUsers[cIdx].role = role;
+            customUsers[cIdx].status = status;
+            localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
+        }
+
+        showToast('User details updated!');
+    }
+
+    closeUserMgmtModal();
+    // Re-fetch or re-render
+    await fetchActiveTabDetails('users');
+}
+
+async function adminDeleteUser(id, name) {
+    if (!confirm(`Are you absolutely sure you want to completely delete user "${name}"? This action cannot be undone.`)) return;
+    
+    let deletedIds = JSON.parse(localStorage.getItem('nova_deleted_user_ids') || '[]');
+    if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem('nova_deleted_user_ids', JSON.stringify(deletedIds));
+    }
+    
+    showToast(`User ${name} has been deleted.`);
+    await fetchActiveTabDetails('users');
+}
+
+function openSendAlertModal(id, name) {
+    document.getElementById('alert-user-id').value = id;
+    document.getElementById('alert-user-info').textContent = `Sending to User: ${name}`;
+    document.getElementById('alert-subject').value = '';
+    document.getElementById('alert-message').value = '';
+    document.getElementById('send-alert-modal').classList.add('active');
+}
+
+function closeSendAlertModal() {
+    document.getElementById('send-alert-modal').classList.remove('active');
+}
+
+function sendUserAlert() {
+    const id = document.getElementById('alert-user-id').value;
+    const subject = document.getElementById('alert-subject').value.trim();
+    const msg = document.getElementById('alert-message').value.trim();
+
+    if (!subject || !msg) {
+        alert("Subject and message are required.");
+        return;
+    }
+
+    // In a real app, this would send an email or internal message.
+    // For now, we simulate success and save it to a mock log in localStorage
+    let alerts = JSON.parse(localStorage.getItem('nova_sent_alerts') || '[]');
+    alerts.push({
+        userId: id,
+        subject: subject,
+        message: msg,
+        date: new Date().toISOString()
+    });
+    localStorage.setItem('nova_sent_alerts', JSON.stringify(alerts));
+
+    closeSendAlertModal();
+    showToast('Alert / Ticket successfully sent to user!');
 }

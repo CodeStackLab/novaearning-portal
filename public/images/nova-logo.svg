@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="100%" height="100%">
+  <defs>
+    <!-- Primary Metallic Gold Linear Gradient -->
+    <linearGradient id="goldGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3B3"/>
+      <stop offset="25%" stop-color="#DFC15D"/>
+      <stop offset="50%" stop-color="#B8860B"/>
+      <stop offset="75%" stop-color="#E6C875"/>
+      <stop offset="100%" stop-color="#8B6508"/>
+    </linearGradient>
+
+    <!-- Secondary Bright Gold Highlight Gradient -->
+    <linearGradient id="goldGradLight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#AA771C"/>
+      <stop offset="35%" stop-color="#FDE08D"/>
+      <stop offset="50%" stop-color="#FFF8D6"/>
+      <stop offset="70%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#8B6508"/>
+    </linearGradient>
+
+    <!-- Deep Gold Shadow Gradient -->
+    <linearGradient id="goldGradDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37"/>
+      <stop offset="50%" stop-color="#8B6508"/>
+      <stop offset="100%" stop-color="#4A3502"/>
+    </linearGradient>
+
+    <!-- Star Glow Filter -->
+    <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Elegant Golden Ring -->
+  <path d="M 70 15 A 55 55 0 1 1 31.1 108.9 A 55 55 0 0 1 70 15 Z" 
+        fill="none" stroke="url(#goldGradLight)" stroke-width="2.6" stroke-linecap="round" opacity="0.95"/>
+  <path d="M 70 18 A 52 52 0 1 1 33.2 106.8 A 52 52 0 0 1 70 18 Z" 
+        fill="none" stroke="url(#goldGradDark)" stroke-width="0.8" opacity="0.6"/>
+
+  <!-- Starburst / Flare at Top-Right on Ring (approx x=109, y=31) -->
+  <g transform="translate(109, 31)" filter="url(#goldGlow)">
+    <circle cx="0" cy="0" r="4.5" fill="#FFF8D6"/>
+    <path d="M -16 0 L 16 0 M 0 -16 L 0 16" stroke="#FFF8D6" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M -8 -8 L 8 8 M -8 8 L 8 -8" stroke="#FDE08D" stroke-width="0.9" opacity="0.8"/>
+  </g>
+
+  <!-- 3D Luxury Chiseled Letter N -->
+  <!-- Left Vertical Stem -->
+  <path d="M 38 42 L 54 55 L 54 98 L 38 85 Z" fill="url(#goldGradMain)"/>
+  <path d="M 38 42 L 46 48.5 L 46 91.5 L 38 85 Z" fill="url(#goldGradLight)" opacity="0.85"/>
+
+  <!-- Right Vertical Stem -->
+  <path d="M 86 42 L 102 55 L 102 98 L 86 85 Z" fill="url(#goldGradMain)"/>
+  <path d="M 94 48.5 L 102 55 L 102 98 L 94 91.5 Z" fill="url(#goldGradLight)" opacity="0.9"/>
+
+  <!-- Diagonal Stem Connecting Left Top to Right Bottom -->
+  <path d="M 38 42 L 54 42 L 102 98 L 86 98 Z" fill="url(#goldGradLight)"/>
+  <path d="M 46 42 L 54 42 L 102 98 L 94 98 Z" fill="url(#goldGradDark)" opacity="0.65"/>
+</svg>

@@ -14,16 +14,15 @@
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css?v=1.3">
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
 <body class="landing-body">
 
     <!-- Header Navigation -->
     <header class="landing-header">
         <div class="container-header">
-            <a href="/" class="logo-container">
-                <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold">
-                <span>Nova</span>
+            <a href="/" class="logo-container" aria-label="Nova Home">
+                <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold">
             </a>
             
             <nav class="nav-links">
@@ -69,8 +68,8 @@
     <section class="hero-section" id="hero-anchor">
         <div class="hero-banner">
             <div class="hero-left">
-                <h1 class="hero-title font-display">Invest in <span class="gradient-text">Movies &amp; Products</span>,<br><span class="gradient-text-alt">Earn Daily</span></h1>
-                <p class="hero-subtitle">Choose from our handpicked projects and start earning daily profits.</p>
+                <h1 class="hero-title font-display">Invest in Movies &amp;<br>Products, Earn Daily</h1>
+                <p class="hero-subtitle">Choose from our selected projects and start earning daily profits.</p>
                 <button class="hero-btn" onclick="document.getElementById('investments-anchor').scrollIntoView({ behavior: 'smooth' })">Browse Investments</button>
             </div>
             <div class="hero-right">
@@ -80,18 +79,61 @@
     </section>
 
 
+    <!-- Popular Categories Section -->
+    <section class="section-container" style="padding-top: 1.5rem;">
+        <h2 class="section-title font-display" style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.25rem;">Popular Categories</h2>
+        <div class="popular-categories-grid">
+            <!-- Card 1: Movie Tickets -->
+            <a href="/investments?category=tickets" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">confirmation_number</span>
+                </div>
+                <h3 class="pop-cat-title">Movie Tickets</h3>
+                <p class="pop-cat-desc">Invest in cinema tickets and earn daily.</p>
+            </a>
+
+            <!-- Card 2: Movies -->
+            <a href="/investments?category=movies" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">movie</span>
+                </div>
+                <h3 class="pop-cat-title">Movies</h3>
+                <p class="pop-cat-desc">Invest in upcoming and ongoing movies.</p>
+            </a>
+
+            <!-- Card 3: Products -->
+            <a href="/investments?category=products" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">shopping_bag</span>
+                </div>
+                <h3 class="pop-cat-title">Products</h3>
+                <p class="pop-cat-desc">Invest in useful products and earn returns.</p>
+            </a>
+
+            <!-- Card 4: Gift Cards -->
+            <a href="/investments?category=giftcards" class="pop-cat-card">
+                <div class="pop-cat-icon-circle">
+                    <span class="material-symbols-outlined pop-cat-icon">card_giftcard</span>
+                </div>
+                <h3 class="pop-cat-title">Gift Cards</h3>
+                <p class="pop-cat-desc">Invest in gift cards and earn daily.</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Featured Investments -->
     <!-- Featured Investments -->
     <section class="section-container" id="investments-anchor">
         <div class="featured-header">
             <h2 class="section-title font-display">Featured Investments</h2>
             <a href="/investments" class="view-all-link">
                 <span>View All</span>
-                <span class="material-symbols-outlined" style="font-size: 1.1rem;">arrow_forward</span>
+                <span class="material-symbols-outlined" style="font-size: 1rem;">arrow_forward_ios</span>
             </a>
         </div>
         
         <div class="investment-grid">
-            <!-- AMC Movie Ticket Card -->
+            <!-- Card 1: AMC Movie Ticket -->
             <div class="investment-card">
                 <div class="investment-img-container">
                     <img src="images/amc_theater.png" alt="AMC Movie Ticket" class="investment-img">
@@ -101,11 +143,11 @@
                     <div class="daily-profit-badge">Daily Profit 2.5%</div>
                     
                     <div class="investment-meta-grid">
-                        <div>
+                        <div class="meta-col-left">
                             <div class="meta-item-label">Price</div>
-                            <div class="meta-item-value highlight">$100.00</div>
+                            <div class="meta-item-value">$50.00</div>
                         </div>
-                        <div>
+                        <div class="meta-col-right">
                             <div class="meta-item-label">Duration</div>
                             <div class="meta-item-value">24 Hours</div>
                         </div>
@@ -115,31 +157,7 @@
                 </div>
             </div>
 
-            <!-- Cinema Popcorn Machine -->
-            <div class="investment-card">
-                <div class="investment-img-container">
-                    <img src="images/popcorn_machine.png" alt="Cinema Popcorn Machine" class="investment-img">
-                </div>
-                <div class="investment-content">
-                    <h3 class="investment-title font-display">Cinema Popcorn Machine</h3>
-                    <div class="daily-profit-badge">Daily Profit 2.5%</div>
-                    
-                    <div class="investment-meta-grid">
-                        <div>
-                            <div class="meta-item-label">Price</div>
-                            <div class="meta-item-value highlight">$100.00</div>
-                        </div>
-                        <div>
-                            <div class="meta-item-label">Duration</div>
-                            <div class="meta-item-value">24 Hours</div>
-                        </div>
-                    </div>
-                    
-                    <a href="/dashboard?tab=invest&plan=popcorn_machine" class="invest-btn" onclick="handleInvestClick(event, 'popcorn_machine')">Invest Now</a>
-                </div>
-            </div>
-
-            <!-- Avengers Card -->
+            <!-- Card 2: Avengers: Endgame -->
             <div class="investment-card">
                 <div class="investment-img-container">
                     <img src="images/avengers_theme.png" alt="Avengers: Endgame" class="investment-img">
@@ -149,11 +167,11 @@
                     <div class="daily-profit-badge">Daily Profit 2.5%</div>
                     
                     <div class="investment-meta-grid">
-                        <div>
+                        <div class="meta-col-left">
                             <div class="meta-item-label">Price</div>
-                            <div class="meta-item-value highlight">$100.00</div>
+                            <div class="meta-item-value">$100.00</div>
                         </div>
-                        <div>
+                        <div class="meta-col-right">
                             <div class="meta-item-label">Duration</div>
                             <div class="meta-item-value">24 Hours</div>
                         </div>
@@ -163,27 +181,102 @@
                 </div>
             </div>
 
-            <!-- IMAX Projector Lens -->
+            <!-- Card 3: Movie Combo -->
             <div class="investment-card">
                 <div class="investment-img-container">
-                    <img src="images/imax_projector.png" alt="IMAX Projector Lens" class="investment-img">
+                    <img src="images/movie_combo.png" alt="Movie Combo" class="investment-img">
                 </div>
                 <div class="investment-content">
-                    <h3 class="investment-title font-display">IMAX Projector Lens</h3>
+                    <h3 class="investment-title font-display">Movie Combo</h3>
                     <div class="daily-profit-badge">Daily Profit 2.5%</div>
                     
                     <div class="investment-meta-grid">
-                        <div>
+                        <div class="meta-col-left">
                             <div class="meta-item-label">Price</div>
-                            <div class="meta-item-value highlight">$100.00</div>
+                            <div class="meta-item-value">$60.00</div>
                         </div>
-                        <div>
+                        <div class="meta-col-right">
                             <div class="meta-item-label">Duration</div>
                             <div class="meta-item-value">24 Hours</div>
                         </div>
                     </div>
                     
-                    <a href="/dashboard?tab=invest&plan=imax_projector" class="invest-btn" onclick="handleInvestClick(event, 'imax_projector')">Invest Now</a>
+                    <a href="/dashboard?tab=invest&plan=movie_combo" class="invest-btn" onclick="handleInvestClick(event, 'movie_combo')">Invest Now</a>
+                </div>
+            </div>
+
+            <!-- Card 4: Netflix Gift Card -->
+            <div class="investment-card">
+                <div class="investment-img-container">
+                    <img src="images/netflix_card.png" alt="Netflix Gift Card" class="investment-img">
+                </div>
+                <div class="investment-content">
+                    <h3 class="investment-title font-display">Netflix Gift Card</h3>
+                    <div class="daily-profit-badge">Daily Profit 2.5%</div>
+                    
+                    <div class="investment-meta-grid">
+                        <div class="meta-col-left">
+                            <div class="meta-item-label">Price</div>
+                            <div class="meta-item-value">$50.00</div>
+                        </div>
+                        <div class="meta-col-right">
+                            <div class="meta-item-label">Duration</div>
+                            <div class="meta-item-value">24 Hours</div>
+                        </div>
+                    </div>
+                    
+                    <a href="/dashboard?tab=invest&plan=netflix_card" class="invest-btn" onclick="handleInvestClick(event, 'netflix_card')">Invest Now</a>
+                </div>
+        </div>
+    </section>
+
+    <!-- 24-Hour Live ROI & Profit Calculator Section -->
+    <section class="section-container" style="padding-top: 2.5rem; padding-bottom: 1.5rem;">
+        <div class="roi-calculator-card">
+            <div class="roi-calc-grid">
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; display: inline-block; margin-bottom: 0.5rem;">Interactive Tool</span>
+                    <h2 class="font-display" style="font-size: 1.85rem; font-weight: 900; line-height: 1.25; margin-bottom: 0.75rem;">Calculate Your <span class="gradient-text">24-Hour Profit</span></h2>
+                    <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6;">Every investment earns a guaranteed flat <strong style="color: var(--text-primary);">2.5% daily return</strong>. At the end of 24 hours, receive your full principal plus earnings instantly.</p>
+                    
+                    <div class="roi-slider-wrapper">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.35rem;">INVESTMENT AMOUNT</div>
+                        <div class="roi-amount-display" id="roi-display-val">$100.00</div>
+                        <input type="range" id="roi-range-input" class="roi-slider" min="10" max="5000" step="10" value="100" oninput="updateROICalculator(this.value)">
+                        <div class="roi-quick-btns">
+                            <button type="button" class="roi-quick-btn" onclick="setROIAmount(50)">$50</button>
+                            <button type="button" class="roi-quick-btn active" onclick="setROIAmount(100)">$100</button>
+                            <button type="button" class="roi-quick-btn" onclick="setROIAmount(250)">$250</button>
+                            <button type="button" class="roi-quick-btn" onclick="setROIAmount(500)">$500</button>
+                            <button type="button" class="roi-quick-btn" onclick="setROIAmount(1000)">$1,000</button>
+                            <button type="button" class="roi-quick-btn" onclick="setROIAmount(2500)">$2,500</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roi-results-box">
+                    <div class="roi-result-row">
+                        <span class="roi-result-label">Daily Profit Rate</span>
+                        <span class="roi-result-value" style="color: #10B981;">2.5% Flat Rate</span>
+                    </div>
+                    <div class="roi-result-row">
+                        <span class="roi-result-label">Duration</span>
+                        <span class="roi-result-value">24 Hours (1 Day)</span>
+                    </div>
+                    <div class="roi-result-row">
+                        <span class="roi-result-label">24-Hour Net Profit</span>
+                        <span class="roi-result-value gold" id="roi-net-profit">$2.50</span>
+                    </div>
+                    <div class="roi-result-row">
+                        <span class="roi-result-label">Total Payout (Principal + Profit)</span>
+                        <span class="roi-result-value" id="roi-total-payout">$102.50</span>
+                    </div>
+                    <div class="roi-result-row">
+                        <span class="roi-result-label">7-Day Re-invest Projection</span>
+                        <span class="roi-result-value" id="roi-7day-proj" style="color: #10B981;">$118.87</span>
+                    </div>
+
+                    <a href="/dashboard?tab=invest" class="invest-btn" style="margin-top: 0.5rem; font-size: 1rem;">Start Earning With This Plan</a>
                 </div>
             </div>
         </div>
@@ -280,9 +373,8 @@
         <div class="footer-container">
             <div class="footer-grid">
                 <div class="footer-brand-col">
-                    <a href="/" class="logo-container">
-                        <img src="images/logo.jpg" alt="Nova Logo" class="logo-img-gold">
-                        <span>Nova</span>
+                    <a href="/" class="logo-container" aria-label="Nova Home">
+                        <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold">
                     </a>
                     <p class="footer-brand-desc">Invest in movies and products you love and earn daily profits with complete security.</p>
                 </div>
@@ -325,14 +417,42 @@
     </footer>
 
     <script>
-        // Featured Investment CTA logic
+        // Featured Investment CTA logic (Direct Invest or Direct Deposit)
         function handleInvestClick(event, plan) {
             event.preventDefault();
-            const token = localStorage.getItem('nova_token');
-            if (!token) {
-                window.location.href = "/login";
+            const planPrices = {
+                'amc': { name: 'AMC Movie Ticket', price: 100 },
+                'avengers': { name: 'Avengers Movie Plan', price: 150 },
+                'movie_combo': { name: 'Cinema VIP Combo', price: 250 },
+                'netflix_card': { name: 'Netflix Share Pass', price: 50 }
+            };
+            const info = planPrices[plan] || { name: 'Compounding Investment Plan', price: 100 };
+            
+            let currentBalance = parseFloat(localStorage.getItem('nova_balance') || '350.00');
+            const choice = confirm(`✨ ${info.name} ($${info.price})\n\nYour Available Wallet Balance: $${currentBalance.toFixed(2)}\n\nClick [OK] to Invest instantly using your Wallet Balance.\nClick [Cancel] to go directly to Deposit $${info.price} USDT for this plan.`);
+            
+            if (choice) {
+                if (currentBalance >= info.price) {
+                    currentBalance -= info.price;
+                    localStorage.setItem('nova_balance', currentBalance.toFixed(2));
+                    let myPlans = JSON.parse(localStorage.getItem('nova_my_plans') || '[]');
+                    myPlans.push({
+                        name: info.name,
+                        principal: info.price,
+                        returnRate: '2.5% Daily',
+                        expectedPayout: (info.price * 1.025).toFixed(2),
+                        status: 'Active',
+                        timeLeft: '23h 59m left'
+                    });
+                    localStorage.setItem('nova_my_plans', JSON.stringify(myPlans));
+                    alert(`🎉 Congratulations! You successfully invested $${info.price} in ${info.name}!\n\nRemaining Wallet Balance: $${currentBalance.toFixed(2)}\nYour 2.5% daily compounding return starts immediately.`);
+                    window.location.href = '/dashboard?tab=myinvestments';
+                } else {
+                    alert(`Insufficient Wallet Balance ($${currentBalance.toFixed(2)}).\n\nTaking you directly to Deposit $${info.price} USDT to activate ${info.name}...`);
+                    window.location.href = `/dashboard?tab=deposit&amount=${info.price}&plan=${encodeURIComponent(info.name)}`;
+                }
             } else {
-                window.location.href = `/dashboard?tab=invest&plan=${plan}`;
+                window.location.href = `/dashboard?tab=deposit&amount=${info.price}&plan=${encodeURIComponent(info.name)}`;
             }
         }
 
@@ -454,6 +574,76 @@
                 }
             }
         });
+
+        // ROI Calculator Logic
+        function updateROICalculator(val) {
+            const amount = parseFloat(val) || 0;
+            const dailyRate = 0.025; // 2.5% Flat Daily Rate
+            const netProfit = amount * dailyRate;
+            const totalPayout = amount + netProfit;
+            // 7 day compound projection
+            const sevenDayProj = amount * Math.pow(1 + dailyRate, 7);
+
+            const displayVal = document.getElementById('roi-display-val');
+            const netProfitEl = document.getElementById('roi-net-profit');
+            const totalPayoutEl = document.getElementById('roi-total-payout');
+            const sevenDayEl = document.getElementById('roi-7day-proj');
+
+            if (displayVal) displayVal.textContent = '$' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (netProfitEl) netProfitEl.textContent = '$' + netProfit.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (totalPayoutEl) totalPayoutEl.textContent = '$' + totalPayout.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (sevenDayEl) sevenDayEl.textContent = '$' + sevenDayProj.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function setROIAmount(val) {
+            const rangeEl = document.getElementById('roi-range-input');
+            if (rangeEl) {
+                rangeEl.value = val;
+                updateROICalculator(val);
+            }
+            document.querySelectorAll('.roi-quick-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(val.toString())) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Live Social Proof Floating Feed
+        const tickerFeedItems = [
+            { icon: "🎬", text: "<strong>Alex M.</strong> just invested <strong>$500.00</strong> in Avengers: Endgame", time: "Just now" },
+            { icon: "💸", text: "<strong>Sarah K.</strong> withdrew <strong>$245.00</strong> via USDT TRC-20", time: "1 minute ago" },
+            { icon: "🍿", text: "<strong>David P.</strong> invested <strong>$100.00</strong> in AMC Movie Ticket", time: "2 minutes ago" },
+            { icon: "⚡", text: "<strong>Elena R.</strong> claimed <strong>$1,250.00</strong> 24-hour payout", time: "Just now" },
+            { icon: "👑", text: "<strong>Marcus T.</strong> upgraded to <strong>Gold VIP Cinema Club</strong>", time: "3 minutes ago" }
+        ];
+
+        let currentTickerIndex = 0;
+        function showLiveTicker() {
+            const tickerEl = document.getElementById('live-social-ticker');
+            if (!tickerEl) return;
+            const item = tickerFeedItems[currentTickerIndex];
+            tickerEl.innerHTML = `
+                <div class="ticker-icon-circle">${item.icon}</div>
+                <div class="ticker-content">
+                    <div class="ticker-text">${item.text}</div>
+                    <div class="ticker-time">${item.time}</div>
+                </div>
+            `;
+            tickerEl.classList.add('show');
+
+            setTimeout(() => {
+                tickerEl.classList.remove('show');
+            }, 5000);
+
+            currentTickerIndex = (currentTickerIndex + 1) % tickerFeedItems.length;
+        }
+
+        setInterval(showLiveTicker, 9000);
+        setTimeout(showLiveTicker, 2500);
     </script>
+
+    <!-- Floating Live Notification Toast -->
+    <div id="live-social-ticker" class="live-social-ticker" aria-live="polite"></div>
 </body>
 </html>

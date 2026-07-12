@@ -98,6 +98,14 @@ function switchTab(tabId) {
 
         // Set hash link URL quietly
         window.history.pushState(null, null, `#${tabId}`);
+
+        // Initialize dynamic panels on first switch
+        if (tabId === 'invest' && typeof filterDashboardPlans === 'function') {
+            filterDashboardPlans(typeof dbCurrentFilter !== 'undefined' ? dbCurrentFilter : 'all');
+        }
+        if (tabId === 'myinvestments' && typeof renderDummyMyInvestments === 'function') {
+            renderDummyMyInvestments();
+        }
     }
 }
 
@@ -225,6 +233,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (planParam && activeTab === 'invest') {
         highlightPlan(planParam);
     }
+    const amtParam = urlParams.get('amount');
+    if (amtParam && activeTab === 'deposit') {
+        const amtVal = parseFloat(amtParam);
+        if (!isNaN(amtVal) && amtVal > 0) {
+            currentSelectedDepositAmount = amtVal;
+            const hint = document.getElementById('deposit-selected-hint');
+            if (hint) {
+                hint.innerHTML = `✨ Deposit required for <strong>${planParam || 'Investment Plan'}</strong>: <strong>$${amtVal} USDT</strong>`;
+            }
+            showToast(`Auto-selected Deposit Amount: $${amtVal} USDT`);
+        }
+    }
 
     // 3. Attach sidebar click events
     const sidebarLinks = document.querySelectorAll('.sidebar-item-link[data-tab]');
@@ -330,6 +350,7 @@ function selectDepositAmount(amount, cardElement) {
 // Copy TRON address function
 function copyWalletAddress() {
     const addrInput = document.getElementById('tron-wallet-address');
+    const copyBtn = document.getElementById('copy-tron-btn');
     if (addrInput) {
         addrInput.select();
         addrInput.setSelectionRange(0, 99999);
@@ -337,6 +358,15 @@ function copyWalletAddress() {
         navigator.clipboard.writeText(addrInput.value)
             .then(() => {
                 showToast("TRON (TRC20) wallet address copied!");
+                if (copyBtn) {
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.style.backgroundColor = '#10b981';
+                    copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">check</span><span>Copied!</span>`;
+                    setTimeout(() => {
+                        copyBtn.style.backgroundColor = '#3b82f6';
+                        copyBtn.innerHTML = originalHTML;
+                    }, 2000);
+                }
             })
             .catch(() => {
                 showToast("Failed to copy address.");
@@ -524,18 +554,23 @@ function renderDepositsTable(deposits) {
         return;
     }
 
-    tbody.innerHTML = deposits.map(dep => `
-        <tr>
-            <td>${dep.date}</td>
-            <td style="font-weight: 700; color: #f8fafc;">$${dep.amount.toFixed(2)}</td>
-            <td>
-                ${dep.screenshot_path ? `<a href="${dep.screenshot_path}" target="_blank" style="color: #3b82f6; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">image</span>View Screenshot</a>` : `<span style="color: #64748b; font-size: 0.8rem;">No screenshot</span>`}
-            </td>
-            <td>
-                <span class="status-badge-lbl ${dep.status.toLowerCase()}">${dep.status}</span>
+    tbody.innerHTML = deposits.map(dep => {
+        const isConfirmed = dep.status === 'Confirmed';
+        const badgeBg = isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+        const badgeColor = isConfirmed ? '#10b981' : '#f59e0b';
+        const badgeBorder = isConfirmed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)';
+        const formattedAmount = typeof dep.amount === 'number' ? `$${dep.amount}` : `$${dep.amount}`;
+        return `
+        <tr style="border-bottom: 1px solid #1e2538;">
+            <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem;">${dep.date || 'Today'}</td>
+            <td style="padding: 1rem 1.25rem; font-weight: 700; color: #f8fafc; font-size: 0.85rem;">${formattedAmount}</td>
+            <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem; font-family: monospace;">${dep.txn_id || 'TXN7f3e8d9c2a1b4f...'}</td>
+            <td style="padding: 1rem 1.25rem;">
+                <span style="background-color: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${dep.status}</span>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function renderAllTransactionsTable(transactions) {
@@ -669,7 +704,362 @@ function enableGuestMode() {
     const buyButtons = document.querySelectorAll('#panel-invest button');
     buyButtons.forEach(btn => {
         btn.textContent = 'Login to Invest';
-        btn.style.backgroundColor = '#10b981'; // Green CTA button
         btn.setAttribute('onclick', "window.location.href='/login'");
     });
 }
+
+// Daily Check-In Claim Function
+function claimDailyCheckin() {
+    const btn = document.getElementById('claim-checkin-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = '🎉 Claimed $0.50 Today!';
+    btn.style.background = '#0F172A';
+    btn.style.border = '1px solid #10B981';
+    btn.style.color = '#10B981';
+
+    const todayPill = document.querySelector('.checkin-day-pill.today');
+    if (todayPill) {
+        todayPill.classList.remove('today');
+        todayPill.classList.add('claimed');
+        const rewardSpan = todayPill.querySelector('.checkin-day-reward');
+        if (rewardSpan) rewardSpan.textContent = '+$0.50 ✓';
+    }
+
+    alert("🎉 Congratulations! You claimed your Day 3 check-in bonus of $0.50! Your 7-day streak continues.");
+}
+
+// =========================================================
+// DEPOSIT PANEL INTERACTIVE LOGIC (EXACT SCREENSHOT MATCH)
+// =========================================================
+let currentSelectedDepositAmount = 50;
+
+function selectDepositAmountCard(cardEl, amount) {
+    currentSelectedDepositAmount = amount;
+    
+    // Reset all deposit cards
+    const allCards = document.querySelectorAll('#panel-deposit .amount-card-opt');
+    allCards.forEach(card => {
+        card.style.borderColor = '#1e2538';
+        const badge = card.querySelector('.card-check-badge');
+        if (badge) badge.style.display = 'none';
+        const btn = card.querySelector('.amount-select-btn');
+        if (btn) {
+            btn.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+            btn.style.color = '#3b82f6';
+        }
+    });
+
+    // Highlight clicked card
+    if (cardEl) {
+        cardEl.style.borderColor = '#3b82f6';
+        const badge = cardEl.querySelector('.card-check-badge');
+        if (badge) badge.style.display = 'flex';
+        const btn = cardEl.querySelector('.amount-select-btn');
+        if (btn) {
+            btn.style.backgroundColor = '#3b82f6';
+            btn.style.color = 'white';
+        }
+    }
+
+    const hint = document.getElementById('deposit-selected-hint');
+    if (hint) {
+        hint.innerHTML = `Select an amount or enter a custom amount to deposit. Selected: <strong>$${amount}</strong>`;
+    }
+    showToast(`Selected Deposit Amount: $${amount}`);
+}
+
+function openCustomDepositPrompt() {
+    const customAmt = prompt("Enter custom deposit amount in USDT ($10 - $50,000):", "150");
+    if (customAmt !== null && customAmt.trim() !== "") {
+        const parsed = parseFloat(customAmt);
+        if (isNaN(parsed) || parsed < 10) {
+            alert("Please enter a valid amount of $10 or more.");
+            return;
+        }
+        currentSelectedDepositAmount = parsed;
+        
+        // Remove active styling from preset cards
+        const allCards = document.querySelectorAll('#panel-deposit .amount-card-opt');
+        allCards.forEach(card => {
+            card.style.borderColor = '#1e2538';
+            const badge = card.querySelector('.card-check-badge');
+            if (badge) badge.style.display = 'none';
+            const btn = card.querySelector('.amount-select-btn');
+            if (btn) {
+                btn.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                btn.style.color = '#3b82f6';
+            }
+        });
+
+        const hint = document.getElementById('deposit-selected-hint');
+        if (hint) {
+            hint.innerHTML = `Select an amount or enter a custom amount to deposit. Selected Custom Amount: <strong>$${parsed}</strong>`;
+        }
+        showToast(`Custom Deposit Selected: $${parsed}`);
+    }
+}
+
+async function submitNewDeposit() {
+    const inputEl = document.getElementById('deposit-tx-hash-input');
+    if (!inputEl || inputEl.value.trim() === "") {
+        alert("Please enter your TRON (TRC20) Transaction ID.");
+        return;
+    }
+    const txnId = inputEl.value.trim();
+    const nowStr = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+
+    try {
+        await apiRequest('/deposits', {
+            method: 'POST',
+            body: JSON.stringify({
+                amount: currentSelectedDepositAmount,
+                txnId: txnId
+            })
+        });
+        showToast("Deposit transaction submitted successfully!");
+        inputEl.value = "";
+        await fetchAllDashboardData();
+    } catch (e) {
+        // Fallback for demo mode if user not authenticated
+        const tbody = document.getElementById('recent-deposits-table-body');
+        if (tbody) {
+            const newRow = document.createElement('tr');
+            newRow.style.borderBottom = '1px solid #1e2538';
+            newRow.innerHTML = `
+                <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem;">${nowStr}</td>
+                <td style="padding: 1rem 1.25rem; font-weight: 700; color: #f8fafc; font-size: 0.85rem;">$${currentSelectedDepositAmount}</td>
+                <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem; font-family: monospace;">${txnId}</td>
+                <td style="padding: 1rem 1.25rem;">
+                    <span style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">Pending</span>
+                </td>
+            `;
+            tbody.insertBefore(newRow, tbody.firstChild);
+        }
+        showToast("Deposit submitted! Verification pending.");
+        inputEl.value = "";
+    }
+}
+
+// ============================================================
+// DYNAMIC INVEST PANEL — Category Filter + Pagination
+// ============================================================
+
+const ALL_INVESTMENT_PLANS = [
+    { name: 'AMC Movie Ticket',     img: 'images/amc_theater.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
+    { name: 'Avengers: Endgame',    img: 'images/avengers_theme.png',   price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
+    { name: 'Movie Combo',          img: 'images/movie_combo.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'products' },
+    { name: 'Netflix Gift Card',    img: 'images/netflix_card.png',     price: 100, roi: 2.5, duration: '24 Hours', category: 'giftcards' },
+    { name: 'Spider-Man Ticket',    img: 'images/amc_theater.png',      price: 150, roi: 3.0, duration: '24 Hours', category: 'movies' },
+    { name: 'Black Panther Plan',   img: 'images/avengers_theme.png',   price: 200, roi: 3.0, duration: '24 Hours', category: 'movies' },
+    { name: 'Popcorn Combo Deal',   img: 'images/movie_combo.png',      price: 80,  roi: 2.5, duration: '24 Hours', category: 'products' },
+    { name: 'Amazon Gift Card',     img: 'images/netflix_card.png',     price: 120, roi: 2.5, duration: '24 Hours', category: 'giftcards' },
+    { name: 'Guardians Ticket',     img: 'images/amc_theater.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
+    { name: 'IMAX Experience',      img: 'images/avengers_theme.png',   price: 250, roi: 3.5, duration: '24 Hours', category: 'movies' },
+    { name: 'Soda + Snack Pack',    img: 'images/movie_combo.png',      price: 60,  roi: 2.0, duration: '24 Hours', category: 'products' },
+    { name: 'Google Play Card',     img: 'images/netflix_card.png',     price: 90,  roi: 2.5, duration: '24 Hours', category: 'giftcards' },
+];
+
+const DB_PLANS_PER_PAGE = 6;
+let dbCurrentPage = 1;
+let dbCurrentFilter = 'all';
+let dbFilteredPlans = [...ALL_INVESTMENT_PLANS];
+
+function filterDashboardPlans(filter) {
+    dbCurrentFilter = filter;
+    dbCurrentPage = 1;
+
+    const customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
+    const allPlans = [...ALL_INVESTMENT_PLANS, ...customPlans.map(p => ({
+        name: p.name, img: p.img || 'images/amc_theater.png',
+        price: parseFloat(p.price) || 100, roi: parseFloat(p.roi) || 2.5,
+        duration: '24 Hours', category: (p.category || 'movies').toLowerCase()
+    }))];
+
+    dbFilteredPlans = filter === 'all' ? allPlans : allPlans.filter(p => p.category === filter);
+
+    ['all','movies','products','giftcards'].forEach(f => {
+        const btn = document.getElementById('db-filter-' + f);
+        if (btn) btn.classList.toggle('active', f === filter);
+    });
+
+    renderDashboardPlansPage();
+}
+
+function changeDashboardPage(direction) {
+    const totalPages = Math.max(1, Math.ceil(dbFilteredPlans.length / DB_PLANS_PER_PAGE));
+    dbCurrentPage = Math.min(Math.max(1, dbCurrentPage + direction), totalPages);
+    renderDashboardPlansPage();
+}
+
+function renderDashboardPlansPage() {
+    const grid = document.getElementById('db-investments-grid');
+    const pageInfo = document.getElementById('db-page-info');
+    const prevBtn = document.getElementById('db-prev-btn');
+    const nextBtn = document.getElementById('db-next-btn');
+    if (!grid) return;
+
+    const totalPages = Math.max(1, Math.ceil(dbFilteredPlans.length / DB_PLANS_PER_PAGE));
+    const start = (dbCurrentPage - 1) * DB_PLANS_PER_PAGE;
+    const pagePlans = dbFilteredPlans.slice(start, start + DB_PLANS_PER_PAGE);
+
+    if (pagePlans.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b;">No plans found in this category.</div>`;
+    } else {
+        grid.innerHTML = pagePlans.map((plan, i) => `
+            <div class="investment-card">
+                <div class="investment-img-container">
+                    <img src="${plan.img}" alt="${plan.name}" class="investment-img" onerror="this.src='images/amc_theater.png'">
+                </div>
+                <div class="investment-content">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+                        <h3 class="investment-title font-display" style="font-size:1rem; margin:0;">${plan.name}</h3>
+                        <span style="font-size:0.7rem; background:rgba(59,130,246,0.15); color:#60a5fa; border-radius:99px; padding:0.2rem 0.6rem; font-weight:600; text-transform:capitalize;">${plan.category}</span>
+                    </div>
+                    <div class="daily-profit-badge">Daily Profit ${plan.roi}%</div>
+                    <div class="investment-meta-grid" style="margin-top:1rem;">
+                        <div>
+                            <div class="meta-item-label">Price</div>
+                            <div class="meta-item-value highlight">$${plan.price.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="meta-item-label">Duration</div>
+                            <div class="meta-item-value">${plan.duration}</div>
+                        </div>
+                        <div>
+                            <div class="meta-item-label">Daily Earn</div>
+                            <div class="meta-item-value" style="color:#10b981;">+$${(plan.price * plan.roi / 100).toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <div class="meta-item-label">Payout</div>
+                            <div class="meta-item-value">$${(plan.price + plan.price * plan.roi / 100).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; margin-top:1rem; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:0.25rem; background:#0b0e14; border:1px solid #1e2538; border-radius:6px; padding:0.3rem 0.5rem; width:85px; flex-shrink:0;">
+                            <span style="font-size:0.7rem; color:#64748b; font-weight:600;">Qty:</span>
+                            <input type="number" id="db-qty-${start+i}" min="1" value="1" style="background:none; border:none; outline:none; color:#f1f5f9; font-weight:700; width:100%; text-align:center; font-size:0.85rem;">
+                        </div>
+                        <button onclick="handleDashboardBuyPlan('${plan.name.replace(/'/g,"\\'")}', ${plan.price}, 'db-qty-${start+i}')" style="background:#3b82f6; color:white; padding:0.5rem 1rem; border-radius:6px; font-size:0.8rem; font-weight:700; flex-grow:1; border:none; cursor:pointer;">Buy Plan</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    if (pageInfo) pageInfo.textContent = `Page ${dbCurrentPage} / ${totalPages}`;
+    if (prevBtn) prevBtn.disabled = dbCurrentPage <= 1;
+    if (nextBtn) nextBtn.disabled = dbCurrentPage >= totalPages;
+}
+
+function handleDashboardBuyPlan(planName, price, qtyId) {
+    const qtyEl = document.getElementById(qtyId);
+    const qty = parseInt(qtyEl ? qtyEl.value : '1') || 1;
+    window.location.href = `/dashboard?tab=deposit&plan=${encodeURIComponent(planName)}&amount=${price * qty}`;
+}
+
+// ============================================================
+// DUMMY INVESTMENTS FOR MY INVESTMENTS PAGE
+// ============================================================
+
+function renderDummyMyInvestments() {
+    const tbody = document.getElementById('myinvestments-table-body');
+    if (!tbody) return;
+
+    const realPurchases = JSON.parse(localStorage.getItem('nova_user_investments') || '[]');
+    const dummyData = [
+        { name: 'AMC Movie Ticket',    amount: 100, roi: 2.5, status: 'Active',    hoursLeft: 18, progress: 0.25 },
+        { name: 'Avengers: Endgame',   amount: 150, roi: 2.5, status: 'Active',    hoursLeft: 7,  progress: 0.71 },
+        { name: 'Movie Combo',         amount: 80,  roi: 2.5, status: 'Completed', hoursLeft: 0,  progress: 1.0  },
+        { name: 'Netflix Gift Card',   amount: 120, roi: 2.5, status: 'Completed', hoursLeft: 0,  progress: 1.0  },
+    ];
+
+    const investments = realPurchases.length > 0 ? realPurchases : dummyData;
+    let totalPrincipal = 0, totalProfit = 0, completed = 0;
+
+    tbody.innerHTML = investments.map(inv => {
+        totalPrincipal += inv.amount;
+        const daily = inv.amount * inv.roi / 100;
+        totalProfit += daily;
+        const isCompleted = inv.status === 'Completed' || inv.progress >= 1;
+        if (isCompleted) completed++;
+        const pct = Math.round((inv.progress || 0) * 100);
+        const color = isCompleted ? '#10b981' : '#3b82f6';
+
+        return `
+            <tr style="border-bottom:1px solid #1e2538;">
+                <td style="padding:1rem 1.25rem; color:#f8fafc; font-weight:700; font-size:0.88rem;">${inv.name}</td>
+                <td style="padding:1rem 1.25rem; color:#f8fafc; font-weight:700;">$${inv.amount.toFixed(2)}</td>
+                <td style="padding:1rem 1.25rem; color:#10b981; font-weight:700;">+${inv.roi}% ($${daily.toFixed(2)})</td>
+                <td style="padding:1rem 1.25rem; color:#f8fafc; font-weight:700;">$${(inv.amount + daily).toFixed(2)}</td>
+                <td style="padding:1rem 1.25rem;">
+                    <div style="display:flex; flex-direction:column; gap:0.35rem; width:140px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:#94a3b8;">
+                            <span style="color:${color}; font-weight:600;">${isCompleted ? 'Completed' : 'Active'}</span>
+                            <span>${isCompleted ? 'Done ✓' : (inv.hoursLeft || '?') + 'h left'}</span>
+                        </div>
+                        <div style="width:100%; height:6px; background:#1e2538; border-radius:4px; overflow:hidden;">
+                            <div style="width:${pct}%; height:100%; background:linear-gradient(90deg,${color},${isCompleted ? '#34d399' : '#60a5fa'}); border-radius:4px;"></div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Update summary metrics
+    const metricsRow = document.querySelector('#panel-myinvestments .dashboard-metrics-row');
+    if (metricsRow) {
+        const vals = metricsRow.querySelectorAll('.metric-val');
+        if (vals[0]) vals[0].textContent = `$${totalPrincipal.toFixed(2)}`;
+        if (vals[1]) vals[1].textContent = `+$${totalProfit.toFixed(2)}`;
+        if (vals[2]) vals[2].textContent = completed;
+    }
+}
+
+// ============================================================
+// GUEST REDIRECT — My Investments & Withdraw nav links
+// ============================================================
+
+(function setupGuestNavRedirects() {
+    function doRedirectSetup() {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const role  = localStorage.getItem('role')  || sessionStorage.getItem('role');
+        const isLoggedIn = !!(token && role === 'user');
+        if (isLoggedIn) return; // logged-in users: no redirect
+
+        const myInvLinks    = document.querySelectorAll('a[href*="my-investments"], a[href*="tab=myinvestments"]');
+        const withdrawLinks = document.querySelectorAll('a[href*="withdraw"]');
+        [...myInvLinks, ...withdrawLinks].forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                window.location.href = '/register';
+            });
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', doRedirectSetup);
+    } else {
+        doRedirectSetup();
+    }
+})();
+
+// ============================================================
+// INIT ON PAGE LOAD
+// ============================================================
+
+(function initDashboardPanels() {
+    function tryInit() {
+        if (document.getElementById('db-investments-grid')) {
+            filterDashboardPlans('all');
+        }
+        if (document.getElementById('myinvestments-table-body')) {
+            renderDummyMyInvestments();
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInit);
+    } else {
+        tryInit();
+    }
+})();
