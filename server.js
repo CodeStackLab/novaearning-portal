@@ -1007,9 +1007,9 @@ setInterval(async () => {
     }
 }, 15000);
 
-// Root Route: Serve Login
+// Root Route: Serve Home Page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Serve static assets from public folder
