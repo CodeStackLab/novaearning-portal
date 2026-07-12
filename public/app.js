@@ -117,11 +117,6 @@ async function fetchAllDashboardData() {
         const profile = await apiRequest('/user/profile');
         
         // Render user card info
-        const userAvatar = document.querySelector('.user-avatar-circle');
-        if (userAvatar && profile.name) {
-            const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            userAvatar.textContent = initials;
-        }
         const userNameLabel = document.querySelector('.user-name-label');
         if (userNameLabel && profile.name) {
             userNameLabel.textContent = profile.name;
@@ -193,6 +188,8 @@ async function fetchAllDashboardData() {
         const tickets = await apiRequest('/tickets');
         renderTicketsTable(tickets);
 
+        // Render dynamic SVG earnings chart
+        renderSVGChart(profile.balance);
     } catch (e) {
         console.error('Error fetching dashboard data:', e.message);
     }
@@ -868,8 +865,17 @@ async function submitNewDeposit() {
                     planName: planName || null
                 })
             });
-            showToast("Deposit submitted! Waiting please for admin approval.");
+            // Show successful deposit modal
+            const successModal = document.getElementById('deposit-success-modal');
+            if (successModal) {
+                successModal.style.display = 'flex';
+            }
             screenshotEl.value = "";
+            const statusText = document.getElementById('upload-status-text');
+            if (statusText) {
+                statusText.textContent = 'Drag & drop screenshot here, or click to browse';
+                statusText.style.color = '#cbd5e1';
+            }
             await fetchAllDashboardData();
         } catch (e) {
             console.error("Deposit error:", e);
@@ -877,6 +883,27 @@ async function submitNewDeposit() {
         }
     };
     reader.readAsDataURL(file);
+}
+
+function closeDepositSuccessModal() {
+    const successModal = document.getElementById('deposit-success-modal');
+    if (successModal) {
+        successModal.style.display = 'none';
+    }
+}
+
+function handleFileSelect(input) {
+    const statusText = document.getElementById('upload-status-text');
+    if (statusText) {
+        if (input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            statusText.textContent = `Selected: ${fileName}`;
+            statusText.style.color = '#10b981'; // Green color for successful select
+        } else {
+            statusText.textContent = 'Drag & drop screenshot here, or click to browse';
+            statusText.style.color = '#cbd5e1';
+        }
+    }
 }
 
 // ============================================================
@@ -993,7 +1020,7 @@ function renderDashboardPlansPage() {
 function handleDashboardBuyPlan(planName, price, qtyId) {
     const qtyEl = document.getElementById(qtyId);
     const qty = parseInt(qtyEl ? qtyEl.value : '1') || 1;
-    window.location.href = `/dashboard?tab=deposit&plan=${encodeURIComponent(planName)}&amount=${price * qty}`;
+    window.location.href = `/user-dashboard?tab=deposit&plan=${encodeURIComponent(planName)}&amount=${price * qty}`;
 }
 
 // ============================================================
@@ -1094,6 +1121,8 @@ function renderDummyMyInvestments() {
         if (document.getElementById('myinvestments-table-body')) {
             renderDummyMyInvestments();
         }
+        // Start simulated transaction notification feed
+        startLiveTransactionsFeed();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', tryInit);
@@ -1122,3 +1151,158 @@ async function changeUserPassword() {
         alert("Error: " + e.message);
     }
 }
+
+// ------------------------------------------------------------
+// DYNAMIC SVG EARNINGS CHART PLOTTER
+// ------------------------------------------------------------
+function renderSVGChart(currentBalance) {
+    const container = document.getElementById('earnings-svg-chart-container');
+    if (!container) return;
+
+    const balance = parseFloat(currentBalance) || 10.0;
+    const dailyRate = 0.025;
+    
+    const data = [];
+    for (let i = 0; i <= 7; i++) {
+        data.push({
+            day: `Day ${i}`,
+            val: balance * Math.pow(1 + dailyRate, i)
+        });
+    }
+
+    const minVal = data[0].val * 0.98;
+    const maxVal = data[7].val * 1.02;
+    const valRange = maxVal - minVal;
+
+    const width = container.clientWidth || 600;
+    const height = 180;
+    const paddingLeft = 55;
+    const paddingRight = 20;
+    const paddingTop = 20;
+    const paddingBottom = 30;
+
+    const chartWidth = width - paddingLeft - paddingRight;
+    const chartHeight = height - paddingTop - paddingBottom;
+
+    const getX = (idx) => paddingLeft + (idx / 7) * chartWidth;
+    const getY = (val) => paddingTop + chartHeight - ((val - minVal) / valRange) * chartHeight;
+
+    let pathD = `M ${getX(0)} ${getY(data[0].val)}`;
+    let areaD = `M ${getX(0)} ${paddingTop + chartHeight} L ${getX(0)} ${getY(data[0].val)}`;
+
+    for (let i = 1; i < data.length; i++) {
+        const x = getX(i);
+        const y = getY(data[i].val);
+        const prevX = getX(i - 1);
+        const prevY = getY(data[i - 1].val);
+        const cpX1 = prevX + (x - prevX) / 2;
+        const cpY1 = prevY;
+        const cpX2 = prevX + (x - prevX) / 2;
+        const cpY2 = y;
+        
+        pathD += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${x} ${y}`;
+        areaD += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${x} ${y}`;
+    }
+
+    areaD += ` L ${getX(7)} ${paddingTop + chartHeight} Z`;
+
+    let svg = `<svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="chart-glow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.00"/>
+            </linearGradient>
+        </defs>
+    `;
+
+    const gridRows = 4;
+    for (let i = 0; i <= gridRows; i++) {
+        const yVal = minVal + (i / gridRows) * valRange;
+        const y = getY(yVal);
+        svg += `
+            <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-dasharray="4 4" />
+            <text x="${paddingLeft - 10}" y="${y + 4}" fill="#64748b" font-size="9" font-weight="600" text-anchor="end">$${yVal.toFixed(2)}</text>
+        `;
+    }
+
+    svg += `<path d="${areaD}" fill="url(#chart-glow)" />`;
+    svg += `<path d="${pathD}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" />`;
+
+    data.forEach((d, idx) => {
+        const x = getX(idx);
+        const y = getY(d.val);
+        svg += `
+            <line x1="${x}" y1="${paddingTop}" x2="${x}" y2="${paddingTop + chartHeight}" stroke="rgba(255,255,255,0.02)" />
+            <text x="${x}" y="${height - 10}" fill="#64748b" font-size="9" font-weight="600" text-anchor="middle">${d.day}</text>
+            <circle cx="${x}" cy="${y}" r="4" fill="#111622" stroke="#3b82f6" stroke-width="2" />
+        `;
+    });
+
+    svg += `</svg>`;
+    container.innerHTML = svg;
+}
+
+// ------------------------------------------------------------
+// SIMULATED LIVE TRANSACTIONS POPUP FEED
+// ------------------------------------------------------------
+function startLiveTransactionsFeed() {
+    let container = document.getElementById('live-toast-container-el');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'live-toast-container-el';
+        container.className = 'live-toast-container';
+        document.body.appendChild(container);
+    }
+
+    const firstNames = ['Rahul', 'Amit', 'Sarah', 'Jessica', 'Rajesh', 'Vikram', 'Priya', 'Aditi', 'Michael', 'David', 'Sanjay', 'Neha', 'John', 'Emma'];
+    const plans = ['AMC Movie Ticket', 'Avengers: Endgame', 'Movie Combo', 'Netflix Gift Card', 'Dolby Soundbar', 'IMAX Projector', 'VIP Recliner'];
+    const amounts = [50, 100, 250, 500, 1000, 2500];
+
+    function showSimulatedToast() {
+        const type = Math.random() > 0.35 ? 'deposit' : 'withdraw';
+        const name = firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + '.';
+        const amount = amounts[Math.floor(Math.random() * amounts.length)];
+        
+        let title = '';
+        let msg = '';
+        let icon = '';
+
+        if (type === 'deposit') {
+            const plan = plans[Math.floor(Math.random() * plans.length)];
+            title = 'Recent Deposit';
+            msg = `<strong>${name}</strong> deposited <strong>$${amount}</strong> to <strong>${plan}</strong>`;
+            icon = 'payments';
+        } else {
+            title = 'Recent Payout';
+            msg = `<strong>${name}</strong> withdrew <strong>$${(amount * 1.025).toFixed(2)}</strong> via USDT`;
+            icon = 'check_circle';
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'live-toast';
+        toast.innerHTML = `
+            <div class="live-toast-icon ${type === 'withdraw' ? 'withdraw' : ''}">
+                <span class="material-symbols-outlined" style="font-size: 20px;">${icon}</span>
+            </div>
+            <div class="live-toast-content">
+                <div class="live-toast-title">${title}</div>
+                <div class="live-toast-msg">${msg}</div>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    setTimeout(showSimulatedToast, 5000);
+
+    setInterval(() => {
+        if (Math.random() > 0.3) {
+            showSimulatedToast();
+        }
+    }, 18000);
+}
+

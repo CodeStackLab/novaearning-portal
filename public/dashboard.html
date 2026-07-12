@@ -11,7 +11,7 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css?v=1.3">
+    <link rel="stylesheet" href="style.css?v=1.7">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -94,10 +94,14 @@
             
             <div class="header-right-user">
 
-                <div class="user-card-info" id="user-profile-menu-btn" style="cursor: pointer; position: relative; background: none; border: none; padding: 0;">
-                    <div class="user-avatar-circle" style="background-color: #3b82f6; background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22white%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E'); background-size: 20px; background-position: center; background-repeat: no-repeat; color: transparent;">JD</div>
-                    <div class="user-text-details" style="align-items: center; margin-left: -0.25rem; flex-direction: row; gap: 0.25rem;">
-                        <span class="user-name-label" style="font-size: 0.85rem; font-weight: 600;">John Doe</span>
+                <div class="user-card-info" id="user-profile-menu-btn" style="cursor: pointer; position: relative; background: none; border: none; padding: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="user-avatar-circle" style="background-color: #3b82f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style="width: 20px; height: 20px; display: block;">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <div class="user-text-details" style="align-items: center; display: flex; flex-direction: row; gap: 0.25rem;">
+                        <span class="user-name-label" style="font-size: 0.85rem; font-weight: 600; color: #ffffff;">John Doe</span>
                         <span class="material-symbols-outlined" style="font-size: 1rem; color: #94a3b8;">keyboard_arrow_down</span>
                     </div>
                     
@@ -129,6 +133,16 @@
                             <div style="font-size: 0.75rem; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">MEMBERSHIP STATUS</div>
                             <div style="font-size: 1.25rem; font-weight: 900; color: #fff;">Gold VIP Investor Member</div>
                             <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.2rem;">Enjoy 2.5% Daily Compound Return + Instant Priority Withdrawals</div>
+                            <!-- VIP Tier Progress Bar -->
+                            <div style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; max-width: 320px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; font-weight: 600;">
+                                    <span>Progress to Platinum VIP</span>
+                                    <span>85%</span>
+                                </div>
+                                <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 85%; height: 100%; background: linear-gradient(90deg, #dfc15d, #f59e0b); border-radius: 3px;"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -207,6 +221,23 @@
                     </div>
                 </div>
 
+                <!-- Dynamic Earnings SVG Chart Box -->
+                <div class="metric-card-box" style="margin-top: 1.5rem; padding: 1.5rem; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h4 style="font-size: 1.05rem; font-weight: 800; color: #f8fafc; margin: 0;">Earnings Growth & Projection Chart</h4>
+                            <p style="font-size: 0.78rem; color: #94a3b8; margin: 2px 0 0 0;">Visualizing your daily 2.5% return projection for the next 7 days</p>
+                        </div>
+                        <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.72rem; color: #3b82f6; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">trending_up</span>
+                            <span>2.5% Daily Compound</span>
+                        </div>
+                    </div>
+                    <!-- The SVG Graph Canvas container -->
+                    <div id="earnings-svg-chart-container" style="width: 100%; height: 180px; position: relative;">
+                        <!-- SVG graph will be rendered dynamically by app.js here -->
+                    </div>
+                </div>
 
             </section>
 
@@ -329,16 +360,22 @@
                         </p>
                     </div>
 
-                    <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 8px; padding: 1.25rem;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: #f8fafc;">Submit your Payment Screenshot for verification:</span>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <input type="file" id="deposit-screenshot-input" accept="image/*" style="flex-grow: 1; background-color: #111622; border: 1px solid #1e2538; border-radius: 6px; padding: 0.5rem; color: #94a3b8; font-size: 0.85rem;">
-                                <button onclick="submitNewDeposit()" style="background-color: #3b82f6; color: white; border: none; border-radius: 6px; padding: 0.65rem 1.5rem; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; justify-content: center;">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
-                                    <span>Submit Deposit</span>
-                                </button>
-                            </div>
+                    <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 12px; padding: 1.5rem;">
+                        <span style="font-size: 0.88rem; font-weight: 700; color: #f8fafc; letter-spacing: 0.3px;">Submit your Payment Screenshot for verification:</span>
+                        
+                        <!-- Premium Custom Upload Area -->
+                        <div class="custom-file-upload" style="border: 2px dashed #242e47; border-radius: 10px; padding: 2.25rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #111622; position: relative;">
+                            <input type="file" id="deposit-screenshot-input" accept="image/*" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 10;" onchange="handleFileSelect(this)">
+                            <span class="material-symbols-outlined" style="font-size: 2.8rem; color: #3b82f6; margin-bottom: 0.75rem; pointer-events: none;">cloud_upload</span>
+                            <span style="font-size: 0.88rem; font-weight: 600; color: #cbd5e1; pointer-events: none; transition: color 0.2s;" id="upload-status-text">Drag & drop screenshot here, or click to browse</span>
+                            <span style="font-size: 0.75rem; color: #64748b; margin-top: 0.35rem; pointer-events: none;">Supports JPG, JPEG, PNG (Max 5MB)</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 0.25rem;">
+                            <button onclick="submitNewDeposit()" style="background-color: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0.75rem 1.75rem; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+                                <span>Submit Deposit</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -531,7 +568,26 @@
         </div>
     </div>
 
+    <!-- MODAL OVERLAY: DEPOSIT SUCCESS CONFIRMATION -->
+    <div id="deposit-success-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:9999; align-items:center; justify-content:center;">
+        <div class="modal-content-box" style="background:#0f172a; border:1px solid #2e384e; border-radius:16px; width:90%; max-width:440px; padding:2rem; box-shadow:0 20px 40px rgba(0,0,0,0.6); text-align:center; display:flex; flex-direction: column; align-items: center; gap: 1.25rem;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #10b981; margin-bottom: 0.25rem;">
+                <span class="material-symbols-outlined" style="font-size: 32px;">check_circle</span>
+            </div>
+            <div>
+                <h3 class="modal-title font-display" style="font-size:1.35rem; color:#f8fafc; margin:0 0 0.5rem 0; font-weight: 800;">Deposit Submitted!</h3>
+                <p style="font-size:0.88rem; color:#cbd5e1; line-height:1.6; margin:0;">
+                    Your deposit is under review, waiting for admin approval.
+                </p>
+                <p style="font-size:0.85rem; color:#94a3b8; line-height:1.5; margin-top: 0.75rem; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 0.75rem;">
+                    After sending your payment, please wait while we verify your transaction. Once confirmed, the amount will be added to your account balance automatically.
+                </p>
+            </div>
+            <button onclick="closeDepositSuccessModal()" style="background-color: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0.75rem 2rem; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s; width: 100%; margin-top: 0.5rem;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">Got it, thank you</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="app.js"></script>
+    <script src="app.js?v=1.7"></script>
 </body>
 </html>

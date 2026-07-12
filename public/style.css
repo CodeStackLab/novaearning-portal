@@ -253,13 +253,13 @@ input {
 }
 
 .hero-banner {
-    background-color: #F3F2FF;
-    border: none;
+    background: var(--gradient-hero);
+    border: 1px solid var(--border-color);
     border-radius: 24px;
     display: grid;
     grid-template-columns: 1.15fr 1fr;
     align-items: center;
-    padding: 3.5rem 4rem;
+    padding: 2.25rem 3.5rem;
     gap: 3rem;
     overflow: visible;
     position: relative;
@@ -283,8 +283,8 @@ input {
     font-size: 1.05rem;
     color: #475569;
     font-weight: 500;
-    margin-top: 1.1rem;
-    margin-bottom: 2rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1.5rem;
     max-width: 440px;
     line-height: 1.6;
 }
@@ -317,7 +317,7 @@ input {
 
 .hero-image {
     width: 100%;
-    max-width: 440px;
+    max-width: 380px;
     object-fit: contain;
     filter: drop-shadow(0 15px 25px rgba(15, 23, 42, 0.12));
     animation: float 6s ease-in-out infinite;
@@ -1003,6 +1003,18 @@ input {
 
 .dashboard-panel-view.active {
     display: block;
+    animation: panelFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes panelFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .panel-title {
@@ -1530,6 +1542,8 @@ input {
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
 }
 
@@ -1806,8 +1820,8 @@ input {
         gap: 0.75rem;
     }
     
-    .profile-dropdown-btn span:not(.profile-avatar-u):not(.material-symbols-outlined) {
-        display: none; /* Hide button text on mobile for both logged-in and guest */
+    .profile-dropdown-btn.logged-in span:not(.profile-avatar-u):not(.material-symbols-outlined) {
+        display: none; /* Hide button text on mobile only when logged in */
     }
     
     /* Client Portal & Admin Dashboards Layouts */
@@ -2052,8 +2066,8 @@ body.dark-theme .nav-toggle-btn {
 }
 
 body.dark-theme .hero-banner {
-    background-color: #141A2E;
-    border: 1px solid rgba(99, 102, 241, 0.25);
+    background: var(--gradient-hero);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -2738,11 +2752,11 @@ body.dark-theme .roi-calculator-card {
 }
 
 .roi-amount-display {
-    font-size: 2.4rem;
+    font-size: 1.85rem;
     font-weight: 900;
     color: var(--primary);
     margin-bottom: 0.75rem;
-    letter-spacing: -1px;
+    letter-spacing: -0.5px;
 }
 
 body.dark-theme .roi-amount-display {
@@ -2839,20 +2853,20 @@ body.dark-theme .roi-result-row {
 }
 
 .roi-result-label {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
 .roi-result-value {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     font-weight: 800;
     color: var(--text-primary);
 }
 
 .roi-result-value.gold {
     color: #10B981;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
 }
 
 body.dark-theme .roi-result-value.gold {
@@ -3107,6 +3121,233 @@ body.dark-theme .filter-btn.active, .dark-theme .filter-btn.active {
     .category-filters-wrapper {
         gap: 0.4rem;
         margin-bottom: 1.5rem;
+    }
+}
+
+/* Live Transaction Popups (FOMO Toasts) */
+.live-toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.live-toast {
+    background-color: #111622;
+    border: 1px solid #1e2538;
+    color: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 0.88rem;
+    min-width: 280px;
+    max-width: 360px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards, toastSlideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) 4.6s forwards;
+    pointer-events: auto;
+}
+
+body.dark-theme .live-toast {
+    background-color: #0c0f1d;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.live-toast-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.live-toast-icon.withdraw {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.live-toast-content {
+    flex-grow: 1;
+}
+
+.live-toast-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.live-toast-msg {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.live-toast-msg strong {
+    color: #ffffff;
+}
+
+@keyframes toastSlideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastSlideOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.9);
+    }
+}
+
+/* Glassmorphism adjustments for metric-card-box in dark-theme & admin dashboard */
+body.dark-theme .metric-card-box, body.dashboard-body .metric-card-box {
+    background: rgba(12, 15, 29, 0.65) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* --- PREMIUM MOBILE RESPONSIVE OPTIMIZATIONS (320px - 480px) --- */
+@media (max-width: 480px) {
+    /* Header layout fixes to prevent wrapping */
+    .container-header {
+        padding: 0.65rem 0.75rem !important;
+    }
+    
+    .header-right {
+        gap: 0.4rem !important;
+    }
+    
+    .profile-dropdown-btn {
+        padding: 0.35rem 0.65rem !important;
+        font-size: 0.75rem !important;
+        gap: 0.35rem !important;
+    }
+    
+    .profile-avatar-u {
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    .profile-avatar-u svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+    
+    .logo-text {
+        font-size: 1.1rem !important;
+    }
+
+    /* Popular categories 2-column grid layout */
+    .popular-categories-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1.75rem !important;
+    }
+    
+    .pop-cat-card {
+        padding: 1.25rem 0.75rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .pop-cat-card span.material-symbols-outlined {
+        font-size: 1.85rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+    
+    .pop-cat-card h3 {
+        font-size: 0.85rem !important;
+    }
+    
+    .pop-cat-card p {
+        font-size: 0.7rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Compact featured investments cards */
+    .investment-img-container {
+        height: 140px !important;
+    }
+    
+    .investment-content {
+        padding: 1rem !important;
+    }
+    
+    .investment-title {
+        font-size: 1.1rem !important;
+    }
+    
+    .daily-profit-badge {
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.6rem !important;
+    }
+    
+    .investment-meta-grid {
+        gap: 0.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .meta-label {
+        font-size: 0.7rem !important;
+    }
+    
+    .meta-val {
+        font-size: 0.88rem !important;
+    }
+    
+    .investment-card .invest-btn {
+        padding: 0.55rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* Compact ROI Calculator */
+    .roi-calculator-card {
+        padding: 1.25rem 1rem !important;
+        border-radius: 12px !important;
+    }
+    
+    .roi-amount-display {
+        font-size: 1.5rem !important;
+    }
+    
+    .roi-quick-btn {
+        padding: 0.35rem 0.7rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .roi-results-box {
+        padding: 1rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    .roi-result-row {
+        padding-bottom: 0.6rem !important;
+    }
+    
+    .roi-result-label {
+        font-size: 0.75rem !important;
+    }
+    
+    .roi-result-value {
+        font-size: 0.88rem !important;
+    }
+    
+    .roi-result-value.gold {
+        font-size: 1rem !important;
     }
 }
 

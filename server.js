@@ -1013,18 +1013,18 @@ app.get('/', (req, res) => {
 });
 
 // Serve static assets from public folder
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
 // Clean HTML URL Routes
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-app.get('/dashboard', (req, res) => {
+app.get('/user-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/admin', (req, res) => {
+app.get('/admin-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
