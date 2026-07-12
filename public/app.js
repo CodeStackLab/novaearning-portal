@@ -1068,8 +1068,8 @@ function renderDummyMyInvestments() {
 
 (function setupGuestNavRedirects() {
     function doRedirectSetup() {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const role  = localStorage.getItem('role')  || sessionStorage.getItem('role');
+        const token = localStorage.getItem('nova_token');
+        const role  = localStorage.getItem('nova_role');
         const isLoggedIn = !!(token && role === 'user');
         if (isLoggedIn) return; // logged-in users: no redirect
 
@@ -1078,7 +1078,7 @@ function renderDummyMyInvestments() {
         [...myInvLinks, ...withdrawLinks].forEach(link => {
             link.addEventListener('click', e => {
                 e.preventDefault();
-                window.location.href = '/register';
+                window.location.href = '/login';
             });
         });
     }
