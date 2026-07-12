@@ -112,17 +112,24 @@ async function initializeDatabase() {
                 amount REAL NOT NULL,
                 txn_id TEXT UNIQUE NOT NULL,
                 screenshot_path TEXT,
+                plan_name TEXT,
                 status TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         `);
 
-        // Ensure screenshot_path column exists in deposits (for older databases)
+        // Ensure screenshot_path and plan_name columns exist in deposits (for older databases)
         try {
             await dbRun('ALTER TABLE deposits ADD COLUMN screenshot_path TEXT');
         } catch (e) {
             // Ignore if column already exists
         }
+        try {
+            await dbRun('ALTER TABLE deposits ADD COLUMN plan_name TEXT');
+        } catch (e) {
+            // Ignore if column already exists
+        }
+
 
         // 3. Create Investments Table
         await dbRun(`
@@ -509,7 +516,7 @@ app.get('/api/deposits', authenticateToken, async (req, res) => {
 
 // 7. Submit User Deposit with Base64 Screenshot Upload
 app.post('/api/deposits', authenticateToken, async (req, res) => {
-    const { amount, screenshotBase64 } = req.body;
+    const { amount, screenshotBase64, txnId, planName } = req.body;
 
     if (!amount || isNaN(amount) || amount <= 0 || !screenshotBase64) {
         return res.status(400).json({ message: 'Valid amount and screenshot file are required' });
@@ -541,19 +548,18 @@ app.post('/api/deposits', authenticateToken, async (req, res) => {
 
         fs.writeFileSync(fullSavePath, buffer);
 
-        // Generate dynamic transaction code
-        const randomTxnCode = "TX" + Date.now().toString().slice(-6) + Math.random().toString(36).substring(2, 6).toUpperCase();
+        const finalTxnCode = txnId || ("TX" + Date.now().toString().slice(-6) + Math.random().toString(36).substring(2, 6).toUpperCase());
 
-        // Insert pending deposit referencing receipt
+        // Insert pending deposit referencing receipt and planName
         await dbRun(
-            'INSERT INTO deposits (user_id, date, amount, txn_id, screenshot_path, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [req.userId, dateStr, amount, randomTxnCode, relativePath, 'Pending']
+            'INSERT INTO deposits (user_id, date, amount, txn_id, screenshot_path, plan_name, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [req.userId, dateStr, amount, finalTxnCode, relativePath, planName || null, 'Pending']
         );
 
         // Insert transaction record
         await dbRun(
             'INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [req.userId, dateStr, 'Deposit', amount, randomTxnCode, 'Pending']
+            [req.userId, dateStr, 'Deposit', amount, finalTxnCode, 'Pending']
         );
 
         res.json({ message: 'Deposit submitted with screenshot. Verification pending admin review.' });
@@ -804,8 +810,21 @@ app.post('/api/admin/deposits/verify', authenticateToken, requireAdmin, async (r
         await dbRun('UPDATE transactions SET status = ? WHERE ref = ?', [newStatus, deposit.txn_id]);
 
         if (action === 'Approve') {
-            // Add amount to user's balance
-            await dbRun('UPDATE users SET balance = balance + ? WHERE id = ?', [deposit.amount, deposit.user_id]);
+            if (deposit.plan_name) {
+                // It's a product deposit! Create investment directly.
+                const dateStr = new Date().toLocaleString('en-US', { 
+                    month: 'short', day: 'numeric', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit', hour12: true 
+                });
+                const nowMs = Date.now();
+                await dbRun(
+                    'INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [deposit.user_id, deposit.plan_name, deposit.amount, 2.5, 1, 'Active', dateStr, nowMs]
+                );
+            } else {
+                // Standard deposit, add amount to user's balance
+                await dbRun('UPDATE users SET balance = balance + ? WHERE id = ?', [deposit.amount, deposit.user_id]);
+            }
 
             // Check if user was referred by someone
             const user = await dbGet('SELECT referred_by FROM users WHERE id = ?', [deposit.user_id]);

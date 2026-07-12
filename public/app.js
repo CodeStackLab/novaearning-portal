@@ -770,75 +770,100 @@ function selectDepositAmountCard(cardEl, amount) {
 }
 
 function openCustomDepositPrompt() {
-    const customAmt = prompt("Enter custom deposit amount in USDT ($10 - $50,000):", "150");
-    if (customAmt !== null && customAmt.trim() !== "") {
-        const parsed = parseFloat(customAmt);
-        if (isNaN(parsed) || parsed < 10) {
-            alert("Please enter a valid amount of $10 or more.");
-            return;
-        }
-        currentSelectedDepositAmount = parsed;
-        
-        // Remove active styling from preset cards
-        const allCards = document.querySelectorAll('#panel-deposit .amount-card-opt');
-        allCards.forEach(card => {
-            card.style.borderColor = '#1e2538';
-            const badge = card.querySelector('.card-check-badge');
-            if (badge) badge.style.display = 'none';
-            const btn = card.querySelector('.amount-select-btn');
-            if (btn) {
-                btn.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
-                btn.style.color = '#3b82f6';
-            }
-        });
+    const modal = document.getElementById('custom-amount-modal');
+    if (modal) modal.style.display = 'flex';
+}
 
-        const hint = document.getElementById('deposit-selected-hint');
-        if (hint) {
-            hint.innerHTML = `Select an amount or enter a custom amount to deposit. Selected Custom Amount: <strong>$${parsed}</strong>`;
-        }
-        showToast(`Custom Deposit Selected: $${parsed}`);
+function closeCustomAmountModal() {
+    const modal = document.getElementById('custom-amount-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function applyCustomAmount() {
+    const input = document.getElementById('custom-amount-input');
+    if (!input) return;
+    const parsed = parseFloat(input.value);
+    if (isNaN(parsed) || parsed < 10) {
+        showToast("Please enter a valid amount of $10 or more.", "error");
+        return;
     }
+    
+    currentSelectedDepositAmount = parsed;
+    closeCustomAmountModal();
+    
+    // Remove active styling from preset cards
+    const allCards = document.querySelectorAll('#panel-deposit .amount-card-opt');
+    allCards.forEach(card => {
+        card.style.borderColor = '#1e2538';
+        const badge = card.querySelector('.card-check-badge');
+        if (badge) badge.style.display = 'none';
+        const btn = card.querySelector('.amount-select-btn');
+        if (btn) {
+            btn.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+            btn.style.color = '#3b82f6';
+        }
+    });
+
+    const hint = document.getElementById('deposit-selected-hint');
+    if (hint) {
+        hint.innerHTML = `Select an amount or enter a custom amount to deposit. Selected Custom Amount: <strong>$${parsed}</strong>`;
+    }
+    showToast(`Custom Deposit Selected: $${parsed}`);
 }
 
 async function submitNewDeposit() {
     const inputEl = document.getElementById('deposit-tx-hash-input');
+    const screenshotEl = document.getElementById('deposit-screenshot-input');
+    
     if (!inputEl || inputEl.value.trim() === "") {
         alert("Please enter your TRON (TRC20) Transaction ID.");
         return;
     }
-    const txnId = inputEl.value.trim();
-    const nowStr = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-
-    try {
-        await apiRequest('/deposits', {
-            method: 'POST',
-            body: JSON.stringify({
-                amount: currentSelectedDepositAmount,
-                txnId: txnId
-            })
-        });
-        showToast("Deposit transaction submitted successfully!");
-        inputEl.value = "";
-        await fetchAllDashboardData();
-    } catch (e) {
-        // Fallback for demo mode if user not authenticated
-        const tbody = document.getElementById('recent-deposits-table-body');
-        if (tbody) {
-            const newRow = document.createElement('tr');
-            newRow.style.borderBottom = '1px solid #1e2538';
-            newRow.innerHTML = `
-                <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem;">${nowStr}</td>
-                <td style="padding: 1rem 1.25rem; font-weight: 700; color: #f8fafc; font-size: 0.85rem;">$${currentSelectedDepositAmount}</td>
-                <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem; font-family: monospace;">${txnId}</td>
-                <td style="padding: 1rem 1.25rem;">
-                    <span style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">Pending</span>
-                </td>
-            `;
-            tbody.insertBefore(newRow, tbody.firstChild);
-        }
-        showToast("Deposit submitted! Verification pending.");
-        inputEl.value = "";
+    if (!screenshotEl || !screenshotEl.files || screenshotEl.files.length === 0) {
+        alert("Please upload a screenshot of your payment.");
+        return;
     }
+
+    const txnId = inputEl.value.trim();
+    const file = screenshotEl.files[0];
+    
+    // Convert file to Base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        
+        // Extract planName if user came from a product
+        const urlParams = new URLSearchParams(window.location.search);
+        let planName = urlParams.get('plan');
+        // Check hash just in case
+        if (!planName) {
+            const hashParts = window.location.hash.split('?');
+            if (hashParts.length > 1) {
+                const hashParams = new URLSearchParams(hashParts[1]);
+                planName = hashParams.get('plan');
+            }
+        }
+
+        try {
+            await apiRequest('/deposits', {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount: currentSelectedDepositAmount,
+                    txnId: txnId,
+                    screenshotBase64: base64Image,
+                    planName: planName || null
+                })
+            });
+            showToast("Deposit submitted! Waiting please for admin approval.");
+            inputEl.value = "";
+            screenshotEl.value = "";
+            await fetchAllDashboardData();
+        } catch (e) {
+            console.error("Deposit error:", e);
+            showToast(e.message || "Failed to submit deposit. Please try again.", "error");
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 // ============================================================

@@ -287,6 +287,7 @@ function renderDepositsTable(deposits) {
             <tr>
                 <td>${dep.date}</td>
                 <td style="font-weight:600; color:#f1f5f9;">${dep.user_name}</td>
+                <td style="color:#a855f7; font-weight:600;">${dep.plan_name ? dep.plan_name : '<span style="color:#64748b; font-size: 0.8rem;">Custom</span>'}</td>
                 <td style="font-weight:700; color:#3b82f6;">$${dep.amount.toFixed(2)}</td>
                 <td>
                     ${dep.screenshot_path ? `<a href="${dep.screenshot_path}" target="_blank" style="color: #3b82f6; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">image</span>View Screenshot</a>` : `<span style="color: #64748b; font-size: 0.8rem;">No screenshot</span>`}
