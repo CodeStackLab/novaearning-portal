@@ -1030,6 +1030,10 @@ app.get('/admin-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+app.get('/help', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'help.html'));
+});
+
 app.get('/investments', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'investments.html'));
 });
