@@ -25,9 +25,6 @@
             
             <nav class="nav-links">
                 <a href="/" class="nav-link">Home</a>
-                <a href="/investments" class="nav-link">Investments</a>
-
-                <a href="/user-dashboard?tab=withdraw" class="nav-link">Withdraw</a>
                 <a href="/help" class="nav-link" style="color:var(--primary-color);">Help</a>
             </nav>
             
@@ -218,17 +215,10 @@
                 })
                 .catch(err => console.error("Error loading user profile:", err));
             } else {
-                // If not logged in, show Register CTA
+                // If not logged in, hide the profile/register button completely
                 const profileBtn = document.getElementById('landing-profile-btn');
                 if (profileBtn) {
-                    profileBtn.classList.remove('logged-in');
-                    profileBtn.href = '/login?tab=signup';
-                    const avatarU = document.querySelector('.profile-avatar-u');
-                    if (avatarU) avatarU.style.display = 'none';
-                    const nameSpan = document.querySelector('.profile-dropdown-btn > span:not(.material-symbols-outlined)');
-                    if (nameSpan) nameSpan.textContent = 'Register';
-                    const arrow = profileBtn.querySelector('.material-symbols-outlined:not(.logo-icon-purple)');
-                    if (arrow) arrow.style.display = 'none';
+                    profileBtn.style.display = 'none';
                 }
             }
         });
