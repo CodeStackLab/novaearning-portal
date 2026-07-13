@@ -88,7 +88,7 @@
         
         <!-- Header Bar -->
         <header class="dashboard-header">
-            <button class="header-left-toggle" aria-label="Toggle Menu">
+            <button class="header-left-toggle" aria-label="Toggle Menu" style="display: none !important;">
                 <span class="material-symbols-outlined">menu</span>
             </button>
             
@@ -126,78 +126,10 @@
                 <p class="panel-desc">Manage your account credentials, view balance, and track invitation referrals.</p>
                 
                 <!-- VIP Cinema Club Tier Banner -->
-                <div class="vip-club-badge-banner">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #DFC15D, #8B6508); display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">👑</div>
-                        <div>
-                            <div style="font-size: 0.75rem; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">MEMBERSHIP STATUS</div>
-                            <div style="font-size: 1.25rem; font-weight: 900; color: #fff;">Gold VIP Investor Member</div>
-                            <div style="font-size: 0.8rem; color: #cbd5e1; margin-top: 0.2rem;">Enjoy 2.5% Daily Compound Return + Instant Priority Withdrawals</div>
-                            <!-- VIP Tier Progress Bar -->
-                            <div style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; max-width: 320px;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94a3b8; font-weight: 600;">
-                                    <span>Progress to Platinum VIP</span>
-                                    <span>85%</span>
-                                </div>
-                                <div style="width: 100%; height: 6px; background-color: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
-                                    <div style="width: 85%; height: 100%; background: linear-gradient(90deg, #dfc15d, #f59e0b); border-radius: 3px;"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <a href="#invest" class="invest-btn" onclick="switchDashboardTab('invest')" style="font-weight: 800; padding: 0.6rem 1.2rem; font-size: 0.88rem;">Upgrade Tier</a>
-                    </div>
-                </div>
+                <!-- VIP Cinema Club Tier Banner Removed -->
 
                 <!-- Daily Check-In & Loyalty Reward Card -->
-                <div class="daily-checkin-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                        <div>
-                            <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem;">Daily Check-In Streak 🎁</h3>
-                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">Check in every 24 hours to earn free loyalty cash bonuses!</p>
-                        </div>
-                        <button id="claim-checkin-btn" onclick="claimDailyCheckin()" style="background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.1rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: all 0.2s ease;">Claim Today's $0.50 Bonus</button>
-                    </div>
-
-                    <div class="checkin-days-grid">
-                        <div class="checkin-day-pill claimed">
-                            <span class="checkin-day-num">Day 1</span>
-                            <span class="checkin-day-reward">+$0.50</span>
-                            <span style="font-size: 0.75rem; color: #10B981;">✓ Claimed</span>
-                        </div>
-                        <div class="checkin-day-pill claimed">
-                            <span class="checkin-day-num">Day 2</span>
-                            <span class="checkin-day-reward">+$0.50</span>
-                            <span style="font-size: 0.75rem; color: #10B981;">✓ Claimed</span>
-                        </div>
-                        <div class="checkin-day-pill today">
-                            <span class="checkin-day-num">Day 3</span>
-                            <span class="checkin-day-reward">+$0.50</span>
-                            <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">★ Today</span>
-                        </div>
-                        <div class="checkin-day-pill">
-                            <span class="checkin-day-num">Day 4</span>
-                            <span class="checkin-day-reward">+$0.75</span>
-                            <span style="font-size: 0.7rem; color: #64748b;">Locked</span>
-                        </div>
-                        <div class="checkin-day-pill">
-                            <span class="checkin-day-num">Day 5</span>
-                            <span class="checkin-day-reward">+$0.75</span>
-                            <span style="font-size: 0.7rem; color: #64748b;">Locked</span>
-                        </div>
-                        <div class="checkin-day-pill">
-                            <span class="checkin-day-num">Day 6</span>
-                            <span class="checkin-day-reward">+$1.00</span>
-                            <span style="font-size: 0.7rem; color: #64748b;">Locked</span>
-                        </div>
-                        <div class="checkin-day-pill">
-                            <span class="checkin-day-num">Day 7 👑</span>
-                            <span class="checkin-day-reward">+$3.00</span>
-                            <span style="font-size: 0.7rem; color: #10B981; font-weight: 600;">Mystery Box</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Daily Check-In & Loyalty Reward Card Removed -->
 
                 <div class="dashboard-metrics-row">
                     <div class="metric-card-box">
@@ -222,22 +154,7 @@
                 </div>
 
                 <!-- Dynamic Earnings SVG Chart Box -->
-                <div class="metric-card-box" style="margin-top: 1.5rem; padding: 1.5rem; width: 100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <div>
-                            <h4 style="font-size: 1.05rem; font-weight: 800; color: #f8fafc; margin: 0;">Earnings Growth & Projection Chart</h4>
-                            <p style="font-size: 0.78rem; color: #94a3b8; margin: 2px 0 0 0;">Visualizing your daily 2.5% return projection for the next 7 days</p>
-                        </div>
-                        <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.72rem; color: #3b82f6; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
-                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">trending_up</span>
-                            <span>2.5% Daily Compound</span>
-                        </div>
-                    </div>
-                    <!-- The SVG Graph Canvas container -->
-                    <div id="earnings-svg-chart-container" style="width: 100%; height: 180px; position: relative;">
-                        <!-- SVG graph will be rendered dynamically by app.js here -->
-                    </div>
-                </div>
+                <!-- Dynamic Earnings SVG Chart Box Removed -->
 
             </section>
 
