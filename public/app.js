@@ -214,6 +214,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
         try {
             await fetchAllDashboardData();
+            fetchUserTronAddress();
         } catch (e) {
             console.error("Dashboard initial load failed:", e);
         }
@@ -356,6 +357,19 @@ function selectDepositAmount(amount, cardElement) {
     cardElement.classList.add('active');
     
     showToast(`Selected Deposit Amount: $${amount}`);
+}
+
+async function fetchUserTronAddress() {
+    try {
+        const res = await fetch('/api/settings/tron-address');
+        const data = await res.json();
+        if (data.address) {
+            const addrInput = document.getElementById('tron-wallet-address');
+            if (addrInput) addrInput.value = data.address;
+        }
+    } catch (err) {
+        console.error('Failed to fetch user TRON address:', err);
+    }
 }
 
 // Copy TRON address function
@@ -989,16 +1003,10 @@ function handleFileSelect(input) {
 // ============================================================
 
 const ALL_INVESTMENT_PLANS = [
-    { name: 'AMC Movie Ticket',     img: 'images/amc_theater.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
-    { name: 'Avengers: Endgame',    img: 'images/avengers_theme.png',   price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
-    { name: 'Movie Combo',          img: 'images/movie_combo.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'products' },
-    { name: 'Netflix Gift Card',    img: 'images/netflix_card.png',     price: 100, roi: 2.5, duration: '24 Hours', category: 'giftcards' },
-    { name: 'Spider-Man Ticket',    img: 'images/amc_theater.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
-    { name: 'Black Panther Plan',   img: 'images/avengers_theme.png',   price: 100, roi: 2.5, duration: '24 Hours', category: 'movies' },
-    { name: 'Popcorn Combo Deal',   img: 'images/movie_combo.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'products' },
-    { name: 'Amazon Gift Card',     img: 'images/netflix_card.png',     price: 100, roi: 2.5, duration: '24 Hours', category: 'giftcards' },
-    { name: 'Soda + Snack Pack',    img: 'images/movie_combo.png',      price: 100, roi: 2.5, duration: '24 Hours', category: 'products' },
-    { name: 'Google Play Card',     img: 'images/netflix_card.png',     price: 100, roi: 2.5, duration: '24 Hours', category: 'giftcards' },
+    { name: 'AMC Movie Ticket',     img: 'images/amc_theater.png',      price: 100, roi: 2.5, duration: '24 Hours' },
+    { name: 'Avengers Movie Plan',   img: 'images/avengers_theme.png',   price: 150, roi: 2.5, duration: '24 Hours' },
+    { name: 'Netflix Gift Card',    img: 'images/netflix_card.png',     price: 100, roi: 2.5, duration: '24 Hours' },
+    { name: 'Amazon Gift Card',     img: 'images/netflix_card.png',      price: 200, roi: 2.5, duration: '24 Hours' }
 ];
 
 const DB_PLANS_PER_PAGE = 6;
@@ -1014,15 +1022,10 @@ function filterDashboardPlans(filter) {
     const allPlans = [...ALL_INVESTMENT_PLANS, ...customPlans.map(p => ({
         name: p.name, img: p.img || 'images/amc_theater.png',
         price: parseFloat(p.price) || 100, roi: parseFloat(p.roi) || 2.5,
-        duration: '24 Hours', category: (p.category || 'movies').toLowerCase()
+        duration: '24 Hours'
     }))];
 
-    dbFilteredPlans = filter === 'all' ? allPlans : allPlans.filter(p => p.category === filter);
-
-    ['all','movies','products','giftcards'].forEach(f => {
-        const btn = document.getElementById('db-filter-' + f);
-        if (btn) btn.classList.toggle('active', f === filter);
-    });
+    dbFilteredPlans = allPlans;
 
     renderDashboardPlansPage();
 }
@@ -1045,7 +1048,7 @@ function renderDashboardPlansPage() {
     const pagePlans = dbFilteredPlans.slice(start, start + DB_PLANS_PER_PAGE);
 
     if (pagePlans.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b;">No plans found in this category.</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b;">No plans found.</div>`;
     } else {
         grid.innerHTML = pagePlans.map((plan, i) => `
             <div class="investment-card">
@@ -1055,7 +1058,6 @@ function renderDashboardPlansPage() {
                 <div class="investment-content">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
                         <h3 class="investment-title font-display" style="font-size:1rem; margin:0;">${plan.name}</h3>
-                        <span style="font-size:0.7rem; background:rgba(59,130,246,0.15); color:#60a5fa; border-radius:99px; padding:0.2rem 0.6rem; font-weight:600; text-transform:capitalize;">${plan.category}</span>
                     </div>
                     <div class="daily-profit-badge">Daily Profit ${plan.roi}%</div>
                     <div class="investment-meta-grid" style="margin-top:1rem;">

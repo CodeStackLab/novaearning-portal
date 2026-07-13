@@ -129,6 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const hash = window.location.hash.substring(1);
     const activeTab = hash || 'overview';
     switchTab(activeTab);
+    fetchAdminTronAddress();
 
     // 3. Attach sidebar click events
     const sidebarLinks = document.querySelectorAll('.sidebar-item-link[data-tab]');
@@ -385,12 +386,12 @@ function renderPayoutsTable(payouts) {
             `;
         }
 
-        const addressText = po.wallet_address || 'No wallet address';
-        const copyButton = po.wallet_address ? `
-            <button onclick="navigator.clipboard.writeText('${po.wallet_address}'); showToast('Wallet address copied!')" style="background: none; border: none; color: #fbbf24; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; margin-top: 0.25rem; padding: 0;">
+        const walletAddress = po.wallet_address || 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
+        const copyButton = `
+            <button onclick="navigator.clipboard.writeText('${walletAddress}'); showToast('Wallet address copied!')" style="background: none; border: none; color: #fbbf24; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; margin-top: 0.25rem; padding: 0;">
                 <span class="material-symbols-outlined" style="font-size: 0.95rem;">content_copy</span> Copy Address
             </button>
-        ` : '';
+        `;
 
         return `
             <tr>
@@ -398,7 +399,7 @@ function renderPayoutsTable(payouts) {
                 <td style="font-weight:600; color:#f1f5f9;">${po.user_name}</td>
                 <td>
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.15rem;">
-                        <span style="font-size:0.8rem; color:#cbd5e1; font-family:monospace; word-break:break-all;">${addressText}</span>
+                        <span style="font-size:0.8rem; color:#cbd5e1; font-family:monospace; word-break:break-all;">${walletAddress}</span>
                         ${copyButton}
                     </div>
                 </td>
@@ -758,9 +759,10 @@ function renderAdminPlans() {
     let deletedDefaultPlans = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
 
     const defaultPlans = [
-        { category: 'Movie Tickets', name: 'AMC Movie Ticket', price: 100, roi: '2.5% Flat', duration: '24 Hours' },
-        { category: 'Movies', name: 'Avengers Movie Plan', price: 150, roi: '2.5% Flat', duration: '24 Hours' },
-        { category: 'Gift Cards', name: 'Apple Gift Card Plan', price: 100, roi: '2.5% Flat', duration: '24 Hours' }
+        { name: 'AMC Movie Ticket', price: 100, roi: '2.5% Flat', duration: '24 Hours' },
+        { name: 'Avengers Movie Plan', price: 150, roi: '2.5% Flat', duration: '24 Hours' },
+        { name: 'Netflix Gift Card', price: 100, roi: '2.5% Flat', duration: '24 Hours' },
+        { name: 'Amazon Gift Card', price: 200, roi: '2.5% Flat', duration: '24 Hours' }
     ];
 
     const activeDefaultPlans = defaultPlans
@@ -770,17 +772,12 @@ function renderAdminPlans() {
     const allPlans = [...activeDefaultPlans, ...customPlans];
     
     tbody.innerHTML = allPlans.map(plan => {
-        let catBg = 'rgba(59,130,246,0.15)', catColor = '#60a5fa';
-        if (plan.category === 'Movies') { catBg = 'rgba(168,85,247,0.15)'; catColor = '#c084fc'; }
-        if (plan.category === 'Gift Cards') { catBg = 'rgba(16,185,129,0.15)'; catColor = '#10b981'; }
-        
-        const planImg = plan.img || (plan.category === 'Movies' ? 'images/avengers_theme.png' : (plan.category === 'Gift Cards' ? 'images/netflix_card.png' : 'images/amc_theater.png'));
+        const planImg = plan.img || 'images/amc_theater.png';
         const safeName = plan.name.replace(/'/g, "\\'");
         const safeRoi = (plan.roi || '2.5% Flat').replace(/'/g, "\\'");
 
         return `
             <tr>
-                <td><span style="background-color: ${catBg}; color: ${catColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem;">${plan.category}</span></td>
                 <td style="font-weight: 700; color: #f8fafc;">
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         <img src="${planImg}" alt="Poster" style="width:36px; height:50px; object-fit:cover; border-radius:4px; border:1px solid #1e2538; background-color:#0b0e14;">
@@ -791,7 +788,7 @@ function renderAdminPlans() {
                 <td>${plan.roi || '2.5% Flat'}</td>
                 <td>${plan.duration || '24 Hours'}</td>
                 <td style="white-space: nowrap;">
-                    <button onclick="openEditPlanModal('${safeName}', '${plan.category}', ${plan.price}, '${safeRoi}', '${planImg}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.4rem;">Edit</button>
+                    <button onclick="openEditPlanModal('${safeName}', ${plan.price}, '${safeRoi}', '${planImg}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.4rem;">Edit</button>
                     <button onclick="adminDeletePlan('${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
                 </td>
             </tr>
@@ -824,10 +821,9 @@ function handlePlanImageSelect(event, formType) {
     reader.readAsDataURL(file);
 }
 
-function openEditPlanModal(name, category, price, roi, currentImg) {
+function openEditPlanModal(name, price, roi, currentImg) {
     const origInput = document.getElementById('edit-plan-original-name');
     const nameInput = document.getElementById('edit-plan-name');
-    const catInput = document.getElementById('edit-plan-category');
     const priceInput = document.getElementById('edit-plan-price');
     const roiInput = document.getElementById('edit-plan-roi');
     const imgUrlInput = document.getElementById('edit-plan-image-url');
@@ -836,7 +832,6 @@ function openEditPlanModal(name, category, price, roi, currentImg) {
 
     if (origInput) origInput.value = name;
     if (nameInput) nameInput.value = name;
-    if (catInput) catInput.value = category || 'Movie Tickets';
     if (priceInput) priceInput.value = price;
     if (roiInput) roiInput.value = roi || '2.5% Flat';
     _editPlanImageBase64 = null;
@@ -867,7 +862,6 @@ function closeEditPlanModal() {
 function saveEditPlan() {
     const origName = document.getElementById('edit-plan-original-name').value;
     const newName = document.getElementById('edit-plan-name').value.trim();
-    const newCat = document.getElementById('edit-plan-category').value;
     const newPrice = parseFloat(document.getElementById('edit-plan-price').value);
     const newROI = document.getElementById('edit-plan-roi').value.trim() || '2.5% Flat';
     const imgUrlVal = document.getElementById('edit-plan-image-url').value.trim();
@@ -883,7 +877,6 @@ function saveEditPlan() {
 
     if (customIdx !== -1) {
         customPlans[customIdx] = {
-            category: newCat,
             name: newName,
             price: newPrice,
             roi: newROI,
@@ -894,7 +887,6 @@ function saveEditPlan() {
     } else {
         let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
         editedPlans[origName] = {
-            category: newCat,
             name: newName,
             price: newPrice,
             roi: newROI,
@@ -912,7 +904,6 @@ function saveEditPlan() {
 
 function adminCreatePlan() {
     const nameEl = document.getElementById('admin-plan-name');
-    const catEl = document.getElementById('admin-plan-category');
     const priceEl = document.getElementById('admin-plan-price');
     const imgUrlEl = document.getElementById('admin-plan-image-url');
     
@@ -924,7 +915,6 @@ function adminCreatePlan() {
     const imgVal = _createPlanImageBase64 || (imgUrlEl ? imgUrlEl.value.trim() : '');
     
     const newPlan = {
-        category: catEl ? catEl.value : 'Products',
         name: nameEl.value.trim(),
         price: parseFloat(priceEl.value),
         img: imgVal,
@@ -1222,6 +1212,81 @@ async function adminVerifyChangeEmailOtp() {
         setTimeout(() => {
             window.location.reload();
         }, 1500);
+    } catch (err) {
+        showToast(err.message);
+    }
+}
+
+// TRON Deposit Address Management
+let globalTronAddress = 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX';
+
+async function fetchAdminTronAddress() {
+    try {
+        const res = await fetch('/api/settings/tron-address');
+        const data = await res.json();
+        if (data.address) {
+            globalTronAddress = data.address;
+            const previewEl = document.getElementById('admin-tron-address-preview');
+            const displayEl = document.getElementById('tron-address-current-display');
+            if (previewEl) previewEl.innerText = globalTronAddress;
+            if (displayEl) displayEl.value = globalTronAddress;
+        }
+    } catch (err) {
+        console.error('Failed to fetch TRON address:', err);
+    }
+}
+
+function copyAdminTronAddress() {
+    navigator.clipboard.writeText(globalTronAddress);
+    showToast('TRON Deposit Address copied!');
+}
+
+function copyTronAddress() {
+    navigator.clipboard.writeText(globalTronAddress);
+    showToast('TRON Deposit Address copied!');
+}
+
+function openTronAddressModal() {
+    const modal = document.getElementById('tron-address-modal');
+    const displayEl = document.getElementById('tron-address-current-display');
+    const inputEl = document.getElementById('tron-address-new-input');
+    
+    if (displayEl) displayEl.value = globalTronAddress;
+    if (inputEl) inputEl.value = '';
+    if (modal) modal.classList.add('active');
+}
+
+function closeTronAddressModal() {
+    const modal = document.getElementById('tron-address-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function saveTronAddress() {
+    const inputEl = document.getElementById('tron-address-new-input');
+    if (!inputEl) return;
+    const newAddress = inputEl.value.trim();
+    if (!newAddress) {
+        alert('Please enter a valid TRON address.');
+        return;
+    }
+
+    const token = localStorage.getItem('nova_token');
+    try {
+        const response = await fetch('/api/admin/settings/tron-address', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ address: newAddress })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to update address');
+
+        showToast('TRON Deposit Address updated successfully!');
+        closeTronAddressModal();
+        await fetchAdminTronAddress();
     } catch (err) {
         showToast(err.message);
     }

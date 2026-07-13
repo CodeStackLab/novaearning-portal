@@ -118,13 +118,6 @@
 
     <!-- Main Listing Grid -->
     <section class="section-container" style="padding-bottom: 6rem;">
-        <!-- Category Filters -->
-        <div class="category-filters-wrapper">
-            <button class="filter-btn active" onclick="filterPlans('all')">All Options</button>
-            <button class="filter-btn" onclick="filterPlans('movies')">Movies & Tickets</button>
-            <button class="filter-btn" onclick="filterPlans('products')">Cinema Products</button>
-        </div>
-
         <div id="investments-container-grid" class="investment-grid">
             <!-- Rendered dynamically -->
         </div>
@@ -151,73 +144,33 @@
             {
                 id: 'amc',
                 name: 'AMC Movie Ticket',
-                category: 'movies',
                 image: 'images/amc_theater.png',
-                profit: '2.5%',
-                price: 50,
-                duration: '24 Hours'
-            },
-            {
-                id: 'avengers',
-                name: 'Avengers: Endgame',
-                category: 'movies',
-                image: 'images/avengers_theme.png',
                 profit: '2.5%',
                 price: 100,
                 duration: '24 Hours'
             },
             {
-                id: 'combo',
-                name: 'Movie Combo',
-                category: 'movies',
-                image: 'images/movie_combo.png',
+                id: 'avengers',
+                name: 'Avengers Movie Plan',
+                image: 'images/avengers_theme.png',
                 profit: '2.5%',
-                price: 60,
+                price: 150,
                 duration: '24 Hours'
             },
             {
                 id: 'netflix',
                 name: 'Netflix Gift Card',
-                category: 'movies',
                 image: 'images/netflix_card.png',
                 profit: '2.5%',
-                price: 50,
-                duration: '24 Hours'
-            },
-            {
-                id: 'popcorn_machine',
-                name: 'Cinema Popcorn Machine',
-                category: 'products',
-                image: 'images/popcorn_machine.png',
-                profit: '2.5%',
                 price: 100,
                 duration: '24 Hours'
             },
             {
-                id: 'imax_projector',
-                name: 'IMAX Projector Lens',
-                category: 'products',
-                image: 'images/imax_projector.png',
+                id: 'amazon',
+                name: 'Amazon Gift Card',
+                image: 'images/netflix_card.png',
                 profit: '2.5%',
-                price: 100,
-                duration: '24 Hours'
-            },
-            {
-                id: 'dolby_soundbar',
-                name: 'Dolby Atmos Soundbar',
-                category: 'products',
-                image: 'images/dolby_soundbar.png',
-                profit: '2.5%',
-                price: 100,
-                duration: '24 Hours'
-            },
-            {
-                id: 'vip_recliner',
-                name: 'VIP Cinema Recliner Chair',
-                category: 'products',
-                image: 'images/vip_recliner.png',
-                profit: '2.5%',
-                price: 100,
+                price: 200,
                 duration: '24 Hours'
             }
         ];
@@ -257,7 +210,6 @@
             const customMapped = customPlans.map((cp, idx) => ({
                 id: 'custom_' + idx,
                 name: cp.name,
-                category: (cp.category || 'products').toLowerCase().replace(' ', ''),
                 image: 'images/amc_theater.png',
                 profit: cp.roi || '2.5%',
                 price: Number(cp.price || 100),
@@ -266,10 +218,7 @@
 
             const combinedPlans = [...activeDefault, ...customMapped];
 
-            // Filter plans by category
-            const filteredPlans = activeCategory === 'all' 
-                ? combinedPlans 
-                : combinedPlans.filter(p => p.category === activeCategory || (activeCategory === 'products' && !['movies','featured'].includes(p.category)));
+            const filteredPlans = combinedPlans;
 
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;

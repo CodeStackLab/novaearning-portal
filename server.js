@@ -6,6 +6,64 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+
+// Load environment variables from .env file if it exists
+if (fs.existsSync(path.join(__dirname, '.env'))) {
+    const envConfig = fs.readFileSync(path.join(__dirname, '.env'), 'utf-8');
+    envConfig.split('\n').forEach(line => {
+        const parts = line.split('=');
+        if (parts.length >= 2) {
+            const key = parts[0].trim();
+            const val = parts.slice(1).join('=').trim().replace(/^['"]|['"]$/g, '');
+            if (key && !process.env[key]) {
+                process.env[key] = val;
+            }
+        }
+    });
+}
+
+// Nodemailer SMTP Transporter setup (reads from environment variables with fallback)
+const mailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '465'),
+    secure: process.env.SMTP_SECURE !== 'false', // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER || '', // Your email address
+        pass: process.env.SMTP_PASS || ''  // Your email password or app password
+    }
+});
+
+// Helper function to send OTP email
+async function sendOTPMail(toEmail, otpCode) {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.log(`[EMAIL WARNING] SMTP credentials not set. Simulated Email to ${toEmail}. OTP Code: ${otpCode}`);
+        return;
+    }
+
+    const mailOptions = {
+        from: `"Nova Support" <${process.env.SMTP_USER}>`,
+        to: toEmail,
+        subject: 'Nova Portal - Email Verification OTP',
+        text: `Your email verification OTP code is: ${otpCode}. It is valid for 10 minutes.`,
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #1e2538; border-radius: 8px; background-color: #0f172a; color: #f8fafc;">
+                <h2 style="color: #3b82f6; text-align: center;">Nova Portal Email Verification</h2>
+                <p>Hello,</p>
+                <p>We received a request to verification OTP code. Please use the following One-Time Password (OTP) to complete the verification:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="font-size: 24px; font-weight: bold; letter-spacing: 4px; background-color: #1e2538; padding: 10px 20px; border-radius: 6px; border: 1px solid #3b82f6; color: #3b82f6;">${otpCode}</span>
+                </div>
+                <p>This code is valid for 10 minutes. If you did not initiate this request, please secure your account credentials immediately.</p>
+                <hr style="border: 0; border-top: 1px solid #1e2538; margin: 20px 0;">
+                <p style="font-size: 12px; color: #94a3b8; text-align: center;">&copy; 2026 Nova Portal. All rights reserved.</p>
+            </div>
+        `
+    };
+
+    await mailTransporter.sendMail(mailOptions);
+    console.log(`[EMAIL SUCCESS] Verification email sent to ${toEmail}`);
+}
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -311,8 +369,35 @@ async function initializeDatabase() {
         }
 
         // Auto-update existing 'admin' and 'user' legacy emails to new emails if they exist
-        await dbRun("UPDATE users SET email = 'admin@mail.com' WHERE email = 'admin'");
-        await dbRun("UPDATE users SET email = 'user@mail.com' WHERE email = 'user'");
+        try {
+            await dbRun("UPDATE users SET email = 'admin@mail.com' WHERE email = 'admin'");
+        } catch (err) {}
+        try {
+            await dbRun("UPDATE users SET email = 'user@mail.com' WHERE email = 'user'");
+        } catch (err) {}
+
+        // Seed dummy referrals for all users if they don't have any
+        const allNormalUsers = await dbAll("SELECT id, name FROM users WHERE role = 'user'");
+        for (let i = 0; i < allNormalUsers.length; i++) {
+            const parent = allNormalUsers[i];
+            const existingRefs = await dbGet("SELECT COUNT(*) as cnt FROM users WHERE referred_by = ?", [parent.id]);
+            if (existingRefs.cnt === 0) {
+                const numReferrals = (i % 2 === 0) ? 10 : 5;
+                console.log(`Seeding ${numReferrals} dummy referrals for user: ${parent.name} (ID: ${parent.id})`);
+                for (let k = 1; k <= numReferrals; k++) {
+                    const refName = `Referral ${k} of ${parent.name}`;
+                    const refEmail = `ref_${parent.id}_${k}@mail.com`;
+                    const refUsername = `ref_${parent.id}_${k}`;
+                    const hashedPwd = await bcrypt.hash('password123', 10);
+                    const refCode = `REF${parent.id}${k}`;
+                    
+                    await dbRun(
+                        'INSERT INTO users (name, email, username, password, balance, earnings, active_investments, role, referred_by, referral_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        [refName, refEmail, refUsername, hashedPwd, 0.00, 0.00, 0.00, 'user', parent.id, refCode]
+                    );
+                }
+            }
+        }
 
     } catch (e) {
         console.error('Initialization error:', e);
@@ -492,7 +577,13 @@ app.post('/api/auth/forgot-password/send-otp', async (req, res) => {
 
         console.log(`[FORGOT PASSWORD OTP] Email: ${email}, OTP Code: ${otpCode}`);
 
-        res.json({ message: 'OTP sent successfully! Please check the console.' });
+        try {
+            await sendOTPMail(email, otpCode);
+            res.json({ message: 'OTP sent successfully! Please check your inbox.' });
+        } catch (mailErr) {
+            console.error('[EMAIL ERROR] Failed to send forgot password email:', mailErr.message);
+            res.json({ message: 'OTP generated! (SMTP connection failed, check server console for code).' });
+        }
     } catch (e) {
         console.error(e);
         res.status(500).json({ message: 'Server sending OTP error' });
@@ -583,7 +674,13 @@ app.post('/api/user/change-email/send-otp', authenticateToken, async (req, res) 
 
         console.log(`[CHANGE EMAIL OTP] User ID: ${req.userId}, New Email: ${newEmail}, OTP Code: ${otpCode}`);
 
-        res.json({ message: 'OTP sent to your new email! Please check the console.' });
+        try {
+            await sendOTPMail(newEmail, otpCode);
+            res.json({ message: 'OTP sent to your new email! Please check your inbox.' });
+        } catch (mailErr) {
+            console.error('[EMAIL ERROR] Failed to send verification email:', mailErr.message);
+            res.json({ message: 'OTP generated! (SMTP connection failed, check server console for code).' });
+        }
     } catch (e) {
         console.error(e);
         res.status(500).json({ message: 'Server sending email OTP error' });
@@ -1185,6 +1282,32 @@ app.post('/api/admin/tickets/toggle-status', authenticateToken, requireAdmin, as
         res.status(500).json({ message: 'Server status toggle error' });
     }
 });
+
+// Settings Endpoint: Get TRON Deposit Address
+app.get('/api/settings/tron-address', async (req, res) => {
+    try {
+        const row = await dbGet("SELECT value FROM settings WHERE key = 'tron_deposit_address'");
+        res.json({ address: row ? row.value : 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX' });
+    } catch (e) {
+        res.status(500).json({ message: 'Error retrieving TRON address' });
+    }
+});
+
+// Admin Settings Endpoint: Update TRON Deposit Address
+app.post('/api/admin/settings/tron-address', authenticateToken, requireAdmin, async (req, res) => {
+    const { address } = req.body;
+    if (!address) {
+        return res.status(400).json({ message: 'Address is required' });
+    }
+    try {
+        await dbRun("INSERT OR REPLACE INTO settings (key, value) VALUES ('tron_deposit_address', ?)", [address]);
+        res.json({ message: 'TRON deposit address updated successfully.' });
+    } catch (e) {
+        res.status(500).json({ message: 'Error updating TRON address' });
+    }
+});
+
+
 
 
 // Background Worker: Compound film plan profits in database (every 15s)
