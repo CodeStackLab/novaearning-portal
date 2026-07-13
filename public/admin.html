@@ -188,11 +188,45 @@
                 <h1 class="panel-title font-display">Advanced User Management</h1>
                 <p class="panel-desc">Complete control over user accounts, balances, status, and direct communication.</p>
                 
-                <div style="margin-bottom: 2rem;">
+                <div style="margin-bottom: 1.5rem;">
                     <button onclick="openAddUserModal()" class="form-btn-db" style="background-color: #10b981; color: white; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
                         <span class="material-symbols-outlined">person_add</span>
                         <span>Add New User</span>
                     </button>
+                </div>
+
+                <!-- Search & Filters Toolbar -->
+                <div class="db-search-filters-bar" style="background-color: #111622; border: 1px solid #1e2538; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                    <!-- Left: Search Box -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 250px; background-color: #0c0f1a; border: 1px solid #1e2538; padding: 0.5rem 0.75rem; border-radius: 8px;">
+                        <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.25rem;">search</span>
+                        <input type="text" id="user-search-input" placeholder="Search by name, email, or referral code..." oninput="triggerUsersFilter()" style="background: none; border: none; color: #f8fafc; font-size: 0.85rem; outline: none; width: 100%;">
+                    </div>
+                    
+                    <!-- Right: Filter controls -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                        <!-- Filter by status/referrals -->
+                        <div style="display: flex; align-items: center; gap: 0.35rem;">
+                            <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.1rem;">filter_list</span>
+                            <select id="user-filter-select" onchange="triggerUsersFilter()" style="background-color: #0c0f1a; border: 1px solid #1e2538; color: #cbd5e1; font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: 8px; outline: none; cursor: pointer;">
+                                <option value="all">All Statuses</option>
+                                <option value="has-referrals">Has Referrals Only</option>
+                                <option value="active">Active Only</option>
+                                <option value="suspended">Suspended Only</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort by -->
+                        <div style="display: flex; align-items: center; gap: 0.35rem;">
+                            <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 1.1rem;">sort</span>
+                            <select id="user-sort-select" onchange="triggerUsersFilter()" style="background-color: #0c0f1a; border: 1px solid #1e2538; color: #cbd5e1; font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: 8px; outline: none; cursor: pointer;">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="balance-desc">Highest Balance</option>
+                                <option value="referrals-desc">Most Referrals (Top Referrals)</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="recent-deposits-section">
@@ -203,6 +237,7 @@
                                 <tr>
                                     <th>User Info</th>
                                     <th>Balance</th>
+                                    <th>Referrals</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>

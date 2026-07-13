@@ -220,11 +220,57 @@ function renderUsersTable(serverUsers) {
     // Combine server users and custom users, filtering out deleted
     let allUsers = [...serverUsers, ...customUsers].filter(u => !deletedUserIds.includes(u.id));
 
-    tbody.innerHTML = allUsers.map(user => {
-        // Apply any advanced edits
+    // Pre-calculate referral counts dynamically based on the current list of users
+    allUsers = allUsers.map(user => {
         const advancedState = advancedUsers[user.id] || {};
-        const displayUser = { ...user, ...advancedState };
-        const status = displayUser.status || 'Active';
+        const merged = { ...user, ...advancedState };
+        const refCount = allUsers.filter(u => u.referred_by === user.id).length;
+        return {
+            ...merged,
+            referral_count: refCount
+        };
+    });
+
+    // Read filter values from DOM if they exist
+    const searchInput = document.getElementById('user-search-input');
+    const filterSelect = document.getElementById('user-filter-select');
+    const sortSelect = document.getElementById('user-sort-select');
+
+    const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const filterVal = filterSelect ? filterSelect.value : 'all';
+    const sortVal = sortSelect ? sortSelect.value : 'newest';
+
+    // 1. Search Filter
+    if (searchVal) {
+        allUsers = allUsers.filter(u => 
+            (u.name || '').toLowerCase().includes(searchVal) ||
+            (u.email || '').toLowerCase().includes(searchVal) ||
+            (u.referral_code || '').toLowerCase().includes(searchVal)
+        );
+    }
+
+    // 2. Dropdown Filter
+    if (filterVal === 'has-referrals') {
+        allUsers = allUsers.filter(u => u.referral_count > 0);
+    } else if (filterVal === 'active') {
+        allUsers = allUsers.filter(u => (u.status || 'Active') === 'Active');
+    } else if (filterVal === 'suspended') {
+        allUsers = allUsers.filter(u => u.status === 'Suspended');
+    }
+
+    // 3. Sorting
+    if (sortVal === 'newest') {
+        allUsers.sort((a, b) => b.id - a.id);
+    } else if (sortVal === 'oldest') {
+        allUsers.sort((a, b) => a.id - b.id);
+    } else if (sortVal === 'balance-desc') {
+        allUsers.sort((a, b) => b.balance - a.balance);
+    } else if (sortVal === 'referrals-desc') {
+        allUsers.sort((a, b) => b.referral_count - a.referral_count);
+    }
+
+    tbody.innerHTML = allUsers.map(user => {
+        const status = user.status || 'Active';
         
         let statusColor = '#10b981'; // Active green
         let statusBg = 'rgba(16, 185, 129, 0.15)';
@@ -233,37 +279,50 @@ function renderUsersTable(serverUsers) {
         if (status === 'Under Review') { statusColor = '#3b82f6'; statusBg = 'rgba(59, 130, 246, 0.15)'; }
 
         // Escape quotes
-        const safeName = (displayUser.name || '').replace(/'/g, "\\'");
-        const safeEmail = (displayUser.email || '').replace(/'/g, "\\'");
+        const safeName = (user.name || '').replace(/'/g, "\\'");
+        const safeEmail = (user.email || '').replace(/'/g, "\\'");
         const safeStatus = status.replace(/'/g, "\\'");
 
         return `
         <tr>
-            <td>
+            <td style="cursor: pointer;" title="Click to view referral members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: white;">
-                        ${displayUser.name ? displayUser.name.substring(0, 2).toUpperCase() : 'U'}
+                        ${user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                     </div>
                     <div>
-                        <div style="font-weight:600; color:#f1f5f9;">${displayUser.name}</div>
-                        <div style="font-size:0.75rem; color:#94a3b8;">${displayUser.email}</div>
+                        <div style="font-weight:600; color:#f1f5f9; display: flex; align-items: center; gap: 0.25rem;">
+                            <span>${user.name}</span>
+                            <span class="material-symbols-outlined" style="font-size: 0.85rem; color: #94a3b8;">open_in_new</span>
+                        </div>
+                        <div style="font-size:0.75rem; color:#94a3b8;">${user.email}</div>
                     </div>
                 </div>
             </td>
-            <td style="font-weight:700; color:#10b981;">${formatUSD(displayUser.balance)}</td>
+            <td style="font-weight:700; color:#10b981;">${formatUSD(user.balance)}</td>
+            <td>
+                <span onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="cursor: pointer; background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;">
+                    <span class="material-symbols-outlined" style="font-size: 0.85rem;">group</span>
+                    <span>${user.referral_count} referred</span>
+                </span>
+            </td>
             <td><span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${status}</span></td>
             <td>
                 <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-                    <button title="View Referred Members" onclick="viewReferredMembers(${displayUser.id}, '${safeName}', '${displayUser.referral_code || ''}')" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
-                    <button title="Edit Profile/Status" onclick="openEditUserModal(${displayUser.id}, '${safeName}', '${safeEmail}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
-                    <button title="Edit Balance" onclick="openEditBalanceModal(${displayUser.id}, '${safeName}', ${displayUser.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
-                    <button title="Send Alert/Ticket" onclick="openSendAlertModal(${displayUser.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
-                    <button title="Delete User" onclick="adminDeleteUser(${displayUser.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
+                    <button title="View Referred Members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
+                    <button title="Edit Profile/Status" onclick="openEditUserModal(${user.id}, '${safeName}', '${safeEmail}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
+                    <button title="Edit Balance" onclick="openEditBalanceModal(${user.id}, '${safeName}', ${user.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
+                    <button title="Send Alert/Ticket" onclick="openSendAlertModal(${user.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
+                    <button title="Delete User" onclick="adminDeleteUser(${user.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
                 </div>
             </td>
         </tr>
         `;
     }).join('');
+}
+
+function triggerUsersFilter() {
+    renderUsersTable(globalUsersList);
 }
 
 function renderDepositsTable(deposits) {
