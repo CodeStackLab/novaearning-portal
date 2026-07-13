@@ -240,27 +240,27 @@ async function initializeDatabase() {
             console.log('Seeded database with default admin user: admin@nova.com');
         }
 
-        // Seed demo admin ("admin" / "admin123") if not exists
-        const demoAdmin = await dbGet('SELECT * FROM users WHERE email = ?', ['admin']);
+        // Seed demo admin ("admin@mail.com" / "admin123") if not exists
+        const demoAdmin = await dbGet('SELECT * FROM users WHERE email = ?', ['admin@mail.com']);
         if (!demoAdmin) {
             const hashedAdminPassword = await bcrypt.hash('admin123', 10);
             await dbRun(
                 'INSERT INTO users (name, email, username, password, balance, earnings, active_investments, role, referral_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                ['Demo Admin', 'admin', 'admin', hashedAdminPassword, 0.00, 0.00, 0.00, 'admin', 'ADMIN7777']
+                ['Demo Admin', 'admin@mail.com', 'admin_demo', hashedAdminPassword, 0.00, 0.00, 0.00, 'admin', 'ADMIN7777']
             );
-            console.log('Seeded database with demo admin: admin');
+            console.log('Seeded database with demo admin: admin@mail.com');
         }
 
-        // Seed demo user ("user" / "user123") if not exists
-        const demoUser = await dbGet('SELECT * FROM users WHERE email = ?', ['user']);
+        // Seed demo user ("user@mail.com" / "user123") if not exists
+        const demoUser = await dbGet('SELECT * FROM users WHERE email = ?', ['user@mail.com']);
         if (!demoUser) {
             const hashedUserPassword = await bcrypt.hash('user123', 10);
             await dbRun(
                 'INSERT INTO users (name, email, username, password, balance, earnings, active_investments, role, referral_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                ['Demo User', 'user', 'user', hashedUserPassword, 1000.00, 150.00, 0.00, 'user', 'USER7777']
+                ['Demo User', 'user@mail.com', 'user_demo', hashedUserPassword, 1000.00, 150.00, 0.00, 'user', 'USER7777']
             );
             
-            const seededUser = await dbGet('SELECT id FROM users WHERE email = ?', ['user']);
+            const seededUser = await dbGet('SELECT id FROM users WHERE email = ?', ['user@mail.com']);
             const userId = seededUser.id;
 
             // Seed historical deposits and transactions for the demo user
@@ -272,8 +272,12 @@ async function initializeDatabase() {
                 'INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)',
                 [userId, 'May 12, 2024 10:45 AM', 'Deposit', 500.00, 'TXNDEMO123456', 'Confirmed']
             );
-            console.log('Seeded database with demo user: user');
+            console.log('Seeded database with demo user: user@mail.com');
         }
+
+        // Auto-update existing 'admin' and 'user' legacy emails to new emails if they exist
+        await dbRun("UPDATE users SET email = 'admin@mail.com' WHERE email = 'admin'");
+        await dbRun("UPDATE users SET email = 'user@mail.com' WHERE email = 'user'");
 
     } catch (e) {
         console.error('Initialization error:', e);
@@ -324,7 +328,7 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'Email/Username and password are required' });
+        return res.status(400).json({ message: 'Email and password are required' });
     }
 
     try {
@@ -347,21 +351,16 @@ app.post('/api/auth/login', async (req, res) => {
 
 // 2. Register User (with Referral Code verification & $5 Sign-up Bonus)
 app.post('/api/auth/register', async (req, res) => {
-    const { name, email, username, password, referralCode } = req.body;
+    const { name, email, password, referralCode } = req.body;
 
-    if (!name || !email || !username || !password) {
-        return res.status(400).json({ message: 'Name, email, username, and password are required' });
+    if (!name || !email || !password) {
+        return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
     try {
         const userExists = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
         if (userExists) {
             return res.status(400).json({ message: 'Email already registered' });
-        }
-
-        const usernameExists = await dbGet('SELECT id FROM users WHERE username = ?', [username]);
-        if (usernameExists) {
-            return res.status(400).json({ message: 'Username already registered' });
         }
 
         let referrerId = null;
@@ -383,7 +382,7 @@ app.post('/api/auth/register', async (req, res) => {
         
         const result = await dbRun(
             'INSERT INTO users (name, email, username, password, balance, earnings, active_investments, role, referred_by, referral_code) VALUES (?, ?, ?, ?, ?, 0.0, 0.0, ?, ?, ?)',
-            [name, email, username, hashedPassword, startBalance, 'user', referrerId, myReferralCode]
+            [name, email, email, hashedPassword, startBalance, 'user', referrerId, myReferralCode]
         );
 
         const newUserId = result.lastID;
