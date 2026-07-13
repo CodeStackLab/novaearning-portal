@@ -656,12 +656,14 @@ function renderInvestmentsTable(investments) {
     const tbody = document.getElementById('my-investments-table-body');
     if (!tbody) return;
 
-    if (investments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #64748b;">No active investments found. Buy a plan to start.</td></tr>`;
-        return;
-    }
+    const dummyInvestments = [
+        { name: 'AMC Movie Ticket', amount: 100.00, daily_profit_pct: 2.5, duration_days: 1, status: 'Active' },
+        { name: 'Avengers Movie Plan', amount: 150.00, daily_profit_pct: 2.5, duration_days: 1, status: 'Completed' }
+    ];
 
-    tbody.innerHTML = investments.map(inv => `
+    const allInvestments = [...dummyInvestments, ...investments];
+
+    tbody.innerHTML = allInvestments.map(inv => `
         <tr>
             <td style="font-weight:600; color:#f8fafc;">${inv.name}</td>
             <td style="font-weight:700; color:#3b82f6;">$${inv.amount.toFixed(2)}</td>
@@ -676,11 +678,11 @@ function renderActiveInvestmentsTracking(investments) {
     const tbody = document.getElementById('active-investments-tbody');
     if (!tbody) return;
 
-    const active = investments.filter(inv => inv.status === 'Active');
-    if (active.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 1.5rem; color: #94a3b8;">No active investments today. Go to 'Investment Plans' to start.</td></tr>`;
-        return;
-    }
+    const dummyActive = [
+        { name: 'AMC Movie Ticket', amount: 100.00, daily_profit_pct: 2.5, status: 'Active' }
+    ];
+
+    const active = [...dummyActive, ...investments.filter(inv => inv.status === 'Active')];
 
     tbody.innerHTML = active.map(inv => {
         const estReturns = inv.amount * (inv.daily_profit_pct / 100);
