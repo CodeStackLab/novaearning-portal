@@ -182,6 +182,30 @@ async function fetchAllDashboardData() {
         const transactions = await apiRequest('/transactions');
         renderAllTransactionsTable(transactions);
 
+        // Compute total deposits and withdrawals sums
+        const totalDepositsSum = deposits
+            .filter(d => d.status === 'Confirmed')
+            .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+
+        const totalWithdrawalsSum = transactions
+            .filter(tx => tx.type === 'Withdrawal' && tx.status === 'Confirmed')
+            .reduce((sum, tx) => sum + (parseFloat(tx.amount) || 0), 0);
+
+        const dbTotalReferrals = document.getElementById('db-total-referrals');
+        if (dbTotalReferrals) {
+            dbTotalReferrals.textContent = profile.referralsStats ? profile.referralsStats.totalReferrals : 0;
+        }
+
+        const dbTotalDeposits = document.getElementById('db-total-deposits');
+        if (dbTotalDeposits) {
+            dbTotalDeposits.textContent = formatUSD(totalDepositsSum);
+        }
+
+        const dbTotalWithdrawals = document.getElementById('db-total-withdrawals');
+        if (dbTotalWithdrawals) {
+            dbTotalWithdrawals.textContent = formatUSD(totalWithdrawalsSum);
+        }
+
         const tickets = await apiRequest('/tickets');
         renderTicketsTable(tickets);
 

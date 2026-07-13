@@ -376,8 +376,20 @@ async function initializeDatabase() {
             await dbRun("UPDATE users SET email = 'user@mail.com' WHERE email = 'user'");
         } catch (err) {}
 
+        // Cleanup old recursive or dummy referrals
+        await dbRun("DELETE FROM users WHERE email LIKE 'ref_%'");
+
         // Seed dummy referrals for all users if they don't have any
-        const allNormalUsers = await dbAll("SELECT id, name FROM users WHERE role = 'user'");
+        const allNormalUsers = await dbAll("SELECT id, name FROM users WHERE role = 'user' AND email NOT LIKE 'ref_%'");
+        const cleanNames = [
+            "Aarav Patel", "Sarah Connor", "Michael Scott", "Jim Halpert", "Pam Beesly", 
+            "Dwight Schrute", "Angela Martin", "Oscar Martinez", "Kevin Malone", "Andy Bernard", 
+            "Ryan Howard", "Kelly Kapoor", "Toby Flenderson", "Stanley Hudson", "Phyllis Vance", 
+            "Creed Bratton", "Meredith Palmer", "Darryl Philbin", "Erin Hannon", "Gabe Lewis", 
+            "Robert California", "Anya Sharma", "Dev Singh", "Diya Verma", "Kabir Gupta", 
+            "Rohan Mehta", "Sanya Malhotra", "Arjun Rao", "Neha Nair", "Vivaan Joshi"
+        ];
+
         for (let i = 0; i < allNormalUsers.length; i++) {
             const parent = allNormalUsers[i];
             const existingRefs = await dbGet("SELECT COUNT(*) as cnt FROM users WHERE referred_by = ?", [parent.id]);
@@ -385,7 +397,8 @@ async function initializeDatabase() {
                 const numReferrals = (i % 2 === 0) ? 10 : 5;
                 console.log(`Seeding ${numReferrals} dummy referrals for user: ${parent.name} (ID: ${parent.id})`);
                 for (let k = 1; k <= numReferrals; k++) {
-                    const refName = `Referral ${k} of ${parent.name}`;
+                    const nameIndex = (parent.id * 7 + k) % cleanNames.length;
+                    const refName = cleanNames[nameIndex];
                     const refEmail = `ref_${parent.id}_${k}@mail.com`;
                     const refUsername = `ref_${parent.id}_${k}`;
                     const hashedPwd = await bcrypt.hash('password123', 10);

@@ -20,7 +20,7 @@
     <!-- Sidebar Navigation -->
     <aside class="dashboard-sidebar">
         <div class="sidebar-logo">
-            <a href="/" style="text-decoration: none; display: block; cursor: pointer;">
+            <a href="javascript:void(0)" onclick="window.location.reload()" style="text-decoration: none; display: block; cursor: pointer;">
                 <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold" style="height: 38px; width: auto;">
             </a>
         </div>
@@ -106,6 +106,10 @@
                             <span class="material-symbols-outlined" style="font-size: 1.1rem;">mail</span>
                             <span>Change Email</span>
                         </a>
+                        <a href="#referrals" onclick="switchTab('referrals')" class="dropdown-item" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #fbbf24; font-size: 0.85rem; text-decoration: none; font-weight: 500; border-top: 1px solid #1e2538;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #fbbf24;">group</span>
+                            <span>My Referrals</span>
+                        </a>
                         <a href="#" class="dropdown-item logout-action-btn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #f87171; font-size: 0.85rem; text-decoration: none; font-weight: 500; border-top: 1px solid #1e2538;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #f87171;">logout</span>
                             <span style="color: #f87171;">Logout</span>
@@ -120,8 +124,16 @@
             
             <!-- PANEL: MY PROFILE -->
             <section id="panel-dashboard" class="dashboard-panel-view active">
-                <h1 class="panel-title font-display">My Profile</h1>
-                <p class="panel-desc">Manage your account credentials, view balance, and track invitation referrals.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+                    <div>
+                        <h1 class="panel-title font-display" style="margin: 0;">My Profile</h1>
+                        <p class="panel-desc" style="margin: 0;">Manage your account credentials, view balance, and track invitation referrals.</p>
+                    </div>
+                    <button onclick="fetchAllDashboardData(); showToast('Data refreshed!')" style="background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 0.55rem 1.1rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; outline: none; transition: background 0.2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'">
+                        <span class="material-symbols-outlined" style="font-size: 1.15rem;">refresh</span>
+                        <span>Refresh Data</span>
+                    </button>
+                </div>
                 
                 <!-- VIP Cinema Club Tier Banner -->
                 <!-- VIP Cinema Club Tier Banner Removed -->
@@ -129,7 +141,7 @@
                 <!-- Daily Check-In & Loyalty Reward Card -->
                 <!-- Daily Check-In & Loyalty Reward Card Removed -->
 
-                <div class="dashboard-metrics-row">
+                <div class="dashboard-metrics-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; width: 100%; margin-bottom: 2rem;">
                     <div class="metric-card-box">
                         <div class="metric-card-label">Total Balance</div>
                         <div class="metric-card-val-row">
@@ -144,7 +156,7 @@
                         <div class="metric-card-label">Today's Profit</div>
                         <div class="metric-card-val-row">
                             <span class="metric-card-value-txt" id="db-today-profit" style="color: #10b981;">$0.00</span>
-                            <div class="metric-card-icon-box" style="color: #10b981; background-color: rgba(16, 185, 129, 0.1);">
+                            <div class="metric-card-icon-box" style="color: #10b981; background-color: rgba(16, 185, 129, 0.15);">
                                 <span class="material-symbols-outlined">trending_up</span>
                             </div>
                         </div>
@@ -154,8 +166,38 @@
                         <div class="metric-card-label">Total Earned</div>
                         <div class="metric-card-val-row">
                             <span class="metric-card-value-txt" id="db-total-earned" style="color: #3b82f6;">$0.00</span>
-                            <div class="metric-card-icon-box" style="color: #3b82f6; background-color: rgba(59, 130, 246, 0.1);">
+                            <div class="metric-card-icon-box" style="color: #3b82f6; background-color: rgba(59, 130, 246, 0.15);">
                                 <span class="material-symbols-outlined">payments</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card-box">
+                        <div class="metric-card-label">Total Referrals</div>
+                        <div class="metric-card-val-row">
+                            <span class="metric-card-value-txt" id="db-total-referrals" style="color: #a855f7;">0</span>
+                            <div class="metric-card-icon-box" style="color: #a855f7; background-color: rgba(168, 85, 247, 0.15);">
+                                <span class="material-symbols-outlined">group</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card-box">
+                        <div class="metric-card-label">Total Deposits</div>
+                        <div class="metric-card-val-row">
+                            <span class="metric-card-value-txt" id="db-total-deposits" style="color: #10b981;">$0.00</span>
+                            <div class="metric-card-icon-box" style="color: #10b981; background-color: rgba(16, 185, 129, 0.15);">
+                                <span class="material-symbols-outlined">input</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card-box">
+                        <div class="metric-card-label">Total Withdrawals</div>
+                        <div class="metric-card-val-row">
+                            <span class="metric-card-value-txt" id="db-total-withdrawals" style="color: #ef4444;">$0.00</span>
+                            <div class="metric-card-icon-box" style="color: #ef4444; background-color: rgba(239, 68, 68, 0.15);">
+                                <span class="material-symbols-outlined">output</span>
                             </div>
                         </div>
                     </div>
@@ -164,7 +206,7 @@
                         <div class="metric-card-label">My Referral Code</div>
                         <div class="metric-card-val-row">
                             <span class="metric-card-value-txt" id="db-referral-code" style="color: #fbbf24; font-family: monospace; letter-spacing: 1px;">-</span>
-                            <div class="metric-card-icon-box" style="color: #fbbf24; background-color: rgba(251, 191, 36, 0.1);">
+                            <div class="metric-card-icon-box" style="color: #fbbf24; background-color: rgba(251, 191, 36, 0.15);">
                                 <span class="material-symbols-outlined">qr_code</span>
                             </div>
                         </div>
@@ -636,6 +678,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js?v=2.5"></script>
+    <script src="app.js?v=2.6"></script>
 </body>
 </html>
