@@ -12,10 +12,17 @@ Follow these steps to clone and run this project on a new PC:
    - Open your terminal in the `C:\laragon\www\` directory.
    - Run: `git clone https://github.com/CodeStackLab/napp-vjgp-online.git`
    - This will create a folder at `C:\laragon\www\napp-vjgp-online`.
-4. **Database Setup**:
+   
+### 🗄️ Database Setup (CRITICAL STEP)
+Because this is a PHP/MySQL project, you MUST import the database manually on the new PC. The `database.sql` file contains the entire structure and default admin/test users.
+
+4. **Import Database**:
    - Open your local database manager (e.g., HeidiSQL in Laragon or phpMyAdmin).
-   - Create a new empty database named `nova_portal`.
-   - Import the `database.sql` file provided in this repository into the `nova_portal` database.
+   - Create a new empty database named **`nova_portal`**.
+   - Select the `nova_portal` database and click **Import**.
+   - Choose the **`database.sql`** file located in this repository folder and execute it.
+   - *Result: All your tables and default users are now ready!*
+
 5. **Configuration**:
    - Open the `config.php` file in the root directory.
    - Ensure the database credentials match your local setup:
@@ -31,7 +38,7 @@ Follow these steps to clone and run this project on a new PC:
 ## 🚀 Live Server Deployment (Shared Hosting)
 
 1. **Create Database**: Go to your web hosting control panel (e.g., IONOS) and create a new MySQL 8.0 database. Note down the Database Name, Username, and Password.
-2. **Import Database**: Open phpMyAdmin on your hosting panel and import the `database.sql` file.
+2. **Import Database**: Open phpMyAdmin on your hosting panel and import the `database.sql` file exactly like you did on local.
 3. **Upload Files**: You can deploy the code via Git (`git clone` or `git pull` via SSH) or upload the ZIP file directly to your `public_html` directory via File Manager/FTP.
 4. **Update config.php**: Edit `config.php` on the live server with the real Database Name, Username, and Password you created in Step 1.
 5. **Setup Cron Job**:
