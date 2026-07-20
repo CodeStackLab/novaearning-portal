@@ -123,6 +123,16 @@ async function fetchAllDashboardData() {
             userNameLabel.textContent = profile.name;
         }
         
+        const dbUserName = document.getElementById('db-user-name');
+        if (dbUserName && profile.name) {
+            dbUserName.textContent = profile.name;
+        }
+
+        const dbAccountId = document.getElementById('db-account-id');
+        if (dbAccountId && profile.id) {
+            dbAccountId.textContent = String(profile.id).padStart(2, '0');
+        }
+        
         // Render profile metrics
         const balanceHeader = document.getElementById('user-balance-header');
         if (balanceHeader) balanceHeader.textContent = `Balance: ${formatUSD(profile.balance)}`;

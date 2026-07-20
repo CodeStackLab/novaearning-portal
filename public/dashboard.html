@@ -126,15 +126,13 @@
             
             <!-- PANEL: MY PROFILE -->
             <section id="panel-dashboard" class="dashboard-panel-view active">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
                     <div>
-                        <h1 class="panel-title font-display" style="margin: 0;">My Profile</h1>
-                        <p class="panel-desc" style="margin: 0;">Manage your account credentials, view balance, and track invitation referrals.</p>
+                        <h1 class="panel-title font-display" style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #f8fafc;">Welcome back, <span id="db-user-name">Demo User</span></h1>
+                        <p class="panel-desc" style="margin: 0.35rem 0 0 0; font-size: 0.95rem; color: #94a3b8; font-weight: 500;">
+                            Account: <span id="db-account-id" style="color: #94a3b8; font-weight: 600;">02</span> &nbsp;&bull;&nbsp; Status: <span style="color: #22c55e; font-weight: 600;">Active</span>
+                        </p>
                     </div>
-                    <button onclick="fetchAllDashboardData(); showToast('Data refreshed!')" style="background: #1e293b; color: #f8fafc; border: 1px solid #334155; padding: 0.55rem 1.1rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; outline: none; transition: background 0.2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'">
-                        <span class="material-symbols-outlined" style="font-size: 1.15rem;">refresh</span>
-                        <span>Refresh Data</span>
-                    </button>
                 </div>
                 
                 <!-- VIP Cinema Club Tier Banner -->

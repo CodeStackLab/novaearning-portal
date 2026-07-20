@@ -9,6 +9,7 @@ services:
       - "8085:80"
     volumes:
       - ./public:/var/www/html
+      - ./public/.htaccess:/var/www/html/.htaccess
       - ./config.php:/var/www/html/config.php
       - ./api:/var/www/html/api
     depends_on:
