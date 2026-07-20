@@ -3,1122 +3,729 @@
 <head>
     <base href="/">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Portal - High-Yield Investment & Web Earnings Platform</title>
-    <meta name="description" content="Access Nova Portal for high-yield compounding investments, daily profits, secure wallet transactions, and real-time earnings tracking. Log in or create an account today.">
-    <meta name="keywords" content="nova portal, crypto investment, compounding returns, web earnings, secure wallet, daily profit">
-    <link rel="canonical" href="https://novaearning.vjgp.online/login">
-    <meta property="og:title" content="Nova Portal - High-Yield Investment & Web Earnings Platform">
-    <meta property="og:description" content="Access Nova Portal for high-yield compounding investments, daily profits, and secure transactions.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nova Portal — Sign In</title>
+    <meta name="description" content="Sign in to Nova Portal. Secure access to your investment dashboard, daily profits, and wallet.">
+    <link rel="canonical" href="https://novaearning.com/login">
+    <meta property="og:title" content="Nova Portal — Sign In">
+    <meta property="og:description" content="Access your Nova Portfolio securely.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://novaearning.vjgp.online/login">
-    <!-- Fonts -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#050a14">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Google Material Symbols -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
-    <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css?v=4.0">
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0">
     <style>
-        .auth-main-wrapper {
-            background: var(--gradient-hero);
-            min-height: calc(100vh - 75px - 340px);
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #050a14;
+            --surface: #0f1624;
+            --card: #111827;
+            --border: rgba(99,120,170,0.18);
+            --border-focus: rgba(99,150,255,0.55);
+            --text: #f0f4ff;
+            --muted: #8496b0;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --gold: #fbbf24;
+            --red: #f87171;
+            --purple: #8b5cf6;
+            --radius: 14px;
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Full-screen layout */
+        .page {
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 4rem 1.5rem;
-            transition: background 0.3s ease;
+            padding: 1.5rem 1rem;
+            position: relative;
+            overflow: hidden;
         }
-        
-        body.dark-theme .auth-main-wrapper {
-            background: var(--gradient-hero);
+
+        /* Ambient glows */
+        .page::before {
+            content: '';
+            position: fixed;
+            top: -20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 500px;
+            background: radial-gradient(ellipse, rgba(59,130,246,0.14) 0%, transparent 70%);
+            pointer-events: none;
         }
-        
+        .page::after {
+            content: '';
+            position: fixed;
+            bottom: -15vh;
+            left: 10%;
+            width: 400px;
+            height: 350px;
+            background: radial-gradient(ellipse, rgba(139,92,246,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Auth Card */
         .auth-card {
             width: 100%;
-            max-width: 680px;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
+            max-width: 400px;
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 3rem;
-            box-shadow: var(--shadow-lg);
-            color: var(--text-primary);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem 1.75rem;
+            box-shadow: 0 25px 60px -10px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+            position: relative;
+            overflow: hidden;
+            animation: cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
         }
 
-        .auth-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.08), 0 0 50px rgba(59, 130, 246, 0.05);
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold) 0%, var(--blue) 50%, var(--green) 100%);
         }
 
-        body.dark-theme .auth-card {
-            background-color: rgba(12, 15, 29, 0.65);
-            border-color: rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(12px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .auth-card .form-label-db {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .auth-card .form-input-db {
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-        }
-
-        .auth-card .form-input-db:focus {
-            border-color: var(--primary);
-            background-color: var(--bg-card);
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
-            outline: none;
-        }
-
-        body.dark-theme .auth-card .form-input-db {
-            background-color: rgba(6, 8, 15, 0.5);
-            border-color: rgba(255, 255, 255, 0.08);
-            color: var(--text-primary);
-        }
-
-        body.dark-theme .auth-card .form-input-db:focus {
-            background-color: rgba(6, 8, 15, 0.8);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.25);
-        }
-
+        /* Logo */
         .auth-logo {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.6rem;
-            font-weight: 900;
-            font-size: 1.8rem;
-            margin-bottom: 2rem;
-            letter-spacing: 1px;
+            margin-bottom: 1.75rem;
             text-decoration: none;
         }
-
-        .auth-logo span {
-            background: linear-gradient(135deg, #d4af37 0%, #f9e8a2 50%, #aa771c 100%);
+        .auth-logo img { height: 36px; width: auto; }
+        .auth-logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #d4af37 0%, #fde68a 50%, #b8860b 100%);
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
         }
 
-        /* Pill Tab Switcher */
+        /* Tabs */
         .auth-tabs {
             display: flex;
-            background-color: #f1f5f9;
-            border-radius: 12px;
-            padding: 0.35rem;
-            border-bottom: none;
-            margin-bottom: 2rem;
-            gap: 0.25rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 3px;
+            margin-bottom: 1.75rem;
+            gap: 3px;
         }
-
-        body.dark-theme .auth-tabs {
-            background-color: #1f2937;
-        }
-
         .auth-tab-btn {
             flex: 1;
-            text-align: center;
-            background: none;
+            padding: 0.55rem;
             border: none;
-            padding: 0.6rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            background: none;
+            color: var(--muted);
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #64748b;
-            transition: all 0.2s ease;
+            border-radius: 8px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
         }
-
         .auth-tab-btn.active {
-            background-color: white;
-            color: #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
         }
 
-        body.dark-theme .auth-tab-btn.active {
-            background-color: #374151;
-            color: #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
-        }
+        /* Form containers */
+        .auth-form-container { display: none; }
+        .auth-form-container.active { display: block; }
 
-        .auth-form-container {
-            display: none;
-        }
-
-        .auth-form-container.active {
+        /* Inputs */
+        .field { margin-bottom: 1rem; }
+        .field label {
             display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
         }
-
-        .forgot-link-box {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 0.5rem;
-        }
-
-        .forgot-link {
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-
-        .forgot-link:hover {
-            color: #3b82f6;
-        }
-
-        .auth-btn {
+        .field input {
             width: 100%;
-            background-color: #3b82f6;
-            color: white;
-            font-weight: 600;
-            padding: 0.75rem;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .field input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .field input::placeholder { color: rgba(132,150,176,0.6); }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            padding: 0.82rem;
+            margin-top: 1.5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 60%, #7c3aed 100%);
+            color: #fff;
             font-size: 0.9rem;
-            margin-top: 1.5rem;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        .auth-btn:hover {
-            background-color: #2563eb;
-            transform: translateY(-1px);
-        }
-
-        /* Demo credentials box styles */
-        .demo-credentials-box {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            border-radius: 12px;
-            font-size: 0.85rem;
-        }
-        .demo-title {
-            display: flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-weight: 600;
-            color: #3b82f6;
-            margin-bottom: 0.75rem;
-        }
-        .demo-title .material-symbols-outlined {
-            font-size: 1.1rem;
-        }
-        .demo-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .demo-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .demo-role {
-            color: #64748b;
-            font-weight: 500;
-        }
-        .demo-code {
-            background-color: #eff6ff;
-            color: #2563eb;
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            font-family: monospace;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
             cursor: pointer;
-            border: 1px solid #dbeafe;
-            transition: all 0.2s ease;
+            font-family: inherit;
+            box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
         }
-        .demo-code:hover {
-            background-color: #dbeafe;
-            transform: scale(1.02);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59,130,246,0.45);
         }
-        .demo-copy-hint {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
+        .btn-primary:active { transform: translateY(0); }
 
-        /* Signup step wizard styling */
-        .signup-steps-indicator {
+        .btn-secondary {
+            flex: 1;
+            padding: 0.72rem;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+
+        .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+
+        /* Forgot link */
+        .forgot-link {
+            font-size: 0.78rem;
+            color: var(--gold);
+            font-weight: 600;
+            text-decoration: none;
+            float: right;
+            margin-top: 0.4rem;
+        }
+        .forgot-link:hover { text-decoration: underline; }
+
+        /* Step indicators */
+        .steps {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 2rem;
-            gap: 0.5rem;
-        }
-
-        .step-indicator-item {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: #f1f5f9;
-            color: #64748b;
-            border: 2px solid #cbd5e1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
-        }
-
-        .step-indicator-item.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-        }
-
-        .step-indicator-line {
-            flex-grow: 1;
-            height: 2px;
-            background-color: #e2e8f0;
-            max-width: 60px;
-        }
-
-        .signup-step-pane {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .signup-step-pane.active {
-            display: block;
-        }
-
-        .step-pane-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0.25rem;
-        }
-
-        .step-pane-subtitle {
-            font-size: 0.85rem;
-            color: #64748b;
+            gap: 0.4rem;
             margin-bottom: 1.5rem;
         }
-
-        .auth-btn.sec-btn {
-            background-color: #f1f5f9;
-            color: #475569;
-            border: 1px solid #cbd5e1;
-            box-shadow: none;
+        .step-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+            border: 2px solid var(--border);
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s ease;
         }
-
-        .auth-btn.sec-btn:hover {
-            background-color: #e2e8f0;
+        .step-dot.active {
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(59,130,246,0.4);
         }
+        .step-line { flex: 1; max-width: 50px; height: 1px; background: var(--border); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Dark theme overrides for step indicators */
-        body.dark-theme .step-indicator-item {
-            background-color: #1f2937;
-            color: #94a3b8;
-            border-color: #374151;
-        }
+        .step-pane { display: none; }
+        .step-pane.active { display: block; animation: fadeSlide 0.3s ease; }
 
-        body.dark-theme .step-indicator-item.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateX(10px); }
+            to   { opacity: 1; transform: translateX(0); }
         }
 
-        body.dark-theme .step-indicator-line {
-            background-color: #374151;
+        .pane-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: var(--text);
+        }
+        .pane-sub {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
         }
 
-        body.dark-theme .step-pane-title {
-            color: #f8fafc;
+        /* Forgot password steps */
+        .forgot-step { display: none; }
+        .forgot-step.active { display: block; animation: fadeSlide 0.3s ease; }
+
+        .msg-success {
+            font-size: 0.85rem;
+            color: var(--green);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
 
-        body.dark-theme .step-pane-subtitle {
-            color: #94a3b8;
+        /* Security footer */
+        .auth-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+        .auth-footer span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+        .auth-footer .material-symbols-outlined { font-size: 0.95rem; }
+
+        /* ---- PWA Install Banner ---- */
+        #pwa-install-banner {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 9999;
+            padding: 1rem 1.25rem;
+            background: linear-gradient(135deg, #0f172a, #111827);
+            border-top: 1px solid rgba(59,130,246,0.3);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+        #pwa-install-banner.show { display: flex; align-items: center; gap: 1rem; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+        .pwa-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3b82f6, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .pwa-icon .material-symbols-outlined { font-size: 1.4rem; color: white; }
+        .pwa-text { flex: 1; }
+        .pwa-text strong { display: block; font-size: 0.9rem; font-weight: 700; color: var(--text); }
+        .pwa-text small { font-size: 0.75rem; color: var(--muted); }
+        .pwa-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .btn-pwa-install {
+            padding: 0.6rem 1.1rem;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-pwa-dismiss {
+            padding: 0.6rem 0.8rem;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            border-radius: 8px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: inherit;
         }
 
-        body.dark-theme .auth-btn.sec-btn {
-            background-color: #1f2937;
-            color: #cbd5e1;
-            border-color: #374151;
-        }
-
-        body.dark-theme .auth-btn.sec-btn:hover {
-            background-color: #374151;
-        }
-
-        /* Demo Credentials Dark Theme overrides */
-        body.dark-theme .demo-credentials-box {
-            background-color: #1e2937;
-            border-color: #374151;
-        }
-        body.dark-theme .demo-title {
-            color: #60a5fa;
-        }
-        body.dark-theme .demo-role {
-            color: #94a3b8;
-        }
-        body.dark-theme .demo-code {
-            background-color: #0f172a;
-            color: #60a5fa;
-            border-color: #1e293b;
-        }
-        body.dark-theme .demo-code:hover {
-            background-color: #1e293b;
-            color: #93c5fd;
-        }
-        body.dark-theme .demo-copy-hint {
-            color: #64748b;
-        }
-
-        /* Forgot password link overrides */
-        body.dark-theme .forgot-link {
-            color: #94a3b8;
-        }
-        body.dark-theme .forgot-link:hover {
-            color: #60a5fa;
-        }
-
-        /* =============================================
-           MOBILE RESPONSIVENESS - ALL SCREEN SIZES
-           ============================================= */
-
-        /* Base: ensure full-width inputs on all screens */
-        .auth-card .form-input-db,
-        .auth-card select,
-        .auth-card textarea {
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Small phones: 320px - 480px */
         @media (max-width: 480px) {
-            .landing-header {
-                padding: 0.5rem 1rem !important;
-            }
-            .nav-links {
-                display: none !important;
-            }
-            .landing-header .container-header {
-                padding: 0 0.75rem !important;
-            }
-            .auth-main-wrapper {
-                padding: 0.75rem 0.75rem !important;
-                min-height: 100vh;
-                align-items: flex-start;
-                padding-top: 1rem !important;
-            }
-            .auth-card {
-                padding: 1.5rem 1.25rem !important;
-                border-radius: 16px !important;
-                max-width: 100% !important;
-                margin: 0;
-            }
-            .auth-logo {
-                margin-bottom: 1.25rem !important;
-            }
-            .auth-logo img {
-                max-height: 36px !important;
-            }
-            .auth-tabs {
-                margin-bottom: 1.25rem !important;
-            }
-            .auth-tab-btn {
-                font-size: 0.8rem !important;
-                padding: 0.5rem 0.35rem !important;
-            }
-            .auth-btn {
-                padding: 0.7rem !important;
-                font-size: 0.85rem !important;
-                margin-top: 1rem !important;
-            }
-            .step-pane-title {
-                font-size: 1rem !important;
-            }
-            .signup-steps-indicator {
-                gap: 0.25rem !important;
-                margin-bottom: 1.25rem !important;
-            }
-            .step-indicator-item {
-                width: 26px !important;
-                height: 26px !important;
-                font-size: 0.75rem !important;
-            }
-            .step-indicator-line {
-                max-width: 30px !important;
-            }
-            .demo-credentials-box {
-                padding: 0.75rem !important;
-                font-size: 0.8rem !important;
-            }
-            .demo-row {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 0.25rem;
-            }
-            /* Header profile/user section */
-            #landing-profile-btn span:last-of-type {
-                display: none;
-            }
-        }
-
-        /* Medium phones: 481px - 640px */
-        @media (min-width: 481px) and (max-width: 640px) {
-            .auth-main-wrapper {
-                padding: 1rem !important;
-            }
-            .auth-card {
-                padding: 2rem 1.5rem !important;
-                border-radius: 16px !important;
-            }
-            .nav-links {
-                display: none !important;
-            }
-        }
-
-        /* Tablets: 641px - 768px */
-        @media (min-width: 641px) and (max-width: 768px) {
-            .auth-main-wrapper {
-                padding: 1.5rem !important;
-            }
-            .auth-card {
-                padding: 2.5rem 2rem !important;
-            }
-        }
-
-        /* All mobile (up to 768px) — shared overrides */
-        @media (max-width: 768px) {
-            .auth-logo {
-                display: flex !important;
-                justify-content: center;
-                margin-bottom: 1.5rem;
-            }
-            .auth-main-wrapper {
-                min-height: calc(100vh - 60px);
-            }
-            .auth-card {
-                max-width: 100% !important;
-                box-shadow: none !important;
-                border: 1px solid rgba(255,255,255,0.07) !important;
-            }
-            /* Ensure inputs are touch-friendly */
-            .auth-card .form-input-db {
-                font-size: 16px !important; /* prevents iOS zoom on focus */
-                padding: 0.8rem 1rem !important;
-                min-height: 48px;
-            }
-            /* Full-width buttons */
-            .auth-btn {
-                min-height: 48px;
-                border-radius: 10px !important;
-            }
-            /* Landing header adjustments */
-            .landing-header {
-                position: sticky;
-                top: 0;
-                z-index: 100;
-            }
-            .container-header {
-                padding: 0 1rem !important;
-            }
-            /* Hide text label next to user avatar in header */
-            #landing-profile-btn > span:first-of-type {
-                display: none;
-            }
-            /* Forgot password + form labels */
-            .form-label-db {
-                font-size: 0.82rem !important;
-            }
-            .forgot-link-box {
-                margin-top: 0.25rem;
-            }
+            .auth-card { padding: 1.5rem 1.25rem; border-radius: 16px; }
+            #pwa-install-banner.show { flex-wrap: wrap; }
+            .pwa-actions { width: 100%; }
+            .btn-pwa-install, .btn-pwa-dismiss { flex: 1; text-align: center; }
         }
     </style>
-    <link rel="stylesheet" href="/style.css?v=5.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=5.0">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f172a">
 </head>
-<body class="landing-body dark-theme">
+<body>
+<div class="page">
 
-    <!-- Header Navigation -->
-    <header class="landing-header">
-        <div class="container-header">
-            <a href="/" class="logo-container" aria-label="Nova Home">
-                <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold">
-            </a>
-            
-            <nav class="nav-links">
-                <a href="/" class="nav-link">Home</a>
-                <a href="/help" class="nav-link">Help</a>
-            </nav>
-            
-            <div class="header-right">
-                <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Theme" style="margin-right: 0.25rem;">
-                    <span class="material-symbols-outlined theme-icon">dark_mode</span>
-                </button>
-                <div style="position: relative;">
-                    <a href="/user-dashboard" class="profile-dropdown-btn" id="landing-profile-btn" style="display: flex; align-items: center; gap: 0.5rem;">
-                        <div class="profile-avatar-u" style="background-color: #3b82f6; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent;">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style="width: 16px; height: 16px; display: block;">
-                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                            </svg>
-                        </div>
-                        <span>User</span>
-                        <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #64748b;">keyboard_arrow_down</span>
-                    </a>
-                    
-                    <!-- Landing Page Profile Dropdown -->
-                    <div class="profile-dropdown-menu" id="landing-profile-dropdown" style="display: none; position: absolute; top: 115%; right: 0; background-color: white; border: 1px solid #e2e8f0; border-radius: 8px; width: 140px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); z-index: 1000; padding: 0.5rem 0;">
-                        <a href="/user-dashboard" class="dropdown-item" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #334155; font-size: 0.85rem; text-decoration: none; font-weight: 500;">
-                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">dashboard</span>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="/" class="dropdown-item logout-action-btn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #ef4444; font-size: 0.85rem; text-decoration: none; font-weight: 500; border-top: 1px solid #f1f5f9;">
-                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">logout</span>
-                            <span>Logout</span>
-                        </a>
-                    </div>
-                </div>
-
-                <button class="nav-toggle-btn" aria-label="Toggle Navigation">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Flex Wrapper -->
-    <main class="auth-main-wrapper">
-        <div class="auth-card">
-        <!-- Brand Logo -->
-        <a href="/" class="auth-logo" aria-label="Nova Authentication">
-            <img src="images/nova-logo-full.svg" alt="Nova Logo" class="auth-logo-img-gold">
+    <!-- Auth Card -->
+    <div class="auth-card">
+        <!-- Logo -->
+        <a href="/" class="auth-logo" aria-label="Nova Home">
+            <img src="images/nova-logo-full.svg" alt="Nova Logo" onerror="this.style.display='none'">
+            <span class="auth-logo-text">NOVA</span>
         </a>
 
-        <div class="auth-intro">
-            <span class="auth-eyebrow"><span class="auth-eyebrow-dot"></span> Account access</span>
-            <h1 class="font-display">Welcome to NOVA</h1>
-            <p>Sign in securely or create your account to manage your portfolio.</p>
-        </div>
-
-        <!-- Auth Navigation Tabs -->
+        <!-- Tabs -->
         <div class="auth-tabs">
-            <button class="auth-tab-btn active" id="tab-btn-signin" onclick="switchAuthTab('signin')">Sign In</button>
-            <button class="auth-tab-btn" id="tab-btn-signup" onclick="switchAuthTab('signup')">Sign Up</button>
-            <button class="auth-tab-btn" id="tab-btn-forgot" onclick="switchAuthTab('forgot')" style="display: none;">Forgot Password</button>
+            <button class="auth-tab-btn active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+            <button class="auth-tab-btn" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+            <button class="auth-tab-btn" id="tab-forgot" onclick="switchTab('forgot')" style="display:none;">Reset</button>
         </div>
 
-        <!-- FORM: SIGN IN -->
+        <!-- SIGN IN -->
         <div class="auth-form-container active" id="form-signin">
             <form onsubmit="submitSignIn(event)">
-                <h3 class="step-pane-title" style="text-align: center; margin-top: 1rem;">Welcome Back</h3>
-                <p class="step-pane-subtitle" style="text-align: center;">Enter your credentials to access your account.</p>
-                
-                <div class="form-group-db">
-                    <label class="form-label-db">Email Address</label>
-                    <input type="text" id="signin-email" required placeholder="name@example.com" class="form-input-db">
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" id="signin-email" placeholder="name@example.com" required autocomplete="email">
                 </div>
-                
-                <div class="form-group-db" style="margin-top: 1.25rem;">
-                    <label class="form-label-db" style="margin-bottom: 0.5rem; display: block;">Password</label>
-                    <input type="password" id="signin-password" required placeholder="••••••••" class="form-input-db">
-                    <div style="text-align: right; margin-top: 0.5rem;">
-                        <a href="#forgot" class="forgot-link" onclick="event.preventDefault(); switchAuthTab('forgot')">Forgot password?</a>
-                    </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" id="signin-password" placeholder="••••••••" required autocomplete="current-password">
+                    <a href="#" class="forgot-link" onclick="event.preventDefault(); switchTab('forgot')">Forgot password?</a>
                 </div>
-                
-                <button type="submit" class="auth-btn" style="margin-top: 2rem;">Log In</button>
-                
-
+                <button type="submit" class="btn-primary" id="signin-btn">Sign In</button>
             </form>
         </div>
 
-        <!-- FORM: SIGN UP -->
+        <!-- SIGN UP -->
         <div class="auth-form-container" id="form-signup">
-            <!-- Step Indicators -->
-            <div class="signup-steps-indicator">
-                <div class="step-indicator-item active" id="step-ind-1">1</div>
-                <div class="step-indicator-line"></div>
-                <div class="step-indicator-item" id="step-ind-2">2</div>
-                <div class="step-indicator-line"></div>
-                <div class="step-indicator-item" id="step-ind-3">3</div>
+            <!-- Step indicator -->
+            <div class="steps">
+                <div class="step-dot active" id="step-ind-1">1</div>
+                <div class="step-line"></div>
+                <div class="step-dot" id="step-ind-2">2</div>
+                <div class="step-line"></div>
+                <div class="step-dot" id="step-ind-3">3</div>
             </div>
-
             <form onsubmit="submitSignUp(event)">
-                <!-- STEP 1: Personal Profile -->
-                <div class="signup-step-pane active" id="signup-step-pane-1">
-                    <h3 class="step-pane-title">Personal Profile</h3>
-                    <p class="step-pane-subtitle">Enter your name and contact details to get started.</p>
-                    
-                    <div class="form-group-db">
-                        <label class="form-label-db">Full Name</label>
-                        <input type="text" id="signup-name" required placeholder="Your Name" class="form-input-db">
-                    </div>
-                    <div class="form-group-db" style="margin-top: 1rem;">
-                        <label class="form-label-db">Email Address</label>
-                        <input type="email" id="signup-email" required placeholder="name@example.com" class="form-input-db">
-                    </div>
-                    <button type="button" class="auth-btn" onclick="nextSignupStep(2)" style="margin-top: 2rem;">Next Step</button>
+                <!-- Step 1 -->
+                <div class="step-pane active" id="step-pane-1">
+                    <div class="pane-title">Create Account</div>
+                    <div class="pane-sub">Enter your details to get started.</div>
+                    <div class="field"><label>Full Name</label><input type="text" id="signup-name" placeholder="Your Name" required></div>
+                    <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="name@example.com" required></div>
+                    <button type="button" class="btn-primary" onclick="nextStep(2)">Continue →</button>
                 </div>
-
-                <!-- STEP 2: Account Security -->
-                <div class="signup-step-pane" id="signup-step-pane-2">
-                    <h3 class="step-pane-title">Account Security</h3>
-                    <p class="step-pane-subtitle">Choose a strong password for your account.</p>
-                    <div class="form-group-db" style="margin-top: 1rem;">
-                        <label class="form-label-db">Password</label>
-                        <input type="password" id="signup-password" required placeholder="Create Password" class="form-input-db">
-                    </div>
-                    <div class="form-group-db" style="margin-top: 1rem;">
-                        <label class="form-label-db">Confirm Password</label>
-                        <input type="password" id="signup-confirm" required placeholder="Repeat Password" class="form-input-db">
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                        <button type="button" class="auth-btn sec-btn" onclick="prevSignupStep(1)">Back</button>
-                        <button type="button" class="auth-btn" onclick="nextSignupStep(3)">Next Step</button>
+                <!-- Step 2 -->
+                <div class="step-pane" id="step-pane-2">
+                    <div class="pane-title">Set Password</div>
+                    <div class="pane-sub">Choose a strong password.</div>
+                    <div class="field"><label>Password</label><input type="password" id="signup-password" placeholder="Min 6 characters" required></div>
+                    <div class="field"><label>Confirm</label><input type="password" id="signup-confirm" placeholder="Repeat password" required></div>
+                    <div class="btn-row">
+                        <button type="button" class="btn-secondary" onclick="prevStep(1)">← Back</button>
+                        <button type="button" class="btn-primary" style="margin-top:0;flex:2;" onclick="nextStep(3)">Continue →</button>
                     </div>
                 </div>
-
-                <!-- STEP 3: Referral Program -->
-                <div class="signup-step-pane" id="signup-step-pane-3">
-                    <h3 class="step-pane-title">Referral Program</h3>
-                    <p class="step-pane-subtitle">Enter a referral code if you have one to claim rewards.</p>
-                    
-                    <div class="form-group-db">
-                        <label class="form-label-db">Referral Code (Optional)</label>
-                        <input type="text" id="signup-ref" placeholder="e.g. JOHN1234" class="form-input-db">
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                        <button type="button" class="auth-btn sec-btn" onclick="prevSignupStep(2)">Back</button>
-                        <button type="submit" class="auth-btn">Create Account</button>
+                <!-- Step 3 -->
+                <div class="step-pane" id="step-pane-3">
+                    <div class="pane-title">Referral (Optional)</div>
+                    <div class="pane-sub">Got a referral code? Enter it here.</div>
+                    <div class="field"><label>Referral Code</label><input type="text" id="signup-ref" placeholder="e.g. JOHN1234"></div>
+                    <div class="btn-row">
+                        <button type="button" class="btn-secondary" onclick="prevStep(2)">← Back</button>
+                        <button type="submit" class="btn-primary" style="margin-top:0;flex:2;">Create Account</button>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- FORM: FORGOT PASSWORD -->
+        <!-- FORGOT PASSWORD -->
         <div class="auth-form-container" id="form-forgot">
-            <div id="forgot-step-1">
-                <div class="form-group-db">
-                    <label class="form-label-db">Account Email Address</label>
-                    <input type="email" id="forgot-email" required placeholder="john.doe@example.com" class="form-input-db">
+            <div class="forgot-step active" id="forgot-s1">
+                <div class="pane-title">Reset Password</div>
+                <div class="pane-sub">Enter your account email to receive an OTP.</div>
+                <div class="field"><label>Email</label><input type="email" id="forgot-email" placeholder="name@example.com" required></div>
+                <button type="button" class="btn-primary" onclick="sendForgotOTP()">Send OTP</button>
+                <div style="text-align:center;margin-top:1rem;">
+                    <a href="#" class="forgot-link" onclick="event.preventDefault();switchTab('signin')">← Back to Sign In</a>
                 </div>
-                <div class="forgot-link-box" style="justify-content: flex-start; margin-top: 0.75rem;">
-                    <a href="#signin" class="forgot-link" onclick="event.preventDefault(); switchAuthTab('signin')">Back to Login</a>
-                </div>
-                <button type="button" class="auth-btn" onclick="sendForgotOTP()">Send OTP</button>
             </div>
-
-            <div id="forgot-step-2" style="display: none;">
-                <p class="step-pane-subtitle" style="margin-bottom: 1rem; color: #10b981;">OTP sent to your email! Please check your inbox.</p>
-                <div class="form-group-db">
-                    <label class="form-label-db">Enter 6-Digit OTP</label>
-                    <input type="text" id="forgot-otp" placeholder="123456" class="form-input-db">
-                </div>
-                <button type="button" class="auth-btn" style="margin-top: 1rem;" onclick="verifyForgotOTP()">Verify OTP</button>
+            <div class="forgot-step" id="forgot-s2">
+                <div class="msg-success"><span class="material-symbols-outlined">mark_email_read</span> OTP sent to your email.</div>
+                <div class="field"><label>6-Digit OTP</label><input type="text" id="forgot-otp" placeholder="123456" maxlength="6"></div>
+                <button type="button" class="btn-primary" onclick="verifyForgotOTP()">Verify OTP</button>
             </div>
-
-            <div id="forgot-step-3" style="display: none;">
-                <p class="step-pane-subtitle" style="margin-bottom: 1rem; color: #10b981;">OTP Verified! Enter your new password.</p>
-                <div class="form-group-db">
-                    <label class="form-label-db">Choose New Password</label>
-                    <input type="password" id="forgot-new-password" placeholder="••••••••" class="form-input-db">
-                </div>
-                <button type="button" class="auth-btn" style="margin-top: 1rem;" onclick="submitNewPassword()">Reset Password & Login</button>
+            <div class="forgot-step" id="forgot-s3">
+                <div class="msg-success"><span class="material-symbols-outlined">verified</span> OTP verified! Set new password.</div>
+                <div class="field"><label>New Password</label><input type="password" id="forgot-new-password" placeholder="Min 6 characters"></div>
+                <button type="button" class="btn-primary" onclick="submitNewPassword()">Reset & Login</button>
             </div>
         </div>
 
-        <div class="auth-security-footer">
-            <span><span class="material-symbols-outlined">lock</span> Encrypted session</span>
-            <span><span class="material-symbols-outlined">verified_user</span> Protected account access</span>
+        <!-- Footer -->
+        <div class="auth-footer">
+            <span><span class="material-symbols-outlined">lock</span> Encrypted</span>
+            <span><span class="material-symbols-outlined">verified_user</span> Secure</span>
         </div>
     </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="landing-footer">
-        <div class="footer-container">
+</div>
 
-            
-            <div class="footer-bottom">
-                <p>&copy; 2025 Nova. All Rights Reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Script for auth portal -->
-    <script>
-        // Theme toggle logic
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        if (themeToggleBtn) {
-            const savedTheme = localStorage.getItem('nova_theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-theme');
-                themeToggleBtn.querySelector('.theme-icon').textContent = 'light_mode';
-            }
-            
-            themeToggleBtn.addEventListener('click', () => {
-                const isDark = document.body.classList.toggle('dark-theme');
-                localStorage.setItem('nova_theme', isDark ? 'dark' : 'light');
-                themeToggleBtn.querySelector('.theme-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
-            });
-        }
-
-        // Autofill credentials helper
-        function copyDemoCreds(email, password) {
-            document.getElementById('signin-email').value = email;
-            document.getElementById('signin-password').value = password;
-        }
-
-        const globalUrlParams = new URLSearchParams(window.location.search);
-        const redirectTarget = globalUrlParams.get('redirect');
-
-        // Check if token exists and redirect immediately
-        const token = localStorage.getItem('nova_token');
-        if (token) {
-            // Check stored role to redirect
-            const role = localStorage.getItem('nova_role');
-            if (role === 'admin') {
-                window.location.href = '/admin';
-            } else {
-                window.location.href = redirectTarget ? redirectTarget : '/dashboard';
-            }
-        }
-
-        // Step Wizard Helpers for Registration
-        function showSignupStep(stepNum) {
-            document.querySelectorAll('.signup-step-pane').forEach(pane => {
-                pane.classList.remove('active');
-            });
-            document.querySelectorAll('.step-indicator-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            const activePane = document.getElementById(`signup-step-pane-${stepNum}`);
-            if (activePane) activePane.classList.add('active');
-            
-            // Update step indicators
-            for (let i = 1; i <= 3; i++) {
-                const ind = document.getElementById(`step-ind-${i}`);
-                if (ind) {
-                    if (i <= stepNum) {
-                        ind.classList.add('active');
-                    } else {
-                        ind.classList.remove('active');
-                    }
-                }
-            }
-        }
-
-        function nextSignupStep(stepNum) {
-            if (stepNum === 2) {
-                const nameVal = document.getElementById('signup-name').value.trim();
-                const emailVal = document.getElementById('signup-email').value.trim();
-                if (!nameVal || !emailVal) {
-                    alert("Please fill in your Full Name and Email Address.");
-                    return;
-                }
-                if (!emailVal.includes('@')) {
-                    alert("Please enter a valid email address.");
-                    return;
-                }
-            } else if (stepNum === 3) {
-                const passwordVal = document.getElementById('signup-password').value;
-                const confirmVal = document.getElementById('signup-confirm').value;
-                if (!passwordVal || !confirmVal) {
-                    alert("Please fill in Password and Confirm Password.");
-                    return;
-                }
-                if (passwordVal !== confirmVal) {
-                    alert("Passwords do not match.");
-                    return;
-                }
-            }
-            showSignupStep(stepNum);
-        }
-
-        function prevSignupStep(stepNum) {
-            showSignupStep(stepNum);
-        }
-
-        // Switch Tabs Helper
-        function switchAuthTab(tabId) {
-            const tabs = ['signin', 'signup', 'forgot'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`tab-btn-${t}`);
-                const form = document.getElementById(`form-${t}`);
-                if (t === tabId) {
-                    if (btn) btn.classList.add('active');
-                    if (btn && t === 'forgot') btn.style.display = 'block';
-                    if (form) form.classList.add('active');
-                    if (t === 'signup') {
-                        showSignupStep(1);
-                    }
-                } else {
-                    if (btn) btn.classList.remove('active');
-                    if (btn && t === 'forgot') btn.style.display = 'none';
-                    if (form) form.classList.remove('active');
-                }
-            });
-        }
-
-        // Submit Sign In API Call
-        async function submitSignIn(e) {
-            e.preventDefault();
-            const email = document.getElementById('signin-email').value;
-            const password = document.getElementById('signin-password').value;
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Login failed');
-
-                localStorage.setItem('nova_token', data.token);
-                localStorage.setItem('nova_role', data.user.role);
-
-                if (data.user.role === 'admin') {
-                    window.location.href = '/admin';
-                } else {
-                    window.location.href = redirectTarget ? redirectTarget : '/dashboard';
-                }
-            } catch (err) {
-                alert(err.message);
-            }
-        }
-
-        // Submit Sign Up API Call
-        async function submitSignUp(e) {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            const confirm = document.getElementById('signup-confirm').value;
-            const referralCode = document.getElementById('signup-ref').value;
-
-            if (password !== confirm) {
-                alert('Passwords do not match');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, referralCode })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || 'Registration failed');
-
-                localStorage.setItem('nova_token', data.token);
-                localStorage.setItem('nova_role', 'user');
-
-                window.location.href = redirectTarget ? redirectTarget : '/dashboard';
-            } catch (err) {
-                alert(err.message);
-            }
-        }
-
-
-        // Mobile Nav Toggle logic
-        const navToggleBtn = document.querySelector('.nav-toggle-btn');
-        const navLinks = document.querySelector('.nav-links');
-        if (navToggleBtn && navLinks) {
-            navToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                navLinks.classList.toggle('active');
-            });
-        }
-
-        // User Profile Dropdown logic on landing page
-        const profileBtn = document.getElementById('landing-profile-btn');
-        const profileDropdown = document.getElementById('landing-profile-dropdown');
-        if (profileBtn && profileDropdown) {
-            profileBtn.addEventListener('click', (e) => {
-                const token = localStorage.getItem('nova_token');
-                if (token) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const isOpen = profileDropdown.style.display === 'block';
-                    profileDropdown.style.display = isOpen ? 'none' : 'block';
-                }
-            });
-
-            // Logout action inside landing dropdown
-            const logoutLink = profileDropdown.querySelector('.logout-action-btn');
-            if (logoutLink) {
-                logoutLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    localStorage.removeItem('nova_token');
-                    localStorage.removeItem('nova_role');
-                    window.location.href = '/login';
-                });
-            }
-        }
-
-        // Global click-away handler to close open menus
-        document.addEventListener('click', () => {
-            if (navLinks) navLinks.classList.remove('active');
-            if (profileDropdown) profileDropdown.style.display = 'none';
-        });
-
-        // Dynamic User Profile Update in Header (Landing Page)
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if redirected to sign up directly or via referral link
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
-            const ref = urlParams.get('ref');
-
-            if (ref) {
-                const refInput = document.getElementById('signup-ref');
-                if (refInput) {
-                    refInput.value = ref;
-                }
-                switchAuthTab('signup');
-            } else if (tab === 'signup' || window.location.hash === '#signup') {
-                switchAuthTab('signup');
-            } else {
-                switchAuthTab('signin');
-            }
-
-            const token = localStorage.getItem('nova_token');
-            if (token) {
-                const role = localStorage.getItem('nova_role');
-                window.location.href = role === 'admin' ? '/admin' : (redirectTarget ? redirectTarget : '/dashboard');
-                return;
-            }
-
-            // Intercept restricted /dashboard links for guests
-            const restrictedLinks = document.querySelectorAll('a[href*="/dashboard"], a[href*="/user-dashboard"]');
-            restrictedLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    switchAuthTab('signin');
-                });
-            });
-
-            // If not logged in, hide the profile/register button completely
-            const profileBtn = document.getElementById('landing-profile-btn');
-            if (profileBtn) {
-                profileBtn.style.display = 'none';
-            }
-        });
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js');
-            });
-        }
-    </script>
-</body>
-</html>
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner">
+    <div class="pwa-icon"><span class="material-symbols-outlined">install_mobile</span></div>
+    <div class="pwa-text">
+        <strong>Add Nova to Home Screen</strong>
+        <small>Access your portfolio instantly — like an app!</small>
+    </div>
+    <div class="pwa-actions">
+        <button class="btn-pwa-install" id="pwa-install-btn">Install</button>
+        <button class="btn-pwa-dismiss" id="pwa-dismiss-btn">Later</button>
+    </div>
+</div>
 
 <script>
-// Forgot Password Flow (OTP)
-async function sendForgotOTP() {
-    const email = document.getElementById('forgot-email').value;
-    if (!email) {
-        alert('Please enter your email address');
-        return;
-    }
+    // --- URL params ---
+    const globalUrlParams = new URLSearchParams(window.location.search);
+    const redirectTarget = globalUrlParams.get('redirect');
 
-    try {
-        const response = await fetch('/api/auth/forgot-password/send-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to send OTP');
-
-        document.getElementById('forgot-step-1').style.display = 'none';
-        document.getElementById('forgot-step-2').style.display = 'block';
-    } catch (err) {
-        alert(err.message);
-    }
-}
-
-function verifyForgotOTP() {
-    const otpCode = document.getElementById('forgot-otp').value;
-    if (!otpCode) {
-        alert('Please enter OTP');
-        return;
-    }
-    
-    // We verify this on the server along with the password reset
-    document.getElementById('forgot-step-2').style.display = 'none';
-    document.getElementById('forgot-step-3').style.display = 'block';
-}
-
-async function submitNewPassword() {
-    const email = document.getElementById('forgot-email').value;
-    const otpCode = document.getElementById('forgot-otp').value;
-    const newPassword = document.getElementById('forgot-new-password').value;
-
-    if (!newPassword || newPassword.length < 6) {
-        alert('Password must be at least 6 characters');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/auth/forgot-password/reset', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, otpCode, newPassword })
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Reset failed');
-
-        alert('Password reset successfully! Logging you in...');
-        
-        // Auto-login
-        const loginResp = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password: newPassword })
-        });
-        
-        const loginData = await loginResp.json();
-        if (loginResp.ok) {
-            localStorage.setItem('nova_token', loginData.token);
-            localStorage.setItem('nova_role', loginData.user.role);
-            window.location.href = loginData.user.role === 'admin' ? '/admin' : '/dashboard';
-        } else {
-            switchAuthTab('signin');
+    // --- Auth guard: already logged in ---
+    (function() {
+        const token = localStorage.getItem('nova_token');
+        if (token) {
+            const role = localStorage.getItem('nova_role');
+            window.location.href = role === 'admin' ? '/admin' : (redirectTarget || '/dashboard');
         }
+    })();
 
-    } catch (err) {
-        alert(err.message);
+    // --- Tab switch ---
+    function switchTab(tabId) {
+        ['signin','signup','forgot'].forEach(t => {
+            const btn = document.getElementById('tab-' + t);
+            const form = document.getElementById('form-' + t);
+            if (t === tabId) {
+                btn.classList.add('active');
+                if (t === 'forgot') btn.style.display = 'block';
+                form.classList.add('active');
+                if (t === 'signup') showStep(1);
+            } else {
+                btn.classList.remove('active');
+                if (t === 'forgot') btn.style.display = 'none';
+                form.classList.remove('active');
+            }
+        });
     }
-}
+
+    // --- Signup step wizard ---
+    function showStep(n) {
+        document.querySelectorAll('.step-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+        const pane = document.getElementById('step-pane-' + n);
+        if (pane) pane.classList.add('active');
+        for (let i = 1; i <= n; i++) {
+            const dot = document.getElementById('step-ind-' + i);
+            if (dot) dot.classList.add('active');
+        }
+    }
+    function nextStep(n) {
+        if (n === 2) {
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            if (!name || !email) { alert('Please fill in Name and Email.'); return; }
+            if (!email.includes('@')) { alert('Enter a valid email.'); return; }
+        }
+        if (n === 3) {
+            const pw = document.getElementById('signup-password').value;
+            const cp = document.getElementById('signup-confirm').value;
+            if (!pw || pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
+            if (pw !== cp) { alert('Passwords do not match.'); return; }
+        }
+        showStep(n);
+    }
+    function prevStep(n) { showStep(n); }
+
+    // --- Sign In ---
+    async function submitSignIn(e) {
+        e.preventDefault();
+        const btn = document.getElementById('signin-btn');
+        btn.textContent = 'Signing in…';
+        btn.disabled = true;
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('signin-email').value,
+                    password: document.getElementById('signin-password').value
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Login failed');
+            localStorage.setItem('nova_token', data.token);
+            localStorage.setItem('nova_role', data.user.role);
+            window.location.href = data.user.role === 'admin' ? '/admin' : (redirectTarget || '/dashboard');
+        } catch (err) {
+            alert(err.message);
+            btn.textContent = 'Sign In';
+            btn.disabled = false;
+        }
+    }
+
+    // --- Sign Up ---
+    async function submitSignUp(e) {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('signup-name').value,
+                    email: document.getElementById('signup-email').value,
+                    password: document.getElementById('signup-password').value,
+                    referralCode: document.getElementById('signup-ref').value
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Registration failed');
+            localStorage.setItem('nova_token', data.token);
+            localStorage.setItem('nova_role', 'user');
+            window.location.href = redirectTarget || '/dashboard';
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    // --- Forgot Password ---
+    async function sendForgotOTP() {
+        const email = document.getElementById('forgot-email').value;
+        if (!email) { alert('Enter your email'); return; }
+        try {
+            const res = await fetch('/api/auth/forgot-password/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
+            document.getElementById('forgot-s1').classList.remove('active');
+            document.getElementById('forgot-s2').classList.add('active');
+        } catch (err) { alert(err.message); }
+    }
+
+    function verifyForgotOTP() {
+        const otp = document.getElementById('forgot-otp').value;
+        if (!otp) { alert('Enter the OTP'); return; }
+        document.getElementById('forgot-s2').classList.remove('active');
+        document.getElementById('forgot-s3').classList.add('active');
+    }
+
+    async function submitNewPassword() {
+        const email = document.getElementById('forgot-email').value;
+        const otpCode = document.getElementById('forgot-otp').value;
+        const newPassword = document.getElementById('forgot-new-password').value;
+        if (!newPassword || newPassword.length < 6) { alert('Password must be at least 6 chars'); return; }
+        try {
+            const res = await fetch('/api/auth/forgot-password/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otpCode, newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Reset failed');
+            // Auto-login
+            const lr = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: newPassword })
+            });
+            const ld = await lr.json();
+            if (lr.ok) {
+                localStorage.setItem('nova_token', ld.token);
+                localStorage.setItem('nova_role', ld.user.role);
+                window.location.href = ld.user.role === 'admin' ? '/admin' : '/dashboard';
+            } else {
+                switchTab('signin');
+            }
+        } catch (err) { alert(err.message); }
+    }
+
+    // --- Pre-fill tab from URL ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
+        const tab = urlParams.get('tab');
+        if (ref) {
+            const el = document.getElementById('signup-ref');
+            if (el) el.value = ref;
+            switchTab('signup');
+        } else if (tab === 'signup') {
+            switchTab('signup');
+        } else {
+            switchTab('signin');
+        }
+    });
+
+    // --- PWA Install Prompt Logic ---
+    // Shows 30-40s after page load for new users.
+    // After user dismisses or installs, snooze 24 hours.
+    let deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+    });
+
+    function showPwaBanner() {
+        const lastSeen = parseInt(localStorage.getItem('nova_pwa_dismissed') || '0', 10);
+        const now = Date.now();
+        const hrs24 = 24 * 60 * 60 * 1000;
+        if (now - lastSeen < hrs24) return; // already dismissed within 24h
+        const banner = document.getElementById('pwa-install-banner');
+        banner.classList.add('show');
+    }
+
+    document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+        if (deferredInstallPrompt) {
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+        }
+        localStorage.setItem('nova_pwa_dismissed', Date.now().toString());
+        document.getElementById('pwa-install-banner').classList.remove('show');
+    });
+
+    document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+        localStorage.setItem('nova_pwa_dismissed', Date.now().toString());
+        document.getElementById('pwa-install-banner').classList.remove('show');
+    });
+
+    // Show banner 30–40 seconds after load (random to avoid being annoying)
+    const delay = 30000 + Math.random() * 10000;
+    setTimeout(showPwaBanner, delay);
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+        });
+    }
 </script>
+</body>
+</html>

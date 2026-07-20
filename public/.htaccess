@@ -1,19 +1,27 @@
-Options -Indexes -MultiViews
+Options -Indexes
 
 RewriteEngine On
 RewriteBase /
 
-# 1. Route API requests
+# 1. Route API requests to PHP router
 RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
 
-# 2. Clean URL aliases (Serves .html files seamlessly without .html in URL bar)
-RewriteRule ^login/?$ login.html [L,QSA]
-RewriteRule ^admin/?$ admin.html [L,QSA]
-RewriteRule ^admin-dashboard/?$ admin.html [L,QSA]
-RewriteRule ^dashboard/?$ dashboard.html [L,QSA]
-RewriteRule ^user-dashboard/?$ dashboard.html [L,QSA]
-RewriteRule ^investments/?$ investments.html [L,QSA]
-RewriteRule ^help/?$ help.html [L,QSA]
+# 2. Clean URL aliases - serve .html files for URL-without-extension
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^login/?$ /login.html [R=301,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^dashboard/?$ /dashboard.html [R=301,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^user-dashboard/?$ /dashboard.html [R=301,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^investments/?$ /investments.html [R=301,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^help/?$ /help.html [R=301,L]
 
 # 3. Do not rewrite existing real files or directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
