@@ -11,9 +11,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-require_once '../config.php';
+require_once __DIR__ . '/../config.php';
 
 $request = isset($_GET['request']) ? explode('/', trim($_GET['request'], '/')) : [];
+if (empty($request) || empty($request[0])) {
+    $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    $uriPath = preg_replace('#^.*/api/?#i', '', $uriPath);
+    $request = explode('/', trim($uriPath, '/'));
+}
+
 $endpoint = isset($request[0]) ? $request[0] : '';
 $action = isset($request[1]) ? $request[1] : '';
 $subaction = isset($request[2]) ? $request[2] : '';
