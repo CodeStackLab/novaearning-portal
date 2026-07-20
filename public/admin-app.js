@@ -106,9 +106,8 @@ async function fetchActiveTabDetails(tabId) {
 }
 
 const notificationSettingKeys = [
-    'user_email_notifications', 'admin_email_notifications', 'email_deposit_notifications',
-    'email_withdrawal_notifications', 'email_investment_notifications', 'email_commission_notifications',
-    'email_reminder_notifications', 'email_support_notifications'
+    'admin_email_notifications', 'admin_email_deposit_notifications', 'admin_email_withdrawal_notifications',
+    'admin_email_investment_notifications', 'admin_email_commission_notifications', 'admin_email_support_notifications'
 ];
 
 async function loadNotificationSettings() {

@@ -207,10 +207,22 @@ function novaEmailBody($heading, $contentHtml) {
         . '<p style="margin-top:24px;font-size:12px;color:#718096">This is an automatic account notification.</p></div>';
 }
 
-function notificationEnabled($pdo, $audience, $event = 'general') {
-    $keys = [$audience . '_email_notifications', 'email_' . $event . '_notifications'];
+function ensureUserNotificationPreferencesTable($pdo) {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS user_notification_preferences (
+        user_id INT NOT NULL,
+        event_key VARCHAR(50) NOT NULL,
+        enabled TINYINT(1) NOT NULL DEFAULT 1,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, event_key)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+function notificationEnabled($pdo, $audience, $event = 'general', $userId = null) {
+    $keys = [$audience . '_email_notifications'];
+    if ($audience === 'admin' && $event !== 'general') $keys[] = 'admin_email_' . $event . '_notifications';
     try {
-        $stmt = $pdo->prepare('SELECT `key`, value FROM settings WHERE `key` IN (?, ?)');
+        $placeholders = implode(',', array_fill(0, count($keys), '?'));
+        $stmt = $pdo->prepare("SELECT `key`, value FROM settings WHERE `key` IN ($placeholders)");
         $stmt->execute($keys);
         $values = [];
         foreach ($stmt->fetchAll() as $row) $values[$row['key']] = $row['value'];
@@ -218,11 +230,20 @@ function notificationEnabled($pdo, $audience, $event = 'general') {
             if (isset($values[$key]) && $values[$key] === '0') return false;
         }
     } catch (Exception $e) {}
+    if ($audience === 'user' && $userId && $event !== 'general') {
+        try {
+            ensureUserNotificationPreferencesTable($pdo);
+            $stmt = $pdo->prepare('SELECT enabled FROM user_notification_preferences WHERE user_id = ? AND event_key = ?');
+            $stmt->execute([$userId, $event]);
+            $preference = $stmt->fetch();
+            if ($preference && (int)$preference['enabled'] === 0) return false;
+        } catch (Exception $e) {}
+    }
     return true;
 }
 
 function notifyUserById($pdo, $userId, $subject, $contentHtml, $event = 'general') {
-    if (!notificationEnabled($pdo, 'user', $event)) return false;
+    if (!notificationEnabled($pdo, 'user', $event, $userId)) return false;
     try {
         $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
         $stmt->execute([$userId]);

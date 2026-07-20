@@ -71,6 +71,13 @@
             </li>
 
             <li>
+                <a href="#notifications" class="sidebar-item-link" data-tab="notifications">
+                    <span class="material-symbols-outlined sidebar-icon">notifications</span>
+                    <span>Notifications</span>
+                </a>
+            </li>
+
+            <li>
                 <a href="#support" class="sidebar-item-link" data-tab="support">
                     <span class="material-symbols-outlined sidebar-icon">help_outline</span>
                     <span>Support</span>
@@ -535,6 +542,28 @@
                         </button>
                     </div>
                 </div>
+            </section>
+
+            <section id="panel-notifications" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">My Notifications</h1>
+                <p class="panel-desc">Choose which personal account emails you want to receive. Security and essential platform messages may still be delivered.</p>
+                <form id="user-notification-form" class="smtp-settings-card" onsubmit="saveUserNotificationSettings(event)">
+                    <div class="smtp-card-heading">
+                        <div class="smtp-heading-icon"><span class="material-symbols-outlined">tune</span></div>
+                        <div><h2 class="font-display">Personal email preferences</h2><p>These controls affect only emails sent to your account.</p></div>
+                    </div>
+                    <div class="notification-settings-grid">
+                        <label class="notification-setting"><span><strong>Deposit status</strong><small>Submission, approval and rejection</small></span><input type="checkbox" id="user-notify-deposit"><i></i></label>
+                        <label class="notification-setting"><span><strong>Withdrawal status</strong><small>Request and successful payout alerts</small></span><input type="checkbox" id="user-notify-withdrawal"><i></i></label>
+                        <label class="notification-setting"><span><strong>Investment activity</strong><small>Activation and completion</small></span><input type="checkbox" id="user-notify-investment"><i></i></label>
+                        <label class="notification-setting"><span><strong>Daily profit</strong><small>24-hour commission credited</small></span><input type="checkbox" id="user-notify-commission"><i></i></label>
+                        <label class="notification-setting"><span><strong>Referral activity</strong><small>New referral and referral commission</small></span><input type="checkbox" id="user-notify-referral"><i></i></label>
+                        <label class="notification-setting"><span><strong>Profit reminders</strong><small>5-hour and 2-hour countdowns</small></span><input type="checkbox" id="user-notify-reminder"><i></i></label>
+                        <label class="notification-setting"><span><strong>Support replies</strong><small>Messages from Nova Support</small></span><input type="checkbox" id="user-notify-support"><i></i></label>
+                    </div>
+                    <div class="notification-privacy-note"><span class="material-symbols-outlined">admin_panel_settings</span><span>Your choices never disable operational alerts sent to Nova administrators.</span></div>
+                    <div class="smtp-actions"><button type="submit" class="form-btn-db" id="user-notification-save-btn"><span class="material-symbols-outlined">save</span> Save My Preferences</button></div>
+                </form>
             </section>
 
         </main>

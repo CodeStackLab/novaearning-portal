@@ -92,6 +92,10 @@ function handleAuth($action, $subaction, $pdo, $body) {
             $stmt->execute([$newUserId, $dateStr, 'Referral Bonus', 5.00, $refStr, 'Confirmed']);
         }
 
+        if ($referrerId) {
+            notifyUserById($pdo, $referrerId, 'You have a new referral', '<p><strong>' . htmlspecialchars($name) . '</strong> joined Nova using your referral code.</p><p>You will receive referral commission when eligible activity is completed.</p>', 'referral');
+        }
+
         $token = generateJWT(['userId' => $newUserId]);
 
         // Send Welcome Email via SMTP

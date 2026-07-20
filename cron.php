@@ -79,7 +79,7 @@ foreach ($activeInvestments as $inv) {
             notifyUserById($pdo, $inv['user_id'], 'Your daily commission was added', '<p>Your 24-hour earning cycle is complete.</p><p><strong>$' . $commissionText . '</strong> commission has been added to your balance.</p><p>Cycle ' . $cycle . ' of ' . $durationDays . ' completed.</p>', 'commission');
             notifyAdmins($pdo, 'Daily investment commission credited', '<p>Investment <strong>#' . (int)$inv['id'] . '</strong> completed earning cycle ' . $cycle . ' of ' . $durationDays . '.</p><p><strong>$' . $commissionText . '</strong> was credited automatically to the investor.</p>', 'commission');
             if ($referrerId) {
-                notifyUserById($pdo, $referrerId, 'Referral commission was added', '<p>Your referral completed an earning cycle.</p><p><strong>$' . number_format($referralCommission, 2) . '</strong> was automatically added to your balance.</p>', 'commission');
+                notifyUserById($pdo, $referrerId, 'Referral commission was added', '<p>Your referral completed an earning cycle.</p><p><strong>$' . number_format($referralCommission, 2) . '</strong> was automatically added to your balance.</p>', 'referral');
             }
         } catch (Exception $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();

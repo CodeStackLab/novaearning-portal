@@ -130,6 +130,7 @@ function switchTab(tabId) {
                 link.classList.remove('active');
             }
         });
+        if (tabId === 'notifications') loadUserNotificationSettings();
 
         // Set hash link URL quietly
         window.history.pushState(null, null, `#${tabId}`);
@@ -141,6 +142,37 @@ function switchTab(tabId) {
         if (tabId === 'myinvestments' && typeof renderDummyMyInvestments === 'function') {
             renderDummyMyInvestments();
         }
+    }
+}
+
+const userNotificationEvents = ['deposit', 'withdrawal', 'investment', 'commission', 'referral', 'reminder', 'support'];
+
+async function loadUserNotificationSettings() {
+    if (!document.getElementById('user-notification-form')) return;
+    try {
+        const settings = await apiRequest('/user/notifications');
+        userNotificationEvents.forEach(key => {
+            const input = document.getElementById(`user-notify-${key}`);
+            if (input) input.checked = settings[key] !== false;
+        });
+    } catch (error) {
+        showToast(error.message || 'Unable to load notification preferences');
+    }
+}
+
+async function saveUserNotificationSettings(event) {
+    event.preventDefault();
+    const button = document.getElementById('user-notification-save-btn');
+    const payload = {};
+    userNotificationEvents.forEach(key => payload[key] = Boolean(document.getElementById(`user-notify-${key}`)?.checked));
+    if (button) button.disabled = true;
+    try {
+        const result = await apiRequest('/user/notifications', { method: 'POST', body: JSON.stringify(payload) });
+        showToast(result.message || 'Your notification preferences were saved');
+    } catch (error) {
+        showToast(error.message || 'Unable to save notification preferences');
+    } finally {
+        if (button) button.disabled = false;
     }
 }
 

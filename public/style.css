@@ -366,6 +366,7 @@ body.dark-theme {
 .notification-setting i::after { content:''; position:absolute; width:20px; height:20px; top:3px; left:3px; border-radius:50%; background:#fff; transition:.2s; }
 .notification-setting input:checked + i { background:#3b82f6; }
 .notification-setting input:checked + i::after { transform:translateX(20px); }
+.notification-privacy-note { display:flex; align-items:center; gap:.65rem; margin-top:1rem; padding:.85rem 1rem; color:#93c5fd; background:rgba(59,130,246,.08); border:1px solid rgba(59,130,246,.25); border-radius:10px; font-size:.85rem; }
 .smtp-password-wrap { position: relative; }
 .smtp-password-wrap .form-input-db { padding-right: 3rem !important; }
 .smtp-password-wrap button { position: absolute; top: 50%; right: .45rem; transform: translateY(-50%); width: 36px; height: 36px; display: grid; place-items: center; color: #8fa0b8; background: transparent; border: 0; border-radius: 8px; cursor: pointer; }

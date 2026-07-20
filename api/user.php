@@ -72,6 +72,32 @@ function handleUser($action, $subaction, $pdo, $body) {
         sendJson(['message' => 'Email changes are handled by support. Please create a support ticket.'], 403);
     }
 
+    if ($action === 'notifications') {
+        $keys = ['deposit', 'withdrawal', 'investment', 'commission', 'referral', 'reminder', 'support'];
+        ensureUserNotificationPreferencesTable($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $result = array_fill_keys($keys, true);
+            $stmt = $pdo->prepare('SELECT event_key, enabled FROM user_notification_preferences WHERE user_id = ?');
+            $stmt->execute([$userId]);
+            foreach ($stmt->fetchAll() as $row) {
+                if (array_key_exists($row['event_key'], $result)) $result[$row['event_key']] = (bool)$row['enabled'];
+            }
+            sendJson($result);
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $stmt = $pdo->prepare('INSERT INTO user_notification_preferences (user_id, event_key, enabled) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)');
+            $pdo->beginTransaction();
+            try {
+                foreach ($keys as $key) $stmt->execute([$userId, $key, !empty($body[$key]) ? 1 : 0]);
+                $pdo->commit();
+                sendJson(['message' => 'Your email preferences were saved.']);
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to save your email preferences.'], 500);
+            }
+        }
+    }
+
     sendJson(['message' => 'Invalid User Action'], 404);
 }
 ?>

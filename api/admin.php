@@ -72,7 +72,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'settings' && $subaction === 'notifications') {
-            $keys = ['user_email_notifications', 'admin_email_notifications', 'email_deposit_notifications', 'email_withdrawal_notifications', 'email_investment_notifications', 'email_commission_notifications', 'email_reminder_notifications', 'email_support_notifications'];
+            $keys = ['admin_email_notifications', 'admin_email_deposit_notifications', 'admin_email_withdrawal_notifications', 'admin_email_investment_notifications', 'admin_email_commission_notifications', 'admin_email_support_notifications'];
             $placeholders = implode(',', array_fill(0, count($keys), '?'));
             $stmt = $pdo->prepare("SELECT `key`, value FROM settings WHERE `key` IN ($placeholders)");
             $stmt->execute($keys);
@@ -150,7 +150,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'settings' && $subaction === 'notifications') {
-            $keys = ['user_email_notifications', 'admin_email_notifications', 'email_deposit_notifications', 'email_withdrawal_notifications', 'email_investment_notifications', 'email_commission_notifications', 'email_reminder_notifications', 'email_support_notifications'];
+            $keys = ['admin_email_notifications', 'admin_email_deposit_notifications', 'admin_email_withdrawal_notifications', 'admin_email_investment_notifications', 'admin_email_commission_notifications', 'admin_email_support_notifications'];
             $stmt = $pdo->prepare('INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)');
             $pdo->beginTransaction();
             try {
@@ -264,7 +264,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
                     $bonusText = number_format($referralBonusAmt, 2);
-                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'commission');
+                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
                 }
                 sendJson(['message' => "Deposit successfully " . strtolower($act) . "d."]);
             } catch (Exception $e) {
