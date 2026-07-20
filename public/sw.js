@@ -1,8 +1,9 @@
-const CACHE_NAME = 'nova-pwa-cache-v2';
+const CACHE_NAME = 'nova-pwa-cache-v3';
 const urlsToCache = [
-  '/',
+  '/login',
   '/login.html',
-  '/style.css'
+  '/manifest.json',
+  '/images/nova-logo-full.svg'
 ];
 
 self.addEventListener('install', event => {
@@ -28,7 +29,20 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
+  // Never cache private API responses.
+  if (new URL(event.request.url).pathname.startsWith('/api/')) return;
+
+  // Keep pages network-first so account screens are never stale.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request).then(response => response || caches.match('/login.html')))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.match(event.request).then(cached => cached || fetch(event.request))
   );
 });

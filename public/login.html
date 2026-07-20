@@ -3,7 +3,7 @@
 <head>
     <base href="/">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Nova Portal — Sign In</title>
     <meta name="description" content="Sign in to Nova Portal. Secure access to your investment dashboard, daily profits, and wallet.">
     <link rel="canonical" href="https://novaearning.com/login">
@@ -16,10 +16,6 @@
     <meta name="theme-color" content="#050a14">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -43,13 +39,14 @@
             height: 100%;
             background: var(--bg);
             color: var(--text);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
         /* Full-screen layout */
         .page {
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -156,6 +153,10 @@
             background: linear-gradient(135deg, var(--blue), var(--purple));
             color: #fff;
             box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        button:focus-visible, a:focus-visible, input:focus-visible {
+            outline: 3px solid rgba(96,165,250,0.45);
+            outline-offset: 2px;
         }
 
         /* Form containers */
@@ -325,7 +326,7 @@
             position: fixed;
             bottom: 0; left: 0; right: 0;
             z-index: 9999;
-            padding: 1rem 1.25rem;
+            padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
             background: linear-gradient(135deg, #0f172a, #111827);
             border-top: 1px solid rgba(59,130,246,0.3);
             box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
@@ -372,10 +373,23 @@
         }
 
         @media (max-width: 480px) {
-            .auth-card { padding: 1.5rem 1.25rem; border-radius: 16px; }
+            .page { justify-content: flex-start; padding: max(1rem, env(safe-area-inset-top)) 0.75rem; overflow: auto; }
+            .auth-card { padding: 1.35rem 1.1rem; border-radius: 16px; margin: auto 0; }
+            .field input { min-height: 48px; font-size: 1rem; }
+            .auth-logo { margin-bottom: 1.25rem; }
+            .auth-tabs { margin-bottom: 1.25rem; }
             #pwa-install-banner.show { flex-wrap: wrap; }
             .pwa-actions { width: 100%; }
             .btn-pwa-install, .btn-pwa-dismiss { flex: 1; text-align: center; }
+        }
+
+        @media (max-height: 680px) {
+            .page { justify-content: flex-start; overflow: auto; }
+            .auth-card { margin: auto 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
         }
     </style>
 </head>
@@ -490,10 +504,10 @@
 
 <!-- PWA Install Banner -->
 <div id="pwa-install-banner">
-    <div class="pwa-icon"><span class="material-symbols-outlined">install_mobile</span></div>
+    <div class="pwa-icon" aria-hidden="true">↓</div>
     <div class="pwa-text">
         <strong>Add Nova to Home Screen</strong>
-        <small>Access your portfolio instantly — like an app!</small>
+        <small id="pwa-install-help">Fast access from your home screen.</small>
     </div>
     <div class="pwa-actions">
         <button class="btn-pwa-install" id="pwa-install-btn">Install</button>
@@ -684,19 +698,44 @@
 
     // --- PWA Install Prompt Logic ---
     // Shows 30-40s after page load for new users.
-    // After user dismisses or installs, snooze 24 hours.
+    // Dismissal snoozes for 24 hours; a completed install hides it permanently.
+    const PWA_SNOOZE_KEY = 'nova_pwa_dismissed';
+    const PWA_INSTALLED_KEY = 'nova_pwa_installed';
+    const PWA_SNOOZE_MS = 24 * 60 * 60 * 1000;
     let deferredInstallPrompt = null;
+    let pwaTimer = null;
+
+    function isStandalone() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function rememberPwaInstalled() {
+        localStorage.setItem(PWA_INSTALLED_KEY, '1');
+        document.getElementById('pwa-install-banner').classList.remove('show');
+        if (pwaTimer) clearTimeout(pwaTimer);
+    }
+
+    if (isStandalone()) rememberPwaInstalled();
 
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredInstallPrompt = e;
     });
 
+    window.addEventListener('appinstalled', rememberPwaInstalled);
+
     function showPwaBanner() {
-        const lastSeen = parseInt(localStorage.getItem('nova_pwa_dismissed') || '0', 10);
+        if (isStandalone() || localStorage.getItem(PWA_INSTALLED_KEY) === '1') return;
+        const lastSeen = parseInt(localStorage.getItem(PWA_SNOOZE_KEY) || '0', 10);
         const now = Date.now();
-        const hrs24 = 24 * 60 * 60 * 1000;
-        if (now - lastSeen < hrs24) return; // already dismissed within 24h
+        if (Number.isFinite(lastSeen) && now - lastSeen < PWA_SNOOZE_MS) return;
+
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        // Native install is available on Chromium; iOS uses the Share menu.
+        if (!deferredInstallPrompt && !isIos) return;
+        if (isIos) {
+            document.getElementById('pwa-install-help').textContent = 'Tap Install, then Share → Add to Home Screen.';
+        }
         const banner = document.getElementById('pwa-install-banner');
         banner.classList.add('show');
     }
@@ -706,19 +745,24 @@
             deferredInstallPrompt.prompt();
             const { outcome } = await deferredInstallPrompt.userChoice;
             deferredInstallPrompt = null;
+            if (outcome === 'accepted') rememberPwaInstalled();
+            else localStorage.setItem(PWA_SNOOZE_KEY, Date.now().toString());
+        } else {
+            // iOS cannot launch the system prompt from JavaScript.
+            document.getElementById('pwa-install-help').textContent = 'In Safari, tap Share, then “Add to Home Screen”.';
+            return;
         }
-        localStorage.setItem('nova_pwa_dismissed', Date.now().toString());
         document.getElementById('pwa-install-banner').classList.remove('show');
     });
 
     document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
-        localStorage.setItem('nova_pwa_dismissed', Date.now().toString());
+        localStorage.setItem(PWA_SNOOZE_KEY, Date.now().toString());
         document.getElementById('pwa-install-banner').classList.remove('show');
     });
 
     // Show banner 30–40 seconds after load (random to avoid being annoying)
     const delay = 30000 + Math.random() * 10000;
-    setTimeout(showPwaBanner, delay);
+    pwaTimer = setTimeout(showPwaBanner, delay);
 
     // Service Worker
     if ('serviceWorker' in navigator) {

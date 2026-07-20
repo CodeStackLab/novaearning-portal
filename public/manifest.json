@@ -1,11 +1,14 @@
 {
-  "name": "NOVA App",
+  "name": "Nova Portal",
   "short_name": "NOVA",
   "description": "Invest in movies and products you love and earn daily profits.",
-  "start_url": "/",
+  "id": "/",
+  "start_url": "/login",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0f172a",
+  "background_color": "#050a14",
+  "theme_color": "#050a14",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/images/nova-logo-full.svg",

@@ -31,9 +31,6 @@
             </nav>
             
             <div class="header-right">
-                <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Theme" style="margin-right: 0.25rem;">
-                    <span class="material-symbols-outlined theme-icon">dark_mode</span>
-                </button>
                 <div style="position: relative;">
                     <a href="/dashboard.html" class="profile-dropdown-btn" id="landing-profile-btn" style="display: flex; align-items: center; gap: 0.5rem;">
                         <div class="profile-avatar-u" style="background-color: #3b82f6; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent;">
@@ -119,21 +116,6 @@
             navToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 navLinks.classList.toggle('active');
-            });
-        }
-
-        // Theme Toggle Logic
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (themeBtn) {
-            themeBtn.addEventListener('click', () => {
-                const body = document.body;
-                body.classList.toggle('dark-theme');
-                const icon = themeBtn.querySelector('.material-symbols-outlined');
-                if (body.classList.contains('dark-theme')) {
-                    icon.textContent = 'light_mode';
-                } else {
-                    icon.textContent = 'dark_mode';
-                }
             });
         }
 
