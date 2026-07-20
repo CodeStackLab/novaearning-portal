@@ -26,9 +26,9 @@ try {
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");
 
-    // Ensure Admin credentials: email = admin@novaearning.com, password = admin123
+    // Ensure Admin credentials for main admin: email = admin@novaearning.com, password = admin123
     $adminHash = password_hash('admin123', PASSWORD_BCRYPT);
-    $stmt = $pdo->prepare("UPDATE users SET email = 'admin@novaearning.com', password = ? WHERE role = 'admin'");
+    $stmt = $pdo->prepare("UPDATE users SET email = 'admin@novaearning.com', password = ? WHERE id = 1 OR username = 'novadmin'");
     $stmt->execute([$adminHash]);
 
     echo "<p style='color: green; font-size: 16px;'><strong>✓ Success! All database tables and initial seed data have been created in IONOS MySQL!</strong></p>";
