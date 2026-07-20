@@ -37,39 +37,26 @@ jobs:
           php -l cron.php
           php -l config.php
 
-      - name: Install secure transfer client
-        run: sudo apt-get update && sudo apt-get install --yes lftp
+      - name: Prepare deployment package
+        run: |
+          mkdir -p dist
+          cp -r public/* dist/
+          mkdir -p dist/api
+          cp -r api/* dist/api/
+          cp cron.php dist/
+          cp config.php dist/
 
       - name: Deploy application over SFTP
-        env:
-          SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
-          SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
-          SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
-          SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
-          REMOTE_PATH: ${{ secrets.IONOS_REMOTE_PATH }}
-        run: |
-          test -n "$SFTP_HOST"
-          test -n "$SFTP_PORT"
-          test -n "$SFTP_USER"
-          test -n "$SFTP_PASSWORD"
-          test -n "$REMOTE_PATH"
-
-          lftp <<DEPLOY
-          set cmd:fail-exit yes
-          set net:max-retries 3
-          set net:timeout 30
-          set sftp:auto-confirm yes
-          open -u "$SFTP_USER","$SFTP_PASSWORD" -p "$SFTP_PORT" "sftp://$SFTP_HOST"
-          mkdir -p "$REMOTE_PATH"
-          mirror --reverse --verbose --parallel=4 \
-            --exclude-glob "uploads/**" \
-            public/ "$REMOTE_PATH/"
-          mkdir -p "$REMOTE_PATH/api"
-          mirror --reverse --verbose --parallel=4 api/ "$REMOTE_PATH/api/"
-          put cron.php -o "$REMOTE_PATH/cron.php"
-          put config.php -o "$REMOTE_PATH/config.php"
-          bye
-          DEPLOY
+        uses: wlixxd/SFTP-deploy-action@v1.5.0
+        with:
+          server: ${{ secrets.IONOS_SFTP_HOST }}
+          port: ${{ secrets.IONOS_SFTP_PORT }}
+          username: ${{ secrets.IONOS_SFTP_USER }}
+          password: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          server-dir: ./
+          local-dir: dist/
+          exclude: |
+            **/uploads/**
 
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
