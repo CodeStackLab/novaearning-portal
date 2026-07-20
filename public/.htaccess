@@ -3,22 +3,22 @@ Options -Indexes
 RewriteEngine On
 RewriteBase /
 
-# 1. Do not rewrite existing files or directories
+# 1. Route API requests
+RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
+
+# 2. Route page aliases BEFORE checking directory existence
+RewriteRule ^admin/?$ /admin.html [L,QSA]
+RewriteRule ^admin-dashboard/?$ /admin.html [L,QSA]
+RewriteRule ^dashboard/?$ /dashboard.html [L,QSA]
+RewriteRule ^user-dashboard/?$ /dashboard.html [L,QSA]
+RewriteRule ^login/?$ /login.html [L,QSA]
+RewriteRule ^investments/?$ /investments.html [L,QSA]
+RewriteRule ^help/?$ /help.html [L,QSA]
+
+# 3. Do not rewrite existing real files or directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
-
-# 2. Route all API requests to /api/index.php
-RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
-
-# 3. Page aliases
-RewriteRule ^dashboard/?$ dashboard.html [L,QSA]
-RewriteRule ^user-dashboard/?$ dashboard.html [L,QSA]
-RewriteRule ^admin/?$ admin.html [L,QSA]
-RewriteRule ^admin-dashboard/?$ admin.html [L,QSA]
-RewriteRule ^login/?$ login.html [L,QSA]
-RewriteRule ^investments/?$ investments.html [L,QSA]
-RewriteRule ^help/?$ help.html [L,QSA]
 
 # 4. Catch-all fallback to index.php
 RewriteRule ^(.*)$ /index.php [L,QSA]
