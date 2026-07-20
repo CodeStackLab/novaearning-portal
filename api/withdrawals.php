@@ -14,7 +14,7 @@ function handleWithdrawals($action, $pdo, $body) {
             sendJson(['message' => 'Valid address and amount (minimum $20) are required'], 400);
         }
 
-        $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
+        $stmt = $pdo->prepare('SELECT name, email, balance FROM users WHERE id = ?');
         $stmt->execute([$userId]);
         $user = $stmt->fetch();
 
@@ -36,6 +36,11 @@ function handleWithdrawals($action, $pdo, $body) {
             $stmt->execute([$userId, $dateStr, 'Withdrawal', $withdrawAmt, $randomRef, 'Pending', $address]);
 
             $pdo->commit();
+            $amountText = number_format($withdrawAmt, 2);
+            $netText = number_format($netPayout, 2);
+            $safeRef = htmlspecialchars($randomRef);
+            notifyUserById($pdo, $userId, 'Withdrawal request received', "<p>Your withdrawal request for <strong>\${$amountText}</strong> is pending review.</p><p>Net payout after the 2% fee: <strong>\${$netText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>");
+            notifyAdmins($pdo, 'New withdrawal awaiting approval', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> requested a withdrawal of <strong>\${$amountText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p><p>Please review it in Manage Payouts.</p>");
             sendJson(['message' => "Withdrawal request for $" . number_format($withdrawAmt, 2) . " submitted. A 2% fee ($" . number_format($fee, 2) . ") applies. Net payout will be $" . number_format($netPayout, 2) . "."]);
         } catch (Exception $e) {
             $pdo->rollBack();

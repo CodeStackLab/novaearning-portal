@@ -99,7 +99,9 @@ function smtpCommand($socket, $command, $expectedCodes, &$error) {
     $response = smtpReadResponse($socket);
     $code = smtpResponseCode($response);
     if (!in_array($code, (array)$expectedCodes, true)) {
-        $error = 'SMTP server rejected the request (code ' . ($code ?: 'unknown') . ').';
+        $error = $code === 535
+            ? 'SMTP authentication failed (code 535). Check the full mailbox address and mailbox password; do not use the IONOS account password.'
+            : 'SMTP server rejected the request (code ' . ($code ?: 'unknown') . ').';
         return false;
     }
     return true;
@@ -195,6 +197,43 @@ function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
     }
 
     return @mail($toEmail, $subject, $bodyHtml, $headers);
+}
+
+function novaEmailBody($heading, $contentHtml) {
+    return '<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;background:#07101f;color:#e5edf8;padding:28px;border-radius:14px">'
+        . '<div style="color:#e8c66a;font-size:22px;font-weight:700;margin-bottom:20px">NOVA</div>'
+        . '<h2 style="margin:0 0 14px;color:#fff">' . htmlspecialchars($heading) . '</h2>'
+        . '<div style="line-height:1.65;color:#bdc9da">' . $contentHtml . '</div>'
+        . '<p style="margin-top:24px;font-size:12px;color:#718096">This is an automatic account notification.</p></div>';
+}
+
+function notifyUserById($pdo, $userId, $subject, $contentHtml) {
+    try {
+        $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        if (!$user || !filter_var($user['email'], FILTER_VALIDATE_EMAIL)) return false;
+        return sendSmtpEmail($user['email'], $user['name'] ?: 'Nova User', $subject, novaEmailBody($subject, $contentHtml), $pdo);
+    } catch (Exception $e) {
+        error_log('Nova user email notification failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+function notifyAdmins($pdo, $subject, $contentHtml) {
+    $sent = false;
+    try {
+        $stmt = $pdo->query("SELECT name, email FROM users WHERE role = 'admin'");
+        $admins = $stmt->fetchAll();
+        if (!$admins) $admins = [['name' => 'Nova Admin', 'email' => defined('SITE_EMAIL') ? SITE_EMAIL : 'contact@novaearning.com']];
+        foreach ($admins as $admin) {
+            if (!filter_var($admin['email'], FILTER_VALIDATE_EMAIL)) continue;
+            $sent = sendSmtpEmail($admin['email'], $admin['name'] ?: 'Nova Admin', $subject, novaEmailBody($subject, $contentHtml), $pdo) || $sent;
+        }
+    } catch (Exception $e) {
+        error_log('Nova admin email notification failed: ' . $e->getMessage());
+    }
+    return $sent;
 }
 
 // Very basic JWT Implementation in PHP to avoid external dependencies

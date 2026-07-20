@@ -22,7 +22,7 @@ function handleInvestments($action, $pdo, $body) {
         $singlePlanPrice = 100.00;
         $totalCost = $singlePlanPrice * $quantity;
 
-        $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
+        $stmt = $pdo->prepare('SELECT name, email, balance FROM users WHERE id = ?');
         $stmt->execute([$userId]);
         $user = $stmt->fetch();
 
@@ -46,6 +46,11 @@ function handleInvestments($action, $pdo, $body) {
             $stmt->execute([$userId, $dateStr, 'Investment', $totalCost, $randomRef, 'Confirmed']);
 
             $pdo->commit();
+            $costText = number_format($totalCost, 2);
+            $safeName = htmlspecialchars($name);
+            $safeRef = htmlspecialchars($randomRef);
+            notifyUserById($pdo, $userId, 'Investment activated', "<p>Your <strong>{$safeName}</strong> investment (quantity {$quantity}) is active.</p><p><strong>Amount:</strong> \${$costText}<br><strong>Reference:</strong> {$safeRef}</p>");
+            notifyAdmins($pdo, 'New investment activated', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> activated {$quantity} × <strong>{$safeName}</strong>.</p><p><strong>Amount:</strong> \${$costText}<br><strong>Reference:</strong> {$safeRef}</p>");
             sendJson(['message' => "Successfully purchased $quantity plan(s) for $name!"]);
         } catch (Exception $e) {
             $pdo->rollBack();

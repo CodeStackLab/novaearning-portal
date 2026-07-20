@@ -33,6 +33,8 @@ foreach ($activeInvestments as $inv) {
             $stmt->execute([$inv['user_id'], $dateStr, 'Payout', $inv['amount'], $refCode, 'Confirmed']);
             
             $pdo->commit();
+            $amountText = number_format((float)$inv['amount'], 2);
+            notifyUserById($pdo, $inv['user_id'], 'Investment matured', "<p>Your <strong>" . htmlspecialchars($inv['name']) . "</strong> investment has completed.</p><p><strong>\${$amountText}</strong> principal was returned to your balance.</p><p><strong>Reference:</strong> " . htmlspecialchars($refCode) . '</p>');
         } catch (Exception $e) {
             $pdo->rollBack();
             // Log error

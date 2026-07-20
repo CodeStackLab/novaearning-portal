@@ -235,6 +235,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     }
                 }
                 $pdo->commit();
+                $amountText = number_format((float)$deposit['amount'], 2);
+                $safeRef = htmlspecialchars($deposit['txn_id']);
+                notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>");
+                if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
+                    $bonusText = number_format($referralBonusAmt, 2);
+                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>");
+                }
                 sendJson(['message' => "Deposit successfully " . strtolower($act) . "d."]);
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -255,6 +262,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             $stmt = $pdo->prepare('UPDATE transactions SET status = ? WHERE id = ?');
             $stmt->execute(['Confirmed', $transactionId]);
+            $amountText = number_format((float)$tx['amount'], 2);
+            notifyUserById($pdo, $tx['user_id'], 'Withdrawal completed', "<p>Your withdrawal of <strong>\${$amountText}</strong> has been approved and marked completed.</p><p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>');
             sendJson(['message' => 'Withdrawal successfully approved and completed.']);
         }
 
