@@ -58,22 +58,45 @@ jobs:
         run: |
           node -e "
           const { Client } = require('ssh2');
-          const conn = new Client();
 
-          conn.on('ready', () => {
-            console.log('SSH Connection Successful!');
-            conn.end();
-          }).on('error', (err) => {
-            console.error('Connection error:', err);
+          const passwords = [
+            process.env.SFTP_PASSWORD,
+            '\"Easy@9129881899\"',
+            'Easy@9129881899\"',
+            '\"Easy@9129881899',
+            'Easy@9129881899'
+          ];
+
+          async function tryConnect(pass) {
+            return new Promise((resolve, reject) => {
+              const conn = new Client();
+              conn.on('ready', () => {
+                console.log('SUCCESS with password:', pass);
+                conn.end();
+                resolve(true);
+              }).on('error', (err) => {
+                resolve(false);
+              }).connect({
+                host: process.env.SFTP_HOST,
+                port: parseInt(process.env.SFTP_PORT || '22'),
+                username: process.env.SFTP_USER,
+                password: pass,
+                tryKeyboard: true
+              });
+            });
+          }
+
+          async function main() {
+            for (const pass of passwords) {
+              console.log('Testing password candidate length:', pass.length);
+              const ok = await tryConnect(pass);
+              if (ok) return;
+            }
+            console.error('All password candidates failed!');
             process.exit(1);
-          }).connect({
-            host: process.env.SFTP_HOST,
-            port: parseInt(process.env.SFTP_PORT || '22'),
-            username: process.env.SFTP_USER,
-            password: process.env.SFTP_PASSWORD,
-            tryKeyboard: true,
-            debug: (msg) => console.log('DEBUG:', msg)
-          });
+          }
+
+          main();
           "
 
       - name: Deployment summary
