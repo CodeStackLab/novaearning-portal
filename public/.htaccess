@@ -6,27 +6,13 @@ RewriteBase /
 # 1. Route API requests to PHP router
 RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
 
-# 2. Clean URL aliases - serve .html files for URL-without-extension
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^login/?$ /login.html [R=301,L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^dashboard/?$ /dashboard.html [R=301,L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^user-dashboard/?$ /dashboard.html [R=301,L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^investments/?$ /investments.html [R=301,L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^help/?$ /help.html [R=301,L]
+# 2. Don't rewrite real existing files (css, js, images, etc)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
 
-# 3. Do not rewrite existing real files or directories
-RewriteCond %{REQUEST_FILENAME} -f [OR]
+# 3. Don't rewrite existing directories (admin/ etc via physical folder)
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# 4. Catch-all fallback to index.php
+# 4. Route all else through index.php (clean URL handler)
 RewriteRule ^(.*)$ /index.php [L,QSA]
