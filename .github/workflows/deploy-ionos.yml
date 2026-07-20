@@ -46,6 +46,8 @@ jobs:
           mkdir -p dist
           cp -r public/* dist/
           cp public/.htaccess dist/.htaccess
+          cp public/admin/.htaccess dist/admin/.htaccess
+          cp public/admin-dashboard/.htaccess dist/admin-dashboard/.htaccess
           mkdir -p dist/api
           cp -r api/* dist/api/
           cp api/.htaccess dist/api/.htaccess
