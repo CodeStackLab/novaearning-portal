@@ -3863,3 +3863,140 @@ html, body {
     text-decoration: underline !important;
     color: #f59e0b !important;
 }
+
+/* Reference-matched user dashboard: overview, transactions and withdraw */
+.user-dashboard-body .dashboard-main-content {
+    max-width: 1040px;
+}
+
+.reference-panel-heading {
+    position: relative;
+    min-height: 118px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.reference-panel-heading::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: -85px;
+    right: -45px;
+    width: 290px;
+    height: 230px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(41, 126, 196, .22), rgba(24, 73, 132, .08) 43%, transparent 72%);
+}
+
+.reference-panel-heading .panel-desc {
+    margin-bottom: 0;
+}
+
+.reference-panel-art {
+    flex: 0 0 auto;
+    margin-right: 3.5rem;
+    color: rgba(76, 201, 228, .3);
+    font-size: 86px !important;
+    filter: drop-shadow(0 0 18px rgba(44, 173, 221, .28));
+    transform: rotate(-7deg);
+}
+
+.withdraw-panel-heading .reference-panel-art {
+    color: rgba(72, 184, 225, .34);
+    font-size: 76px !important;
+}
+
+.transactions-card {
+    padding: clamp(1rem, 2.6vw, 1.65rem) !important;
+    border-radius: 22px !important;
+    background: linear-gradient(145deg, rgba(14, 24, 43, .95), rgba(7, 15, 29, .97)) !important;
+    border-color: rgba(98, 151, 203, .3) !important;
+}
+
+.transactions-table-wrap {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+.transactions-table-wrap .deposits-table-list {
+    min-width: 680px;
+}
+
+.transactions-table-wrap .deposits-table-list th {
+    background: transparent !important;
+    color: #8592a7 !important;
+}
+
+.transactions-table-wrap .deposits-table-list td {
+    background: transparent !important;
+}
+
+.table-scroll-hint {
+    display: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .35rem;
+    margin: .8rem 0 0;
+    color: #68758a;
+    font-size: .72rem;
+}
+
+.table-scroll-hint .material-symbols-outlined { font-size: 1rem; }
+
+.user-dashboard-body #panel-withdraw .deposit-step-box {
+    border-radius: 22px !important;
+    border-color: rgba(98, 151, 203, .28) !important;
+    background: linear-gradient(145deg, rgba(14, 24, 43, .96), rgba(8, 16, 30, .98)) !important;
+}
+
+.user-dashboard-body #panel-withdraw .form-label-db {
+    color: #d8deea;
+    font-size: .88rem;
+}
+
+.user-dashboard-body #panel-withdraw .form-input-db {
+    min-height: 54px;
+    font-size: 1rem !important;
+    border-color: rgba(126, 156, 205, .28) !important;
+}
+
+.user-dashboard-body #panel-withdraw .form-btn-db {
+    min-width: 210px;
+    min-height: 50px;
+    background: linear-gradient(135deg, #1598ff, #2d79f4) !important;
+    box-shadow: 0 8px 25px rgba(20, 139, 244, .3), 0 0 22px rgba(49, 135, 241, .16);
+}
+
+@media (max-width: 768px) {
+    .user-dashboard-body .dashboard-header-context { display: none; }
+    .reference-panel-heading { min-height: 142px; align-items: flex-start; padding-top: 1.15rem; }
+    .reference-panel-heading .panel-title { font-size: 2rem; }
+    .reference-panel-heading .panel-desc { max-width: 78%; font-size: .9rem; line-height: 1.5; }
+    .reference-panel-art { position: absolute; right: -.8rem; top: .5rem; margin: 0; font-size: 102px !important; opacity: .72; }
+    .table-scroll-hint { display: flex; }
+    .transactions-card { padding: 1rem !important; }
+    .user-dashboard-body #panel-withdraw { max-width: 100%; }
+    .user-dashboard-body #panel-withdraw .deposit-step-box { padding: 1.35rem !important; }
+}
+
+@media (max-width: 520px) {
+    .user-dashboard-body .dashboard-main-content { padding: 1.15rem .8rem 2.5rem; }
+    .user-dashboard-body .dashboard-header { padding-inline: .8rem; }
+    .user-dashboard-body .user-card-info { max-width: 138px; }
+    .user-dashboard-body .user-name-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .reference-panel-heading { min-height: 132px; }
+    .reference-panel-heading .panel-title { font-size: 1.9rem; }
+    .reference-panel-heading .panel-desc { max-width: 88%; font-size: .84rem; }
+    .reference-panel-art { right: -1.4rem; top: .85rem; font-size: 88px !important; opacity: .48; }
+    .transactions-card { margin-inline: 0; border-radius: 17px !important; }
+    .transactions-table-wrap .deposits-table-list { min-width: 620px; }
+    .transactions-table-wrap .deposits-table-list th { padding: .7rem .8rem !important; }
+    .transactions-table-wrap .deposits-table-list td { padding: .75rem .8rem !important; }
+    .user-dashboard-body #panel-withdraw .deposit-step-box { padding: 1.1rem !important; border-radius: 17px !important; }
+    .user-dashboard-body #panel-withdraw .form-input-db { min-height: 50px; font-size: 1rem !important; }
+    .user-dashboard-body #panel-withdraw .form-btn-db { width: 100%; min-width: 0; }
+}

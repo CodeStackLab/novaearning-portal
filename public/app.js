@@ -710,7 +710,7 @@ function renderAllTransactionsTable(transactions) {
     const tbody = document.getElementById('all-transactions-table-body');
     if (!tbody) return;
 
-    const filtered = transactions.filter(tx => tx.type === 'Deposit' || tx.type === 'Withdrawal');
+    const filtered = transactions.filter(tx => ['Deposit', 'Withdrawal', 'Investment'].includes(tx.type));
 
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No transactions logged.</td></tr>`;
@@ -722,14 +722,20 @@ function renderAllTransactionsTable(transactions) {
         if (tx.type === "Investment") typeColor = "#a855f7";
         if (tx.type === "Withdrawal") typeColor = "#ef4444";
 
+        const numericAmount = Math.abs(Number(tx.amount) || 0);
+        const isDebit = tx.type === 'Withdrawal' || tx.type === 'Investment';
+        const amountText = `${isDebit ? '-' : ''}$${numericAmount.toFixed(2)}`;
+        const amountColor = isDebit ? '#f47d8b' : '#f8fafc';
+        const reference = String(tx.ref || 'Pending');
+
         return `
             <tr>
                 <td>${tx.date}</td>
                 <td style="font-weight:600; color: ${typeColor};">${tx.type}</td>
-                <td style="font-weight: 700; color: #f8fafc;">$${tx.amount.toFixed(2)}</td>
+                <td style="font-weight: 700; color: ${amountColor};">${amountText}</td>
                 <td class="deposit-tx-hash" style="font-family: monospace; white-space: nowrap;">
-                    <span>${tx.ref.substring(0, 16)}...</span>
-                    <button onclick="copyToClipboard('${tx.ref}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Full Reference">
+                    <span>${reference.substring(0, 16)}${reference.length > 16 ? '...' : ''}</span>
+                    <button onclick="copyToClipboard('${reference.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Full Reference">
                         <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
                     </button>
                 </td>

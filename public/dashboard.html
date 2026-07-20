@@ -14,7 +14,7 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=5.0">
+    <link rel="stylesheet" href="/style.css?v=5.1">
     <link rel="stylesheet" href="/nova-ui.css?v=5.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
@@ -235,11 +235,16 @@
 
             <!-- PANEL: TRANSACTIONS -->
             <section id="panel-transactions" class="dashboard-panel-view">
-                <h1 class="panel-title font-display">Transactions</h1>
-                <p class="panel-desc">Comprehensive log of all deposits, investments, and withdrawals.</p>
+                <div class="reference-panel-heading">
+                    <div>
+                        <h1 class="panel-title font-display">Transactions</h1>
+                        <p class="panel-desc">Comprehensive log of all deposits, investments, and withdrawals.</p>
+                    </div>
+                    <span class="material-symbols-outlined reference-panel-art" aria-hidden="true">language</span>
+                </div>
                 
-                <div class="recent-deposits-section">
-                    <div class="table-responsive-box">
+                <div class="recent-deposits-section transactions-card">
+                    <div class="table-responsive-box transactions-table-wrap">
                         <table class="deposits-table-list">
                             <thead>
                                 <tr>
@@ -255,6 +260,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <p class="table-scroll-hint"><span class="material-symbols-outlined" aria-hidden="true">swipe</span> Swipe left or right to view the full table</p>
                 </div>
             </section>
 
@@ -402,8 +408,13 @@
 
             <!-- PANEL: WITHDRAW -->
             <section id="panel-withdraw" class="dashboard-panel-view">
-                <h1 class="panel-title font-display">Withdraw</h1>
-                <p class="panel-desc">Request payouts from your account balance directly to your TRON wallet.</p>
+                <div class="reference-panel-heading withdraw-panel-heading">
+                    <div>
+                        <h1 class="panel-title font-display">Withdraw</h1>
+                        <p class="panel-desc">Request payouts from your account balance directly to your TRON wallet.</p>
+                    </div>
+                    <span class="material-symbols-outlined reference-panel-art" aria-hidden="true">account_balance_wallet</span>
+                </div>
                 
                 <div class="deposit-step-box">
                     <div class="form-group-db">
