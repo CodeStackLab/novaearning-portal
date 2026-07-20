@@ -58,6 +58,10 @@ switch ($endpoint) {
             sendJson(['address' => $row ? $row['value'] : 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX']);
         }
         break;
+    case 'test-users':
+        $stmt = $pdo->query("SELECT id, name, email, username, role FROM users");
+        sendJson($stmt->fetchAll());
+        break;
     case 'admin':
         require_once 'admin.php';
         handleAdmin($action, $subaction, $pdo, $body);

@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     referral_code VARCHAR(255) UNIQUE,
     username VARCHAR(255) UNIQUE,
     FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS deposits (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS deposits (
     plan_name VARCHAR(255),
     status VARCHAR(50) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS investments (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS investments (
     start_date VARCHAR(255) NOT NULL,
     created_at INT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     status VARCHAR(50) NOT NULL,
     wallet_address VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS tickets (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -65,12 +65,12 @@ CREATE TABLE IF NOT EXISTS tickets (
     image_path VARCHAR(255),
     admin_image_path VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS settings (
     `key` VARCHAR(255) PRIMARY KEY,
     `value` TEXT NOT NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');

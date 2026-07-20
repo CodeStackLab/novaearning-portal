@@ -3,10 +3,10 @@
 session_start(); // We will use sessions for admin/user states if needed, though JWT is preferred for API
 
 // Database Configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'nova_portal'); // Change this on production
-define('DB_USER', 'root'); // Change this on production
-define('DB_PASS', ''); // Change this on production
+define('DB_HOST', 'mysql');
+define('DB_NAME', 'nova_portal');
+define('DB_USER', 'nova_user');
+define('DB_PASS', 'nova_password_2026');
 
 // JWT Secret Key (Keep this secret!)
 define('JWT_SECRET', 'nova-super-secret-key-2026');
@@ -73,9 +73,23 @@ function verifyJWT($token) {
     return false;
 }
 
+function getAuthHeader() {
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        return $_SERVER['HTTP_AUTHORIZATION'];
+    }
+    if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        return $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    }
+    if (function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        if (isset($headers['Authorization'])) return $headers['Authorization'];
+        if (isset($headers['authorization'])) return $headers['authorization'];
+    }
+    return '';
+}
+
 function authenticateToken() {
-    $headers = apache_request_headers();
-    $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : (isset($headers['authorization']) ? $headers['authorization'] : '');
+    $authHeader = getAuthHeader();
     
     if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
         $token = $matches[1];

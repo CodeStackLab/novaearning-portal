@@ -779,9 +779,9 @@
             // Check stored role to redirect
             const role = localStorage.getItem('nova_role');
             if (role === 'admin') {
-                window.location.href = '/admin-dashboard';
+                window.location.href = '/admin';
             } else {
-                window.location.href = redirectTarget ? redirectTarget : '/user-dashboard';
+                window.location.href = redirectTarget ? redirectTarget : '/dashboard';
             }
         }
 
@@ -882,9 +882,9 @@
                 localStorage.setItem('nova_role', data.user.role);
 
                 if (data.user.role === 'admin') {
-                    window.location.href = '/admin-dashboard';
+                    window.location.href = '/admin';
                 } else {
-                    window.location.href = redirectTarget ? redirectTarget : '/user-dashboard';
+                    window.location.href = redirectTarget ? redirectTarget : '/dashboard';
                 }
             } catch (err) {
                 alert(err.message);
@@ -918,7 +918,7 @@
                 localStorage.setItem('nova_token', data.token);
                 localStorage.setItem('nova_role', 'user');
 
-                window.location.href = redirectTarget ? redirectTarget : '/user-dashboard';
+                window.location.href = redirectTarget ? redirectTarget : '/dashboard';
             } catch (err) {
                 alert(err.message);
             }
@@ -988,12 +988,13 @@
 
             const token = localStorage.getItem('nova_token');
             if (token) {
-                window.location.href = redirectTarget ? redirectTarget : '/user-dashboard';
+                const role = localStorage.getItem('nova_role');
+                window.location.href = role === 'admin' ? '/admin' : (redirectTarget ? redirectTarget : '/dashboard');
                 return;
             }
 
             // Intercept restricted /dashboard links for guests
-            const restrictedLinks = document.querySelectorAll('a[href*="/user-dashboard"]');
+            const restrictedLinks = document.querySelectorAll('a[href*="/dashboard"], a[href*="/user-dashboard"]');
             restrictedLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -1089,7 +1090,7 @@ async function submitNewPassword() {
         if (loginResp.ok) {
             localStorage.setItem('nova_token', loginData.token);
             localStorage.setItem('nova_role', loginData.user.role);
-            window.location.href = loginData.user.role === 'admin' ? '/admin-dashboard' : '/user-dashboard';
+            window.location.href = loginData.user.role === 'admin' ? '/admin' : '/dashboard';
         } else {
             switchAuthTab('signin');
         }

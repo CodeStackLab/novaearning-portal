@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: nova_webapp
+    restart: always
+    ports:
+      - "8085:80"
+    volumes:
+      - ./public:/var/www/html
+      - ./config.php:/var/www/html/config.php
+      - ./api:/var/www/html/api
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: nova_mysql8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: nova_root_password_2026
+      MYSQL_DATABASE: nova_portal
+      MYSQL_USER: nova_user
+      MYSQL_PASSWORD: nova_password_2026
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: nova_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: nova_root_password_2026
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
