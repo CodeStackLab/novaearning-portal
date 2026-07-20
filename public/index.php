@@ -3,6 +3,14 @@ $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $parsedUrl = parse_url($requestUri, PHP_URL_PATH);
 $path = trim($parsedUrl, '/');
 
+// Handle API requests
+if (strpos($path, 'api') === 0) {
+    $apiPath = preg_replace('#^api/?#', '', $path);
+    $_GET['request'] = $apiPath;
+    require_once __DIR__ . '/api/index.php';
+    exit;
+}
+
 switch ($path) {
     case 'dashboard':
     case 'user-dashboard':

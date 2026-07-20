@@ -5,6 +5,8 @@ ErrorDocument 404 /index.php
 RewriteEngine On
 RewriteBase /
 
+RewriteRule ^api/(.*)$ api/index.php?request=$1 [L,QSA]
+
 RewriteRule ^dashboard/?$ dashboard.html [L,QSA]
 RewriteRule ^user-dashboard/?$ dashboard.html [L,QSA]
 RewriteRule ^admin/?$ admin.html [L,QSA]
