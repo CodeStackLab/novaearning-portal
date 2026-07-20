@@ -282,14 +282,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const overlay = document.getElementById('sidebar-overlay');
 
     if (menuToggleBtn && sidebar && overlay) {
+        const menuIcon = menuToggleBtn.querySelector('.material-symbols-outlined');
+        const syncSidebarState = (isOpen) => {
+            menuToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            if (menuIcon) menuIcon.textContent = isOpen ? 'close' : 'menu';
+        };
         const toggleSidebar = () => {
             sidebar.classList.toggle('active');
             overlay.classList.toggle('active');
+            syncSidebarState(sidebar.classList.contains('active'));
         };
 
         const closeSidebar = () => {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
+            syncSidebarState(false);
         };
 
         menuToggleBtn.addEventListener('click', toggleSidebar);
@@ -300,6 +307,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         menuLinks.forEach(link => {
             link.addEventListener('click', closeSidebar);
         });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeSidebar();
+        });
+        syncSidebarState(false);
     }
 
     // Admin Profile Dropdown logic

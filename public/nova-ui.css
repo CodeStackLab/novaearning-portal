@@ -106,3 +106,91 @@ html, body {
         display: block !important;
     }
 }
+
+/* Final responsive shell — shared by user and admin dashboards */
+.dashboard-sidebar {
+    width: 240px !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.dashboard-wrapper {
+    width: calc(100% - 240px) !important;
+    min-width: 0 !important;
+    margin-left: 240px !important;
+}
+
+.sidebar-logo {
+    min-height: 88px;
+    padding: 1.25rem 1.25rem 1rem !important;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.sidebar-logo img { display: block; max-width: 145px; height: auto !important; }
+.sidebar-product-label { flex: 0 0 auto; padding: .2rem 1.25rem .65rem; color: #dbe5f4; font-size: .73rem; font-weight: 750; letter-spacing: .025em; text-transform: uppercase; }
+.sidebar-menu { flex: 1 1 auto !important; min-height: 0; margin: 0 !important; padding: .25rem .7rem !important; overflow-x: hidden !important; overflow-y: auto !important; scrollbar-width: thin; }
+.sidebar-menu li { width: 100%; }
+.sidebar-item-link { width: 100%; min-height: 44px; padding: .68rem .85rem !important; gap: .75rem !important; white-space: nowrap; }
+.sidebar-item-link > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.sidebar-icon { width: 22px; flex: 0 0 22px; text-align: center; }
+
+.sidebar-system-card {
+    flex: 0 0 auto;
+    margin: .75rem;
+    padding: .8rem;
+    display: grid;
+    grid-template-columns: 9px minmax(0, 1fr);
+    align-items: center;
+    gap: .65rem;
+    background: rgba(8,16,29,.72);
+    border: 1px solid rgba(126,156,205,.16);
+    border-radius: 12px;
+}
+.system-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #29c97d; box-shadow: 0 0 0 4px rgba(41,201,125,.1), 0 0 12px rgba(41,201,125,.45); }
+.sidebar-system-card > div { min-width: 0; display: flex; flex-direction: column; gap: .12rem; }
+.sidebar-system-card strong, .sidebar-system-card span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-system-card strong { color: #d9e3f1; font-size: .72rem; line-height: 1.3; }
+.sidebar-system-card > div > span { color: #718096; font-size: .64rem; line-height: 1.3; }
+
+.dashboard-header { min-width: 0; gap: 1rem; }
+.dashboard-header-context { min-width: 0; display: flex; align-items: center; gap: .65rem; }
+.dashboard-header-context > .material-symbols-outlined { flex: 0 0 auto; color: #89a9df; font-size: 1.2rem; }
+.dashboard-header-context > div { min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.dashboard-header-context strong, .dashboard-header-context span { display: block; white-space: nowrap; }
+.dashboard-header-context strong { color: #edf3fb; font-size: .8rem; }
+.dashboard-header-context > div > span { margin-top: .14rem; color: #78869a; font-size: .65rem; }
+.header-right-user { min-width: 0; }
+.dashboard-footer { margin-top: auto; min-height: 58px; display: flex; align-items: center; padding: 0 1.5rem; }
+
+@media (max-width: 900px) {
+    .dashboard-sidebar {
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        width: min(82vw, 280px) !important;
+        transform: translateX(-105%);
+        transition: transform .25s cubic-bezier(.2,.8,.2,1) !important;
+        z-index: 9999 !important;
+        box-shadow: 16px 0 42px rgba(0,0,0,.48) !important;
+    }
+    .dashboard-sidebar.active, .dashboard-sidebar.mobile-open { left: 0 !important; transform: translateX(0); }
+    .dashboard-wrapper { width: 100% !important; margin-left: 0 !important; }
+    .header-left-toggle { display: flex !important; width: 44px; height: 44px; flex: 0 0 44px; align-items: center; justify-content: center; border-radius: 10px; }
+    .sidebar-overlay { position: fixed; inset: 0; z-index: 9998; background: rgba(1,5,12,.7); backdrop-filter: blur(4px); }
+    .sidebar-overlay.active { display: block !important; }
+}
+
+@media (max-width: 520px) {
+    .dashboard-header { height: 60px !important; padding: 0 .65rem !important; gap: .45rem; }
+    .dashboard-header-context { display: none; }
+    .header-right-user { margin-left: auto; }
+    .user-card-info { max-width: 132px; padding: .4rem .55rem !important; }
+    .user-name-label { max-width: 75px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dashboard-main-content { width: 100%; min-width: 0; padding-inline: .75rem !important; }
+    .dashboard-footer { min-height: 50px; padding: 0 .8rem; font-size: .68rem; }
+}
