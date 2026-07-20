@@ -1,18 +1,22 @@
 Options -Indexes
 
+# Use ErrorDocument to intercept 404s and route through PHP router
+# This works even on shared hosting with limited AllowOverride
+ErrorDocument 404 /index.php
+
 RewriteEngine On
 RewriteBase /
 
 # 1. Route API requests to PHP router
 RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
 
-# 2. Don't rewrite real existing files (css, js, images, etc)
+# 2. Don't rewrite real existing files
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# 3. Don't rewrite existing directories (admin/ etc via physical folder)
+# 3. Don't rewrite existing directories
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# 4. Route all else through index.php (clean URL handler)
+# 4. Route all else through index.php
 RewriteRule ^(.*)$ /index.php [L,QSA]

@@ -1,5 +1,6 @@
 <?php
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+// Strip query string for path matching
 $parsedUrl = parse_url($requestUri, PHP_URL_PATH);
 $path = trim($parsedUrl, '/');
 
