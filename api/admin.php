@@ -70,6 +70,16 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 'passwordConfigured' => !empty($stored['smtp_password'])
             ]);
         }
+
+        if ($action === 'settings' && $subaction === 'notifications') {
+            $keys = ['user_email_notifications', 'admin_email_notifications', 'email_deposit_notifications', 'email_withdrawal_notifications', 'email_investment_notifications', 'email_commission_notifications', 'email_reminder_notifications', 'email_support_notifications'];
+            $placeholders = implode(',', array_fill(0, count($keys), '?'));
+            $stmt = $pdo->prepare("SELECT `key`, value FROM settings WHERE `key` IN ($placeholders)");
+            $stmt->execute($keys);
+            $result = array_fill_keys($keys, true);
+            foreach ($stmt->fetchAll() as $row) $result[$row['key']] = $row['value'] !== '0';
+            sendJson($result);
+        }
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -136,6 +146,20 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             } catch (Exception $e) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
                 sendJson(['message' => 'Unable to save SMTP configuration'], 500);
+            }
+        }
+
+        if ($action === 'settings' && $subaction === 'notifications') {
+            $keys = ['user_email_notifications', 'admin_email_notifications', 'email_deposit_notifications', 'email_withdrawal_notifications', 'email_investment_notifications', 'email_commission_notifications', 'email_reminder_notifications', 'email_support_notifications'];
+            $stmt = $pdo->prepare('INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)');
+            $pdo->beginTransaction();
+            try {
+                foreach ($keys as $key) $stmt->execute([$key, !empty($body[$key]) ? '1' : '0']);
+                $pdo->commit();
+                sendJson(['message' => 'Email notification preferences saved.']);
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to save notification preferences.'], 500);
             }
         }
 
@@ -237,10 +261,10 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $pdo->commit();
                 $amountText = number_format((float)$deposit['amount'], 2);
                 $safeRef = htmlspecialchars($deposit['txn_id']);
-                notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>");
+                notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
                     $bonusText = number_format($referralBonusAmt, 2);
-                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>");
+                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'commission');
                 }
                 sendJson(['message' => "Deposit successfully " . strtolower($act) . "d."]);
             } catch (Exception $e) {
@@ -263,7 +287,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->prepare('UPDATE transactions SET status = ? WHERE id = ?');
             $stmt->execute(['Confirmed', $transactionId]);
             $amountText = number_format((float)$tx['amount'], 2);
-            notifyUserById($pdo, $tx['user_id'], 'Withdrawal completed', "<p>Your withdrawal of <strong>\${$amountText}</strong> has been approved and marked completed.</p><p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>');
+            notifyUserById($pdo, $tx['user_id'], 'Withdrawal completed', "<p>Your withdrawal of <strong>\${$amountText}</strong> has been approved and marked completed.</p><p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>', 'withdrawal');
             sendJson(['message' => 'Withdrawal successfully approved and completed.']);
         }
 
@@ -309,7 +333,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                              "<p>You have received a reply from Nova Support team:</p>" .
                              "<blockquote style='background:#f4f4f4; padding: 12px; border-left:4px solid #0070f3;'>" . nl2br(htmlspecialchars($reply)) . "</blockquote>" .
                              "<p>Log in to your Nova Portal dashboard to view full chat history.</p>";
-                sendSmtpEmail($targetUser['email'], $targetUser['name'], $emailSubject, $emailBody, $pdo);
+                if (notificationEnabled($pdo, 'user', 'support')) sendSmtpEmail($targetUser['email'], $targetUser['name'], $emailSubject, $emailBody, $pdo);
             }
 
             sendJson(['message' => 'Reply sent successfully.']);

@@ -53,8 +53,8 @@ function handleDeposits($action, $pdo, $body) {
         $safeAmount = number_format((float)$amount, 2);
         $safeRef = htmlspecialchars($finalTxnCode);
         $safePlan = $planName ? '<p><strong>Plan:</strong> ' . htmlspecialchars($planName) . '</p>' : '';
-        notifyUserById($pdo, $userId, 'Deposit received — pending review', "<p>We received your deposit of <strong>\${$safeAmount}</strong>.</p>{$safePlan}<p><strong>Reference:</strong> {$safeRef}</p><p>Status: Pending admin verification.</p>");
-        notifyAdmins($pdo, 'New deposit awaiting approval', "<p>A user submitted a deposit of <strong>\${$safeAmount}</strong>.</p>{$safePlan}<p><strong>Reference:</strong> {$safeRef}</p><p>Please review it in Verify Deposits.</p>");
+        notifyUserById($pdo, $userId, 'Deposit received — pending review', "<p>We received your deposit of <strong>\${$safeAmount}</strong>.</p>{$safePlan}<p><strong>Reference:</strong> {$safeRef}</p><p>Status: Pending admin verification.</p>", 'deposit');
+        notifyAdmins($pdo, 'New deposit awaiting approval', "<p>A user submitted a deposit of <strong>\${$safeAmount}</strong>.</p>{$safePlan}<p><strong>Reference:</strong> {$safeRef}</p><p>Please review it in Verify Deposits.</p>", 'deposit');
 
         sendJson(['message' => 'Deposit submitted with screenshot. Verification pending admin review.']);
     }

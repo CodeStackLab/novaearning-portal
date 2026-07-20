@@ -49,8 +49,8 @@ function handleInvestments($action, $pdo, $body) {
             $costText = number_format($totalCost, 2);
             $safeName = htmlspecialchars($name);
             $safeRef = htmlspecialchars($randomRef);
-            notifyUserById($pdo, $userId, 'Investment activated', "<p>Your <strong>{$safeName}</strong> investment (quantity {$quantity}) is active.</p><p><strong>Amount:</strong> \${$costText}<br><strong>Reference:</strong> {$safeRef}</p>");
-            notifyAdmins($pdo, 'New investment activated', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> activated {$quantity} × <strong>{$safeName}</strong>.</p><p><strong>Amount:</strong> \${$costText}<br><strong>Reference:</strong> {$safeRef}</p>");
+            notifyUserById($pdo, $userId, 'Investment activated', "<p>Your <strong>{$safeName}</strong> investment (quantity {$quantity}) is active.</p><p><strong>Amount:</strong> \${$costText}<br><strong>Reference:</strong> {$safeRef}</p>", 'investment');
+            notifyAdmins($pdo, 'New investment activated', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> activated {$quantity} × <strong>{$safeName}</strong>.</p><p><strong>Amount:</strong> \${$costText}<br><strong>Reference:</strong> {$safeRef}</p>", 'investment');
             sendJson(['message' => "Successfully purchased $quantity plan(s) for $name!"]);
         } catch (Exception $e) {
             $pdo->rollBack();

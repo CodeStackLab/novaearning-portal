@@ -97,9 +97,46 @@ async function fetchActiveTabDetails(tabId) {
             renderTicketsTable(tickets);
         } else if (tabId === 'smtp') {
             await loadSmtpSettings();
+        } else if (tabId === 'notifications') {
+            await loadNotificationSettings();
         }
     } catch (e) {
         console.error('Error fetching tab details:', e.message);
+    }
+}
+
+const notificationSettingKeys = [
+    'user_email_notifications', 'admin_email_notifications', 'email_deposit_notifications',
+    'email_withdrawal_notifications', 'email_investment_notifications', 'email_commission_notifications',
+    'email_reminder_notifications', 'email_support_notifications'
+];
+
+async function loadNotificationSettings() {
+    if (!document.getElementById('notification-settings-form')) return;
+    try {
+        const settings = await adminRequest('/admin/settings/notifications');
+        notificationSettingKeys.forEach(key => {
+            const input = document.getElementById(key);
+            if (input) input.checked = settings[key] !== false;
+        });
+    } catch (error) {
+        showToast(error.message || 'Unable to load notification settings');
+    }
+}
+
+async function saveNotificationSettings(event) {
+    event.preventDefault();
+    const button = document.getElementById('notification-save-btn');
+    const payload = {};
+    notificationSettingKeys.forEach(key => payload[key] = Boolean(document.getElementById(key)?.checked));
+    if (button) button.disabled = true;
+    try {
+        const result = await adminRequest('/admin/settings/notifications', { method: 'POST', body: JSON.stringify(payload) });
+        showToast(result.message || 'Notification preferences saved');
+    } catch (error) {
+        showToast(error.message || 'Unable to save notification settings');
+    } finally {
+        if (button) button.disabled = false;
     }
 }
 

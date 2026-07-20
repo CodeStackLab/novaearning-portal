@@ -39,8 +39,8 @@ function handleWithdrawals($action, $pdo, $body) {
             $amountText = number_format($withdrawAmt, 2);
             $netText = number_format($netPayout, 2);
             $safeRef = htmlspecialchars($randomRef);
-            notifyUserById($pdo, $userId, 'Withdrawal request received', "<p>Your withdrawal request for <strong>\${$amountText}</strong> is pending review.</p><p>Net payout after the 2% fee: <strong>\${$netText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>");
-            notifyAdmins($pdo, 'New withdrawal awaiting approval', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> requested a withdrawal of <strong>\${$amountText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p><p>Please review it in Manage Payouts.</p>");
+            notifyUserById($pdo, $userId, 'Withdrawal request received', "<p>Your withdrawal request for <strong>\${$amountText}</strong> is pending review.</p><p>Net payout after the 2% fee: <strong>\${$netText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'withdrawal');
+            notifyAdmins($pdo, 'New withdrawal awaiting approval', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> requested a withdrawal of <strong>\${$amountText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p><p>Please review it in Manage Payouts.</p>", 'withdrawal');
             sendJson(['message' => "Withdrawal request for $" . number_format($withdrawAmt, 2) . " submitted. A 2% fee ($" . number_format($fee, 2) . ") applies. Net payout will be $" . number_format($netPayout, 2) . "."]);
         } catch (Exception $e) {
             $pdo->rollBack();

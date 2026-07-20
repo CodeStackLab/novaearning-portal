@@ -60,8 +60,8 @@ function handleTickets($action, $pdo, $body) {
                          "<p><strong>Message:</strong></p>" .
                          "<blockquote style='background:#f4f4f4; padding: 12px; border-left:4px solid #0070f3;'>" . nl2br(htmlspecialchars($message)) . "</blockquote>";
 
-            notifyAdmins($pdo, $emailSubject, $emailBody);
-            notifyUserById($pdo, $userId, "Support request received {$ticketId}", '<p>We received your support message and will reply as soon as possible.</p><p><strong>Subject:</strong> ' . htmlspecialchars($title) . '</p>');
+            notifyAdmins($pdo, $emailSubject, $emailBody, 'support');
+            notifyUserById($pdo, $userId, "Support request received {$ticketId}", '<p>We received your support message and will reply as soon as possible.</p><p><strong>Subject:</strong> ' . htmlspecialchars($title) . '</p>', 'support');
 
             sendJson(['message' => 'Support ticket submitted.']);
         } catch (Exception $e) {

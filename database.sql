@@ -72,6 +72,14 @@ CREATE TABLE IF NOT EXISTS settings (
     `value` TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS notification_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    investment_id INT NOT NULL,
+    event_key VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_investment_event (investment_id, event_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.com');
@@ -80,6 +88,14 @@ INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_encryption', 'tls');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_username', 'contact@novaearning.com');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_email', 'contact@novaearning.com');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_name', 'Nova Support');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('user_email_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('admin_email_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('email_deposit_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('email_withdrawal_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('email_investment_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('email_commission_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('email_reminder_notifications', '1');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('email_support_notifications', '1');
 
 -- Seed Admin
 INSERT IGNORE INTO users (name, email, username, password, role, referral_code) 

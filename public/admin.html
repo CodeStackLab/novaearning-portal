@@ -69,6 +69,12 @@
                 </a>
             </li>
             <li>
+                <a href="#notifications" class="sidebar-item-link" data-tab="notifications">
+                    <span class="material-symbols-outlined sidebar-icon">notifications_active</span>
+                    <span>Email Alerts</span>
+                </a>
+            </li>
+            <li>
                 <a href="#smtp" class="sidebar-item-link" data-tab="smtp">
                     <span class="material-symbols-outlined sidebar-icon">outgoing_mail</span>
                     <span>SMTP Settings</span>
@@ -477,6 +483,29 @@
                         </div>
                     </div>
                 </div>
+            </section>
+
+            <!-- PANEL: EMAIL NOTIFICATIONS -->
+            <section id="panel-notifications" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Email Notification Controls</h1>
+                <p class="panel-desc">Control which transactional and investment alerts are delivered. Changes apply immediately.</p>
+                <form id="notification-settings-form" class="smtp-settings-card" onsubmit="saveNotificationSettings(event)">
+                    <div class="smtp-card-heading">
+                        <div class="smtp-heading-icon"><span class="material-symbols-outlined">notifications_active</span></div>
+                        <div><h2 class="font-display">Delivery preferences</h2><p>Master controls and event-specific email alerts.</p></div>
+                    </div>
+                    <div class="notification-settings-grid">
+                        <label class="notification-setting master"><span><strong>User email notifications</strong><small>Master control for all client emails</small></span><input type="checkbox" id="user_email_notifications"><i></i></label>
+                        <label class="notification-setting master"><span><strong>Admin email notifications</strong><small>Master control for operational alerts</small></span><input type="checkbox" id="admin_email_notifications"><i></i></label>
+                        <label class="notification-setting"><span><strong>Deposits</strong><small>Submission and approval status</small></span><input type="checkbox" id="email_deposit_notifications"><i></i></label>
+                        <label class="notification-setting"><span><strong>Withdrawals</strong><small>Requests and completed payouts</small></span><input type="checkbox" id="email_withdrawal_notifications"><i></i></label>
+                        <label class="notification-setting"><span><strong>Investments</strong><small>Activation and maturity alerts</small></span><input type="checkbox" id="email_investment_notifications"><i></i></label>
+                        <label class="notification-setting"><span><strong>Daily commissions</strong><small>24-hour earnings and referral credits</small></span><input type="checkbox" id="email_commission_notifications"><i></i></label>
+                        <label class="notification-setting"><span><strong>Commission reminders</strong><small>5-hour and 2-hour countdown alerts</small></span><input type="checkbox" id="email_reminder_notifications"><i></i></label>
+                        <label class="notification-setting"><span><strong>Support messages</strong><small>Ticket creation and replies</small></span><input type="checkbox" id="email_support_notifications"><i></i></label>
+                    </div>
+                    <div class="smtp-actions"><button type="submit" class="form-btn-db" id="notification-save-btn"><span class="material-symbols-outlined">save</span> Save Alert Settings</button></div>
+                </form>
             </section>
 
             <!-- PANEL: SMTP SETTINGS -->

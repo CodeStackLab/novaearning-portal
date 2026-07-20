@@ -207,7 +207,22 @@ function novaEmailBody($heading, $contentHtml) {
         . '<p style="margin-top:24px;font-size:12px;color:#718096">This is an automatic account notification.</p></div>';
 }
 
-function notifyUserById($pdo, $userId, $subject, $contentHtml) {
+function notificationEnabled($pdo, $audience, $event = 'general') {
+    $keys = [$audience . '_email_notifications', 'email_' . $event . '_notifications'];
+    try {
+        $stmt = $pdo->prepare('SELECT `key`, value FROM settings WHERE `key` IN (?, ?)');
+        $stmt->execute($keys);
+        $values = [];
+        foreach ($stmt->fetchAll() as $row) $values[$row['key']] = $row['value'];
+        foreach ($keys as $key) {
+            if (isset($values[$key]) && $values[$key] === '0') return false;
+        }
+    } catch (Exception $e) {}
+    return true;
+}
+
+function notifyUserById($pdo, $userId, $subject, $contentHtml, $event = 'general') {
+    if (!notificationEnabled($pdo, 'user', $event)) return false;
     try {
         $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
         $stmt->execute([$userId]);
@@ -220,7 +235,8 @@ function notifyUserById($pdo, $userId, $subject, $contentHtml) {
     }
 }
 
-function notifyAdmins($pdo, $subject, $contentHtml) {
+function notifyAdmins($pdo, $subject, $contentHtml, $event = 'general') {
+    if (!notificationEnabled($pdo, 'admin', $event)) return false;
     $sent = false;
     try {
         $stmt = $pdo->query("SELECT name, email FROM users WHERE role = 'admin'");
