@@ -60,44 +60,10 @@ jobs:
           SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
           SFTP_REMOTE_PATH: ${{ secrets.IONOS_REMOTE_PATH }}
         run: |
-          node -e "
-          const Client = require('ssh2-sftp-client');
-          const sftp = new Client();
-
-          async function deploy() {
-            try {
-              console.log('Connecting to IONOS SFTP server...');
-              await sftp.connect({
-                host: process.env.SFTP_HOST,
-                port: parseInt(process.env.SFTP_PORT || '22'),
-                username: process.env.SFTP_USER,
-                password: process.env.SFTP_PASSWORD,
-                tryKeyboard: true,
-                retries: 3,
-                timeout: 30000
-              });
-              const targetDir = process.env.SFTP_REMOTE_PATH || '.';
-              if (targetDir && targetDir !== '.') {
-                try {
-                  console.log('Creating remote directory if not exists: ' + targetDir);
-                  await sftp.mkdir(targetDir, true);
-                } catch (e) {
-                  console.log('Directory notice:', e.message);
-                }
-              }
-              console.log('Connected successfully. Uploading files to ' + targetDir + '...');
-              await sftp.uploadDir('dist', targetDir);
-              console.log('SFTP deployment finished successfully.');
-            } catch (err) {
-              console.error('Deployment error:', err.message);
-              process.exit(1);
-            } finally {
-              await sftp.end();
-            }
-          }
-
-          deploy();
-          "
+          sudo apt-get update && sudo apt-get install -y lftp
+          TARGET_DIR="${SFTP_REMOTE_PATH:-.}"
+          echo "Deploying to target directory: $TARGET_DIR"
+          lftp -e "set sftp:auto-confirm yes; mkdir -p $TARGET_DIR; mirror -R dist/ $TARGET_DIR/; quit" -u "$SFTP_USER,$SFTP_PASSWORD" sftp://$SFTP_HOST:${SFTP_PORT:-22}
 
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
