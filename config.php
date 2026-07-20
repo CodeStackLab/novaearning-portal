@@ -2,11 +2,11 @@
 // config.php
 session_start(); // We will use sessions for admin/user states if needed, though JWT is preferred for API
 
-// Database Configuration
-define('DB_HOST', 'mysql');
-define('DB_NAME', 'nova_portal');
-define('DB_USER', 'nova_user');
-define('DB_PASS', 'nova_password_2026');
+// Database Configuration (IONOS MySQL)
+define('DB_HOST', 'db5020969176.hosting-data.io');
+define('DB_NAME', 'dbs15918036');
+define('DB_USER', 'dbu2389530');
+define('DB_PASS', 'DB@9129881899');
 
 // JWT Secret Key (Keep this secret!)
 define('JWT_SECRET', 'nova-super-secret-key-2026');

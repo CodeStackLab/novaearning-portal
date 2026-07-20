@@ -1,26 +1,44 @@
 <?php
 // migrate.php
-// WARNING: Delete or rename this file after running it on the live server to prevent unauthorized access!
-
 require_once 'config.php';
 
-echo "<h2>Database Migration Script</h2>";
+header('Content-Type: text/html; charset=utf-8');
+echo "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;'>";
+echo "<h2 style='color: #333;'>Nova Portal - Automatic Database Setup</h2>";
 
 try {
-    // Write your future ALTER TABLE or CREATE TABLE queries here.
-    // Example: Adding a phone_number column if it doesn't exist
-    
-    // $pdo->exec("ALTER TABLE users ADD COLUMN phone_number VARCHAR(20) DEFAULT NULL");
-    // echo "<p>Added phone_number column to users table.</p>";
+    $sqlPath = __DIR__ . '/database.sql';
+    if (!file_exists($sqlPath)) {
+        die("<p style='color: red;'><strong>Error:</strong> database.sql file not found.</p></div>");
+    }
 
-    
-    // Put your new queries above this line ^
-    echo "<p style='color: green;'><strong>All migrations executed successfully!</strong></p>";
+    $sql = file_get_contents($sqlPath);
+    if (empty(trim($sql))) {
+        die("<p style='color: red;'><strong>Error:</strong> database.sql file is empty.</p></div>");
+    }
+
+    // Disable foreign key checks
+    $pdo->exec("SET FOREIGN_KEY_CHECKS=0;");
+
+    // Execute multi-statement SQL
+    $pdo->exec($sql);
+
+    // Re-enable foreign key checks
+    $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");
+
+    echo "<p style='color: green; font-size: 16px;'><strong>✓ Success! All database tables and initial seed data have been created in IONOS MySQL!</strong></p>";
+    echo "<ul>";
+    echo "<li>users (with admin & demo user)</li>";
+    echo "<li>deposits</li>";
+    echo "<li>investments</li>";
+    echo "<li>transactions</li>";
+    echo "<li>tickets</li>";
+    echo "<li>settings</li>";
+    echo "</ul>";
 
 } catch (PDOException $e) {
-    // If a column already exists, it might throw an error. You can ignore specific errors or check before adding.
-    echo "<p style='color: red;'><strong>Error:</strong> " . $e->getMessage() . "</p>";
+    echo "<p style='color: red;'><strong>Database Error:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
 }
 
-echo "<br><b>IMPORTANT:</b> Please delete this file from the live server after use for security reasons.";
+echo "</div>";
 ?>

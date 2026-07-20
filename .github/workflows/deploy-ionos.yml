@@ -36,6 +36,7 @@ jobs:
           find api -name '*.php' -print0 | xargs -0 -n1 php -l
           php -l cron.php
           php -l config.php
+          php -l migrate.php
 
       - name: Install SFTP Client library
         run: npm install ssh2-sftp-client
@@ -48,6 +49,8 @@ jobs:
           cp -r api/* dist/api/
           cp cron.php dist/
           cp config.php dist/
+          cp migrate.php dist/
+          cp database.sql dist/
 
       - name: Deploy application over SFTP
         env:
