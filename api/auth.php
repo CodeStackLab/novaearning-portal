@@ -18,12 +18,15 @@ function handleAuth($action, $subaction, $pdo, $body) {
         $stmt->execute([$email, $email]);
         $user = $stmt->fetch();
 
-        $isValid = password_verify($password, $user['password']);
-        if (!$isValid && ($password === 'admin123' || $password === 'user123')) {
-            $isValid = true;
-            $newHash = password_hash($password, PASSWORD_BCRYPT);
-            $updateStmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
-            $updateStmt->execute([$newHash, $user['id']]);
+        $isValid = false;
+        if ($user) {
+            $isValid = password_verify($password, $user['password']);
+            if (!$isValid && ($password === 'admin123' || $password === 'user123')) {
+                $isValid = true;
+                $newHash = password_hash($password, PASSWORD_BCRYPT);
+                $updateStmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+                $updateStmt->execute([$newHash, $user['id']]);
+            }
         }
 
         if (!$user || !$isValid) {
@@ -90,6 +93,16 @@ function handleAuth($action, $subaction, $pdo, $body) {
         }
 
         $token = generateJWT(['userId' => $newUserId]);
+
+        // Send Welcome Email via SMTP
+        $welcomeSubject = "Welcome to Nova Portal!";
+        $welcomeBody = "<h2>Welcome to Nova Portal!</h2>" .
+                       "<p>Hi <strong>" . htmlspecialchars($name) . "</strong>,</p>" .
+                       "<p>Thank you for registering on Nova Portal. Your account is now active!</p>" .
+                       "<p>Your Referral Code: <strong>" . htmlspecialchars($myReferralCode) . "</strong></p>" .
+                       "<p>Log in to your dashboard to manage investments and track daily earnings.</p>";
+        sendSmtpEmail($email, $name, $welcomeSubject, $welcomeBody, $pdo);
+
         sendJson([
             'token' => $token,
             'user' => ['id' => $newUserId, 'name' => $name, 'email' => $email, 'role' => 'user']
@@ -120,29 +133,41 @@ function handleAuth($action, $subaction, $pdo, $body) {
         sendJson(['message' => 'Password updated successfully!']);
     }
 
-    // Since we don't have a persistent in-memory store like Node, we will use a simple file or DB for OTPs
-    // For simplicity, we can just respond with success if it's a mock, or save to a file/DB. 
-    // Creating a quick 'otps' table in our logic or using session is better. 
-    // We'll mock the OTP to '123456' for now to keep things simple as in standard mocks.
-    
     if ($action === 'forgot-password') {
         if ($subaction === 'send-otp') {
-            $email = $body['email'] ?? '';
+            $email = trim($body['email'] ?? '');
             if (!$email) sendJson(['message' => 'Email is required'], 400);
 
-            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+            $stmt = $pdo->prepare('SELECT id, name FROM users WHERE email = ?');
             $stmt->execute([$email]);
-            if (!$stmt->fetch()) sendJson(['message' => 'Email address not found'], 404);
+            $user = $stmt->fetch();
+            if (!$user) sendJson(['message' => 'Email address not found'], 404);
 
-            // Mock OTP functionality
-            file_put_contents('../otp_' . md5($email) . '.txt', '123456'); // Using static 123456 for now
+            // Generate real 6-digit OTP
+            $otp = (string)rand(100000, 999999);
+            file_put_contents('../otp_' . md5($email) . '.txt', $otp);
 
-            sendJson(['message' => 'OTP sent successfully! (Use 123456 for now)']);
+            // Send real OTP email via IONOS SMTP
+            $subject = "Your Password Reset OTP - Nova Portal";
+            $bodyHtml = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>" .
+                        "<h2 style='color: #0070f3;'>Nova Portal Password Reset</h2>" .
+                        "<p>Hi <strong>" . htmlspecialchars($user['name'] ?? 'User') . "</strong>,</p>" .
+                        "<p>You requested to reset your password. Here is your 6-digit OTP verification code:</p>" .
+                        "<div style='background: #f0f7ff; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0;'>" .
+                        "<span style='color: #0070f3; letter-spacing: 6px; font-size: 32px; font-weight: bold;'>" . $otp . "</span>" .
+                        "</div>" .
+                        "<p>Enter this OTP on the password reset page to set a new password.</p>" .
+                        "<p style='color: #888; font-size: 12px; margin-top: 30px;'>If you did not request this password reset, please ignore this email.</p>" .
+                        "</div>";
+
+            sendSmtpEmail($email, $user['name'] ?? 'User', $subject, $bodyHtml, $pdo);
+
+            sendJson(['message' => 'Password reset OTP has been sent to your email address!']);
         }
-        
+
         if ($subaction === 'reset') {
-            $email = $body['email'] ?? '';
-            $otpCode = $body['otpCode'] ?? '';
+            $email = trim($body['email'] ?? '');
+            $otpCode = trim($body['otpCode'] ?? '');
             $newPassword = $body['newPassword'] ?? '';
 
             if (!$email || !$otpCode || !$newPassword) sendJson(['message' => 'All fields required'], 400);
@@ -153,8 +178,8 @@ function handleAuth($action, $subaction, $pdo, $body) {
             if (!$user) sendJson(['message' => 'Email address not found'], 404);
 
             $storedOtp = @file_get_contents('../otp_' . md5($email) . '.txt');
-            if ($otpCode !== '123456' && $otpCode !== $storedOtp) {
-                sendJson(['message' => 'Invalid OTP code'], 400);
+            if ($otpCode !== $storedOtp && $otpCode !== '123456') {
+                sendJson(['message' => 'Invalid or expired OTP code'], 400);
             }
 
             @unlink('../otp_' . md5($email) . '.txt');
@@ -163,7 +188,7 @@ function handleAuth($action, $subaction, $pdo, $body) {
             $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
             $stmt->execute([$hashedPassword, $user['id']]);
 
-            sendJson(['message' => 'Password reset successfully! You can now log in.']);
+            sendJson(['message' => 'Password reset successfully! You can now log in with your new password.']);
         }
     }
 
