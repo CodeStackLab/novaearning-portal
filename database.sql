@@ -89,6 +89,37 @@ CREATE TABLE IF NOT EXISTS user_notification_preferences (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS in_app_notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, category VARCHAR(40) NOT NULL,
+    title VARCHAR(180) NOT NULL, message TEXT NOT NULL, action_url VARCHAR(255), is_read TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_notification_user (user_id, is_read, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL, action VARCHAR(100) NOT NULL,
+    target_type VARCHAR(50), target_id VARCHAR(100), details TEXT, ip_address VARCHAR(64),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_audit_created (created_at), INDEX idx_audit_admin (admin_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS balance_ledger (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, transaction_ref VARCHAR(255) NOT NULL,
+    entry_type VARCHAR(60) NOT NULL, amount DECIMAL(15,2) NOT NULL, balance_before DECIMAL(15,2) NOT NULL,
+    balance_after DECIMAL(15,2) NOT NULL, description VARCHAR(255), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_ledger_ref_type (transaction_ref, entry_type), INDEX idx_ledger_user (user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS login_activity (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, ip_address VARCHAR(64),
+    user_agent VARCHAR(255), login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_login_user (user_id, login_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS auth_attempts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, identifier_hash CHAR(64) NOT NULL, ip_address VARCHAR(64) NOT NULL,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_auth_attempt (identifier_hash, ip_address, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.com');

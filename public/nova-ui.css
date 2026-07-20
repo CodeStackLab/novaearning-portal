@@ -285,6 +285,34 @@ html, body {
     .transactions-table-wrap tr { padding: .8rem; gap: .65rem .75rem; }
 }
 
+/* In-app notification center and investment-cycle visibility */
+.header-notification-btn { position:relative; width:42px; height:42px; display:grid; place-items:center; flex:0 0 42px; color:#9db1cd; background:rgba(12,20,35,.8); border:1px solid rgba(126,156,205,.22); border-radius:12px; cursor:pointer; }
+.header-notification-btn b { position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; display:grid; place-items:center; color:#fff; background:#ef4444; border:2px solid #111622; border-radius:99px; font-size:.58rem; }
+.notification-inbox-card { margin-bottom:1rem; padding:1rem; background:linear-gradient(145deg,rgba(14,24,43,.96),rgba(8,16,30,.98)); border:1px solid rgba(126,156,205,.2); border-radius:16px; }
+.notification-inbox-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.8rem; }
+.notification-inbox-heading h2 { margin:0;color:#f5f8fd;font-size:1rem; }
+.notification-inbox-heading p { margin:.2rem 0 0;color:#8391a6;font-size:.72rem; }
+.notification-inbox-heading button { color:#80a8ef;background:transparent;border:0;font-size:.72rem;font-weight:700;cursor:pointer; }
+.notification-inbox-list { display:grid; gap:.55rem; max-height:420px; overflow:auto; }
+.notification-inbox-item { width:100%; padding:.8rem; display:grid; grid-template-columns:38px minmax(0,1fr); gap:.7rem; text-align:left; color:#cbd5e1; background:rgba(3,9,18,.35); border:1px solid rgba(126,156,205,.1); border-radius:11px; cursor:pointer; }
+.notification-inbox-item.unread { background:rgba(37,99,235,.1); border-color:rgba(77,127,222,.3); }
+.notification-category-icon { width:38px;height:38px;display:grid!important;place-items:center;color:#75a3f7;background:rgba(43,83,157,.24);border-radius:10px; }
+.notification-inbox-item strong,.notification-inbox-item small,.notification-inbox-item time { display:block; }
+.notification-inbox-item strong { color:#edf3fb;font-size:.8rem; }.notification-inbox-item small{margin-top:.2rem;color:#8d9bb0;font-size:.7rem;line-height:1.4}.notification-inbox-item time{margin-top:.3rem;color:#59677c;font-size:.62rem}
+.notification-inbox-empty { padding:2rem 1rem;text-align:center;color:#718096 }.notification-inbox-empty span,.notification-inbox-empty strong,.notification-inbox-empty small{display:block;margin-inline:auto}.notification-inbox-empty strong{margin-top:.4rem;color:#dce6f5}.notification-inbox-empty small{margin-top:.25rem;font-size:.7rem}
+.investment-cycle { min-width:130px;color:#8fa0b8;font-size:.7rem }.investment-cycle b{color:#68a0ff}.investment-cycle i{display:block;height:6px;margin-top:.4rem;overflow:hidden;background:#1e293b;border-radius:99px}.investment-cycle em{display:block;height:100%;background:linear-gradient(90deg,#3b82f6,#22c55e);border-radius:99px}
+.statement-download-btn { position:relative; z-index:2; margin-left:auto; padding:.65rem .85rem; display:inline-flex; align-items:center; gap:.4rem; color:#dce9ff; background:rgba(30,64,125,.6); border:1px solid rgba(95,140,225,.4); border-radius:10px; font-weight:700; cursor:pointer }.statement-download-btn .material-symbols-outlined{font-size:1.05rem}
+.audit-toolbar{display:flex;gap:.7rem;margin-bottom:1rem}.audit-toolbar input{flex:1}.audit-toolbar button{padding:.65rem .9rem;display:flex;align-items:center;gap:.35rem;color:#dce9ff;background:#17243a;border:1px solid #2b3c58;border-radius:10px}.audit-log-list{display:grid;gap:.65rem}.audit-log-item{padding:.9rem;display:grid;grid-template-columns:38px minmax(0,1fr);gap:.75rem;background:rgba(12,20,35,.75);border:1px solid rgba(126,156,205,.16);border-radius:12px}.audit-log-item>.material-symbols-outlined{width:38px;height:38px;display:grid;place-items:center;color:#79a6fa;background:rgba(45,81,151,.25);border-radius:10px}.audit-log-item strong,.audit-log-item small,.audit-log-item time{display:block}.audit-log-item strong{color:#eef4fd;font-size:.82rem}.audit-log-item small{margin-top:.25rem;color:#91a0b5;font-size:.72rem}.audit-log-item time{margin-top:.35rem;color:#59677c;font-size:.64rem}
+.security-summary-card{margin-bottom:1rem;padding:1rem;display:grid;grid-template-columns:44px minmax(0,1fr);gap:.8rem;align-items:center;color:#b9c9df;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:14px}.security-summary-card>.material-symbols-outlined{width:44px;height:44px;display:grid;place-items:center;color:#42cf8b;background:rgba(16,185,129,.12);border-radius:12px}.security-summary-card strong,.security-summary-card small{display:block}.security-summary-card strong{color:#eaf7f0}.security-summary-card small{margin-top:.25rem;color:#88a397;font-size:.72rem;line-height:1.4}
+
+@media (max-width:600px) {
+    .header-notification-btn { width:38px;height:38px;flex-basis:38px;border-radius:10px; }
+    .notification-inbox-heading { align-items:flex-start; }.notification-inbox-heading p{max-width:190px}.notification-inbox-card{padding:.8rem;border-radius:14px}.notification-inbox-item{padding:.7rem;grid-template-columns:34px minmax(0,1fr)}.notification-category-icon{width:34px;height:34px}
+    .statement-download-btn { position:absolute; right:0; bottom:.65rem; padding:.55rem .7rem; font-size:.7rem; }
+    .audit-toolbar{flex-direction:column}.audit-toolbar button{justify-content:center;min-height:44px}.audit-log-item{padding:.75rem;grid-template-columns:34px minmax(0,1fr)}
+}
+@media (max-width:430px) { .user-dashboard-body .user-text-details { display:none !important; } .user-dashboard-body .user-card-info { max-width:48px !important; } }
+
 /* Deposit history: compact, complete and swipe-free on phones */
 .recent-deposits-empty-row td { padding: 2.25rem 1rem !important; text-align: center !important; color: #718096 !important; }
 .recent-deposits-empty-row span, .recent-deposits-empty-row strong, .recent-deposits-empty-row small { display: block; margin-inline: auto; }

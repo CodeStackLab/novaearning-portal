@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="/style.css?v=5.3">
-    <link rel="stylesheet" href="/nova-ui.css?v=5.4">
+    <link rel="stylesheet" href="/nova-ui.css?v=6.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -72,6 +72,12 @@
                 <a href="#notifications" class="sidebar-item-link" data-tab="notifications">
                     <span class="material-symbols-outlined sidebar-icon">notifications_active</span>
                     <span>Email Alerts</span>
+                </a>
+            </li>
+            <li>
+                <a href="#audit" class="sidebar-item-link" data-tab="audit">
+                    <span class="material-symbols-outlined sidebar-icon">history</span>
+                    <span>Audit Log</span>
                 </a>
             </li>
             <li>
@@ -504,6 +510,13 @@
                     </div>
                     <div class="smtp-actions"><button type="submit" class="form-btn-db" id="notification-save-btn"><span class="material-symbols-outlined">save</span> Save Alert Settings</button></div>
                 </form>
+            </section>
+
+            <section id="panel-audit" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Admin Audit Log</h1>
+                <p class="panel-desc">A read-only history of sensitive administrative actions.</p>
+                <div class="audit-toolbar"><input id="audit-search" class="form-input-db" type="search" placeholder="Search action, target or administrator…" oninput="filterAuditLog()"><button type="button" onclick="loadAuditLog()"><span class="material-symbols-outlined">refresh</span> Refresh</button></div>
+                <div id="audit-log-list" class="audit-log-list"><div class="notification-inbox-empty">Loading audit history…</div></div>
             </section>
 
             <!-- PANEL: SMTP SETTINGS -->

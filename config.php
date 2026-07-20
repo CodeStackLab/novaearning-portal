@@ -207,6 +207,87 @@ function novaEmailBody($heading, $contentHtml) {
         . '<p style="margin-top:24px;font-size:12px;color:#718096">This is an automatic account notification.</p></div>';
 }
 
+function ensurePlatformFeatureTables($pdo) {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS in_app_notifications (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, category VARCHAR(40) NOT NULL,
+        title VARCHAR(180) NOT NULL, message TEXT NOT NULL, action_url VARCHAR(255) DEFAULT NULL,
+        is_read TINYINT(1) NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_notification_user (user_id, is_read, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS admin_audit_log (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL, action VARCHAR(100) NOT NULL,
+        target_type VARCHAR(50) DEFAULT NULL, target_id VARCHAR(100) DEFAULT NULL, details TEXT DEFAULT NULL,
+        ip_address VARCHAR(64) DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_audit_created (created_at), INDEX idx_audit_admin (admin_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS balance_ledger (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, transaction_ref VARCHAR(255) NOT NULL,
+        entry_type VARCHAR(60) NOT NULL, amount DECIMAL(15,2) NOT NULL, balance_before DECIMAL(15,2) NOT NULL,
+        balance_after DECIMAL(15,2) NOT NULL, description VARCHAR(255) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY unique_ledger_ref_type (transaction_ref, entry_type),
+        INDEX idx_ledger_user (user_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS login_activity (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, ip_address VARCHAR(64) DEFAULT NULL,
+        user_agent VARCHAR(255) DEFAULT NULL, login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_login_user (user_id, login_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS auth_attempts (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, identifier_hash CHAR(64) NOT NULL, ip_address VARCHAR(64) NOT NULL,
+        attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_auth_attempt (identifier_hash, ip_address, attempted_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+function recordLoginActivity($pdo, $userId) {
+    try {
+        ensurePlatformFeatureTables($pdo);
+        $stmt = $pdo->prepare('INSERT INTO login_activity (user_id, ip_address, user_agent) VALUES (?, ?, ?)');
+        $stmt->execute([$userId, $_SERVER['REMOTE_ADDR'] ?? null, substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown device', 0, 255)]);
+    } catch (Exception $e) { error_log('Login activity failed: ' . $e->getMessage()); }
+}
+
+function enforceLoginRateLimit($pdo, $identifier) {
+    ensurePlatformFeatureTables($pdo);
+    $hash = hash('sha256', strtolower(trim($identifier)));
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $stmt = $pdo->prepare('SELECT COUNT(*) AS attempts FROM auth_attempts WHERE identifier_hash = ? AND ip_address = ? AND attempted_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)');
+    $stmt->execute([$hash, $ip]);
+    if ((int)($stmt->fetch()['attempts'] ?? 0) >= 8) sendJson(['message' => 'Too many login attempts. Please wait 15 minutes and try again.'], 429);
+}
+
+function recordFailedLogin($pdo, $identifier) {
+    try { $stmt = $pdo->prepare('INSERT INTO auth_attempts (identifier_hash, ip_address) VALUES (?, ?)'); $stmt->execute([hash('sha256', strtolower(trim($identifier))), $_SERVER['REMOTE_ADDR'] ?? 'unknown']); } catch (Exception $e) {}
+}
+
+function clearFailedLogins($pdo, $identifier) {
+    try { $stmt = $pdo->prepare('DELETE FROM auth_attempts WHERE identifier_hash = ? AND ip_address = ?'); $stmt->execute([hash('sha256', strtolower(trim($identifier))), $_SERVER['REMOTE_ADDR'] ?? 'unknown']); } catch (Exception $e) {}
+}
+
+function createInAppNotification($pdo, $userId, $category, $title, $message, $actionUrl = null) {
+    try {
+        ensurePlatformFeatureTables($pdo);
+        $stmt = $pdo->prepare('INSERT INTO in_app_notifications (user_id, category, title, message, action_url) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$userId, $category, $title, trim(strip_tags($message)), $actionUrl]);
+    } catch (Exception $e) { error_log('In-app notification failed: ' . $e->getMessage()); }
+}
+
+function auditAdminAction($pdo, $adminId, $action, $targetType = null, $targetId = null, $details = null) {
+    try {
+        ensurePlatformFeatureTables($pdo);
+        $stmt = $pdo->prepare('INSERT INTO admin_audit_log (admin_id, action, target_type, target_id, details, ip_address) VALUES (?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$adminId, $action, $targetType, (string)$targetId, $details ? json_encode($details) : null, $_SERVER['REMOTE_ADDR'] ?? null]);
+    } catch (Exception $e) { error_log('Admin audit failed: ' . $e->getMessage()); }
+}
+
+function recordBalanceLedger($pdo, $userId, $reference, $entryType, $amount, $balanceBefore, $description = null) {
+    try {
+        ensurePlatformFeatureTables($pdo);
+        $after = (float)$balanceBefore + (float)$amount;
+        $stmt = $pdo->prepare('INSERT IGNORE INTO balance_ledger (user_id, transaction_ref, entry_type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$userId, $reference, $entryType, $amount, $balanceBefore, $after, $description]);
+    } catch (Exception $e) { error_log('Balance ledger failed: ' . $e->getMessage()); }
+}
+
 function ensureUserNotificationPreferencesTable($pdo) {
     $pdo->exec("CREATE TABLE IF NOT EXISTS user_notification_preferences (
         user_id INT NOT NULL,
@@ -243,6 +324,7 @@ function notificationEnabled($pdo, $audience, $event = 'general', $userId = null
 }
 
 function notifyUserById($pdo, $userId, $subject, $contentHtml, $event = 'general') {
+    createInAppNotification($pdo, $userId, $event, $subject, $contentHtml, '#notifications');
     if (!notificationEnabled($pdo, 'user', $event, $userId)) return false;
     try {
         $stmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');

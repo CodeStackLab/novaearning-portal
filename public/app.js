@@ -130,7 +130,8 @@ function switchTab(tabId) {
                 link.classList.remove('active');
             }
         });
-        if (tabId === 'notifications') loadUserNotificationSettings();
+        if (tabId === 'notifications') { loadUserNotificationSettings(); loadNotificationCenter(); }
+        if (tabId === 'security') loadLoginActivity();
 
         // Set hash link URL quietly
         window.history.pushState(null, null, `#${tabId}`);
@@ -146,6 +147,46 @@ function switchTab(tabId) {
 }
 
 const userNotificationEvents = ['deposit', 'withdrawal', 'investment', 'commission', 'referral', 'reminder', 'support'];
+
+function escapeUi(value) {
+    const node = document.createElement('div');
+    node.textContent = String(value ?? '');
+    return node.innerHTML;
+}
+
+async function loadNotificationCenter() {
+    if (!localStorage.getItem('nova_token')) return;
+    try {
+        const result = await apiRequest('/user/notification-center');
+        const badge = document.getElementById('header-notification-count');
+        if (badge) { badge.textContent = result.unread > 99 ? '99+' : result.unread; badge.hidden = !result.unread; }
+        const list = document.getElementById('notification-inbox-list');
+        if (!list) return;
+        if (!result.items?.length) {
+            list.innerHTML = '<div class="notification-inbox-empty"><span class="material-symbols-outlined">notifications_none</span><strong>You are all caught up</strong><small>New account alerts will appear here.</small></div>';
+            return;
+        }
+        list.innerHTML = result.items.map(item => `<button type="button" class="notification-inbox-item ${item.is_read ? '' : 'unread'}" onclick="markNotificationRead(${Number(item.id)})"><span class="notification-category-icon material-symbols-outlined">${item.category === 'withdrawal' ? 'payments' : item.category === 'deposit' ? 'account_balance_wallet' : item.category === 'support' ? 'support_agent' : item.category === 'referral' ? 'group_add' : 'notifications'}</span><span><strong>${escapeUi(item.title)}</strong><small>${escapeUi(item.message)}</small><time>${escapeUi(item.created_at)}</time></span></button>`).join('');
+    } catch (error) { console.error('Notification center:', error.message); }
+}
+
+async function markNotificationRead(notificationId) {
+    await apiRequest('/user/notification-center', { method: 'POST', body: JSON.stringify({ notificationId }) });
+    await loadNotificationCenter();
+}
+
+async function markAllNotificationsRead() {
+    await apiRequest('/user/notification-center', { method: 'POST', body: '{}' });
+    await loadNotificationCenter();
+}
+
+async function loadLoginActivity() {
+    const list = document.getElementById('login-activity-list'); if (!list) return;
+    try {
+        const rows = await apiRequest('/user/login-activity');
+        list.innerHTML = rows.length ? rows.map(row => `<article class="audit-log-item"><span class="material-symbols-outlined">devices</span><div><strong>${escapeUi(row.user_agent || 'Unknown device')}</strong><small>IP: ${escapeUi(row.ip_address || 'Unavailable')}</small><time>${escapeUi(row.login_at)}</time></div></article>`).join('') : '<div class="notification-inbox-empty">No login activity recorded yet.</div>';
+    } catch (error) { list.innerHTML = `<div class="notification-inbox-empty">${escapeUi(error.message)}</div>`; }
+}
 
 async function loadUserNotificationSettings() {
     if (!document.getElementById('user-notification-form')) return;
@@ -326,6 +367,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             await fetchAllDashboardData();
             fetchUserTronAddress();
+            loadNotificationCenter();
         } catch (e) {
             console.error("Dashboard initial load failed:", e);
         }
@@ -790,6 +832,17 @@ function renderAllTransactionsTable(transactions) {
     }).join('');
 }
 
+async function downloadAccountStatement() {
+    try {
+        const rows = await apiRequest('/user/ledger');
+        const csv = [['Date','Type','Reference','Amount','Balance Before','Balance After','Description'], ...rows.map(row => [row.created_at,row.entry_type,row.transaction_ref,row.amount,row.balance_before,row.balance_after,row.description || ''])]
+            .map(cols => cols.map(value => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a'); link.href = url; link.download = `nova-statement-${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(url);
+        showToast('Statement downloaded');
+    } catch (error) { showToast(error.message || 'Unable to download statement'); }
+}
+
 function renderInvestmentsTable(investments) {
     const tbody = document.getElementById('my-investments-table-body');
     if (!tbody) return;
@@ -816,21 +869,28 @@ function renderActiveInvestmentsTracking(investments) {
     const tbody = document.getElementById('active-investments-tbody');
     if (!tbody) return;
 
-    const dummyActive = [
-        { name: 'AMC Movie Ticket', amount: 100.00, daily_profit_pct: 2.5, status: 'Active' }
-    ];
+    const active = investments.filter(inv => inv.status === 'Active');
 
-    const active = [...dummyActive, ...investments.filter(inv => inv.status === 'Active')];
+    if (!active.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#94a3b8">No active investments yet.</td></tr>';
+        return;
+    }
 
     tbody.innerHTML = active.map(inv => {
         const estReturns = inv.amount * (inv.daily_profit_pct / 100);
+        const cycleMs = 24 * 60 * 60 * 1000;
+        const elapsed = Math.max(0, Date.now() - Number(inv.created_at || Date.now()));
+        const cycleProgress = Math.min(1, (elapsed % cycleMs) / cycleMs);
+        const remaining = Math.max(0, cycleMs - (elapsed % cycleMs));
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
         return `
         <tr style="border-bottom: 1px solid #1e2538;">
             <td style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${inv.name}</td>
             <td style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">$${inv.amount.toFixed(2)}</td>
             <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${inv.daily_profit_pct}% / day</td>
             <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:700;">+$${estReturns.toFixed(2)}</td>
-            <td style="padding: 1rem 1.25rem;"><span style="background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${inv.status}</span></td>
+            <td style="padding: 1rem 1.25rem;"><div class="investment-cycle"><span><b>${hours}h ${minutes}m</b> to next credit</span><i><em style="width:${Math.round(cycleProgress * 100)}%"></em></i></div></td>
         </tr>
         `;
     }).join('');

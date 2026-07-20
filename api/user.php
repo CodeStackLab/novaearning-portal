@@ -98,6 +98,43 @@ function handleUser($action, $subaction, $pdo, $body) {
         }
     }
 
+    if ($action === 'notification-center') {
+        ensurePlatformFeatureTables($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $stmt = $pdo->prepare('SELECT id, category, title, message, action_url, is_read, created_at FROM in_app_notifications WHERE user_id = ? ORDER BY id DESC LIMIT 50');
+            $stmt->execute([$userId]);
+            $items = $stmt->fetchAll();
+            $unread = 0;
+            foreach ($items as &$item) { $item['is_read'] = (bool)$item['is_read']; if (!$item['is_read']) $unread++; }
+            sendJson(['items' => $items, 'unread' => $unread]);
+        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $notificationId = (int)($body['notificationId'] ?? 0);
+            if ($notificationId > 0) {
+                $stmt = $pdo->prepare('UPDATE in_app_notifications SET is_read = 1 WHERE id = ? AND user_id = ?');
+                $stmt->execute([$notificationId, $userId]);
+            } else {
+                $stmt = $pdo->prepare('UPDATE in_app_notifications SET is_read = 1 WHERE user_id = ?');
+                $stmt->execute([$userId]);
+            }
+            sendJson(['message' => 'Notifications marked as read.']);
+        }
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'ledger') {
+        ensurePlatformFeatureTables($pdo);
+        $stmt = $pdo->prepare('SELECT transaction_ref, entry_type, amount, balance_before, balance_after, description, created_at FROM balance_ledger WHERE user_id = ? ORDER BY id DESC LIMIT 250');
+        $stmt->execute([$userId]);
+        sendJson($stmt->fetchAll());
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'login-activity') {
+        ensurePlatformFeatureTables($pdo);
+        $stmt = $pdo->prepare('SELECT ip_address, user_agent, login_at FROM login_activity WHERE user_id = ? ORDER BY id DESC LIMIT 20');
+        $stmt->execute([$userId]);
+        sendJson($stmt->fetchAll());
+    }
+
     sendJson(['message' => 'Invalid User Action'], 404);
 }
 ?>

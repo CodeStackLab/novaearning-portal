@@ -75,6 +75,13 @@ foreach ($activeInvestments as $inv) {
             }
             $pdo->commit();
 
+            $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$inv['user_id']]); $currentBalance = (float)($stmt->fetch()['balance'] ?? 0);
+            recordBalanceLedger($pdo, $inv['user_id'], $refCode, 'daily_commission', $commission, $currentBalance - $commission, '24-hour investment commission');
+            if ($referrerId) {
+                $stmt->execute([$referrerId]); $refCurrent = (float)($stmt->fetch()['balance'] ?? 0);
+                recordBalanceLedger($pdo, $referrerId, 'REF-' . $refCode, 'referral_commission', $referralCommission, $refCurrent - $referralCommission, 'Referral earning commission');
+            }
+
             $commissionText = number_format($commission, 2);
             notifyUserById($pdo, $inv['user_id'], 'Your daily commission was added', '<p>Your 24-hour earning cycle is complete.</p><p><strong>$' . $commissionText . '</strong> commission has been added to your balance.</p><p>Cycle ' . $cycle . ' of ' . $durationDays . ' completed.</p>', 'commission');
             notifyAdmins($pdo, 'Daily investment commission credited', '<p>Investment <strong>#' . (int)$inv['id'] . '</strong> completed earning cycle ' . $cycle . ' of ' . $durationDays . '.</p><p><strong>$' . $commissionText . '</strong> was credited automatically to the investor.</p>', 'commission');
@@ -99,6 +106,8 @@ foreach ($activeInvestments as $inv) {
             $stmt = $pdo->prepare('INSERT IGNORE INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
             $stmt->execute([$inv['user_id'], date('M j, Y h:i A'), 'Payout', $inv['amount'], $refCode, 'Confirmed']);
             $pdo->commit();
+            $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$inv['user_id']]); $currentBalance = (float)($stmt->fetch()['balance'] ?? 0);
+            recordBalanceLedger($pdo, $inv['user_id'], $refCode, 'principal_return', (float)$inv['amount'], $currentBalance - (float)$inv['amount'], 'Investment principal returned');
             notifyUserById($pdo, $inv['user_id'], 'Investment completed', '<p>Your <strong>' . htmlspecialchars($inv['name']) . '</strong> plan has completed successfully.</p><p><strong>$' . number_format((float)$inv['amount'], 2) . '</strong> principal was returned to your balance.</p>', 'investment');
         } catch (Exception $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();

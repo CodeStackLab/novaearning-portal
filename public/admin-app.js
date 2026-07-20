@@ -4,6 +4,9 @@ const API_BASE = '/api';
 let activeEditUserId = null;
 let activeReplyTicketId = null;
 let globalUsersList = [];
+let globalAuditLog = [];
+
+function escapeAdminUi(value) { const node = document.createElement('div'); node.textContent = String(value ?? ''); return node.innerHTML; }
 
 // Format Currency
 function formatUSD(amount) {
@@ -99,10 +102,31 @@ async function fetchActiveTabDetails(tabId) {
             await loadSmtpSettings();
         } else if (tabId === 'notifications') {
             await loadNotificationSettings();
+        } else if (tabId === 'audit') {
+            await loadAuditLog();
         }
     } catch (e) {
         console.error('Error fetching tab details:', e.message);
     }
+}
+
+async function loadAuditLog() {
+    const list = document.getElementById('audit-log-list');
+    if (!list) return;
+    try { globalAuditLog = await adminRequest('/admin/audit-log'); renderAuditLog(globalAuditLog); }
+    catch (error) { list.innerHTML = `<div class="notification-inbox-empty">${error.message || 'Unable to load audit log'}</div>`; }
+}
+
+function filterAuditLog() {
+    const query = document.getElementById('audit-search')?.value.toLowerCase().trim() || '';
+    renderAuditLog(globalAuditLog.filter(row => JSON.stringify(row).toLowerCase().includes(query)));
+}
+
+function renderAuditLog(rows) {
+    const list = document.getElementById('audit-log-list');
+    if (!list) return;
+    if (!rows.length) { list.innerHTML = '<div class="notification-inbox-empty">No matching administrative actions.</div>'; return; }
+    list.innerHTML = rows.map(row => `<article class="audit-log-item"><span class="material-symbols-outlined">verified_user</span><div><strong>${escapeAdminUi(row.action)}</strong><small>${escapeAdminUi(row.admin_name || 'Administrator')} · ${escapeAdminUi(row.target_type || 'system')} ${escapeAdminUi(row.target_id || '')}</small><time>${escapeAdminUi(row.created_at)} · ${escapeAdminUi(row.ip_address || 'IP unavailable')}</time></div></article>`).join('');
 }
 
 const notificationSettingKeys = [

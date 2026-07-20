@@ -36,6 +36,7 @@ function handleWithdrawals($action, $pdo, $body) {
             $stmt->execute([$userId, $dateStr, 'Withdrawal', $withdrawAmt, $randomRef, 'Pending', $address]);
 
             $pdo->commit();
+            recordBalanceLedger($pdo, $userId, $randomRef, 'withdrawal_request', -$withdrawAmt, (float)$user['balance'], 'Withdrawal requested');
             $amountText = number_format($withdrawAmt, 2);
             $netText = number_format($netPayout, 2);
             $safeRef = htmlspecialchars($randomRef);

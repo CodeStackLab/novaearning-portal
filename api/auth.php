@@ -13,6 +13,7 @@ function handleAuth($action, $subaction, $pdo, $body) {
         if (!$email || !$password) {
             sendJson(['message' => 'Email and password are required'], 400);
         }
+        enforceLoginRateLimit($pdo, $email);
 
         $stmt = $pdo->prepare('SELECT * FROM users WHERE email = ? OR username = ?');
         $stmt->execute([$email, $email]);
@@ -21,18 +22,15 @@ function handleAuth($action, $subaction, $pdo, $body) {
         $isValid = false;
         if ($user) {
             $isValid = password_verify($password, $user['password']);
-            if (!$isValid && ($password === 'admin123' || $password === 'user123')) {
-                $isValid = true;
-                $newHash = password_hash($password, PASSWORD_BCRYPT);
-                $updateStmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
-                $updateStmt->execute([$newHash, $user['id']]);
-            }
         }
 
         if (!$user || !$isValid) {
+            recordFailedLogin($pdo, $email);
             sendJson(['message' => 'Invalid credentials'], 401);
         }
 
+        clearFailedLogins($pdo, $email);
+        recordLoginActivity($pdo, $user['id']);
         $token = generateJWT(['userId' => $user['id']]);
         sendJson([
             'token' => $token,

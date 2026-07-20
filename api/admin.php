@@ -52,6 +52,12 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             sendJson($stmt->fetchAll());
         }
 
+        if ($action === 'audit-log') {
+            ensurePlatformFeatureTables($pdo);
+            $stmt = $pdo->query('SELECT admin_audit_log.*, users.name AS admin_name FROM admin_audit_log LEFT JOIN users ON users.id = admin_audit_log.admin_id ORDER BY admin_audit_log.id DESC LIMIT 250');
+            sendJson($stmt->fetchAll());
+        }
+
         if ($action === 'settings' && $subaction === 'smtp') {
             $keys = ['smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name'];
             $placeholders = implode(',', array_fill(0, count($keys), '?'));
@@ -171,8 +177,11 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 sendJson(['message' => 'Valid user ID and non-negative balance are required'], 400);
             }
 
+            $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$targetUserId]); $beforeBalance = (float)($stmt->fetch()['balance'] ?? 0);
             $stmt = $pdo->prepare('UPDATE users SET balance = ? WHERE id = ?');
             $stmt->execute([(float)$newBalance, $targetUserId]);
+            recordBalanceLedger($pdo, $targetUserId, 'ADMIN-' . $userId . '-' . time(), 'admin_adjustment', (float)$newBalance - $beforeBalance, $beforeBalance, 'Administrative balance adjustment');
+            auditAdminAction($pdo, $userId, 'user.balance.updated', 'user', $targetUserId, ['newBalance' => (float)$newBalance]);
             sendJson(['message' => 'User balance updated successfully.']);
         }
 
@@ -259,6 +268,15 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     }
                 }
                 $pdo->commit();
+                auditAdminAction($pdo, $userId, 'deposit.' . strtolower($newStatus), 'deposit', $depositId, ['amount' => (float)$deposit['amount'], 'userId' => $deposit['user_id']]);
+                if ($act === 'Approve' && !$deposit['plan_name']) {
+                    $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$deposit['user_id']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
+                    recordBalanceLedger($pdo, $deposit['user_id'], $deposit['txn_id'], 'deposit_credit', (float)$deposit['amount'], $current - (float)$deposit['amount'], 'Confirmed deposit');
+                }
+                if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt, $refCode)) {
+                    $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$user['referred_by']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
+                    recordBalanceLedger($pdo, $user['referred_by'], $refCode, 'referral_bonus', $referralBonusAmt, $current - $referralBonusAmt, 'Deposit referral bonus');
+                }
                 $amountText = number_format((float)$deposit['amount'], 2);
                 $safeRef = htmlspecialchars($deposit['txn_id']);
                 notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
@@ -286,6 +304,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             $stmt = $pdo->prepare('UPDATE transactions SET status = ? WHERE id = ?');
             $stmt->execute(['Confirmed', $transactionId]);
+            auditAdminAction($pdo, $userId, 'withdrawal.confirmed', 'transaction', $transactionId, ['amount' => (float)$tx['amount'], 'userId' => $tx['user_id']]);
             $amountText = number_format((float)$tx['amount'], 2);
             notifyUserById($pdo, $tx['user_id'], 'Withdrawal completed', "<p>Your withdrawal of <strong>\${$amountText}</strong> has been approved and marked completed.</p><p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>', 'withdrawal');
             sendJson(['message' => 'Withdrawal successfully approved and completed.']);

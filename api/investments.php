@@ -46,6 +46,7 @@ function handleInvestments($action, $pdo, $body) {
             $stmt->execute([$userId, $dateStr, 'Investment', $totalCost, $randomRef, 'Confirmed']);
 
             $pdo->commit();
+            recordBalanceLedger($pdo, $userId, $randomRef, 'investment_purchase', -$totalCost, (float)$user['balance'], "$name investment purchase");
             $costText = number_format($totalCost, 2);
             $safeName = htmlspecialchars($name);
             $safeRef = htmlspecialchars($randomRef);
