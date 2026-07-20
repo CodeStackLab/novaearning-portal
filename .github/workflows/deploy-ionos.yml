@@ -77,6 +77,14 @@ jobs:
                 timeout: 30000
               });
               const targetDir = process.env.SFTP_REMOTE_PATH || '.';
+              if (targetDir && targetDir !== '.') {
+                try {
+                  console.log('Creating remote directory if not exists: ' + targetDir);
+                  await sftp.mkdir(targetDir, true);
+                } catch (e) {
+                  console.log('Directory notice:', e.message);
+                }
+              }
               console.log('Connected successfully. Uploading files to ' + targetDir + '...');
               await sftp.uploadDir('dist', targetDir);
               console.log('SFTP deployment finished successfully.');
