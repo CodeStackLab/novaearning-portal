@@ -1,0 +1,76 @@
+name: Deploy production to IONOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ionos-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Validate JavaScript
+        run: |
+          node --check public/app.js
+          node --check public/admin-app.js
+
+      - name: Validate PHP
+        run: |
+          find api -name '*.php' -print0 | xargs -0 -n1 php -l
+          php -l cron.php
+          php -l config.php
+
+      - name: Install secure transfer client
+        run: sudo apt-get update && sudo apt-get install --yes lftp
+
+      - name: Deploy application over SFTP
+        env:
+          SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
+          SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+          SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          REMOTE_PATH: ${{ secrets.IONOS_REMOTE_PATH }}
+        run: |
+          test -n "$SFTP_HOST"
+          test -n "$SFTP_PORT"
+          test -n "$SFTP_USER"
+          test -n "$SFTP_PASSWORD"
+          test -n "$REMOTE_PATH"
+
+          lftp <<DEPLOY
+          set cmd:fail-exit yes
+          set net:max-retries 2
+          set net:timeout 20
+          set sftp:auto-confirm yes
+          open --user "$SFTP_USER" --password "$SFTP_PASSWORD" "sftp://$SFTP_HOST:$SFTP_PORT"
+          mkdir -p "$REMOTE_PATH"
+          mirror --reverse --verbose --parallel=4 \
+            --exclude-glob "uploads/**" \
+            public/ "$REMOTE_PATH/"
+          mkdir -p "$REMOTE_PATH/api"
+          mirror --reverse --verbose --parallel=4 api/ "$REMOTE_PATH/api/"
+          put cron.php -o "$REMOTE_PATH/cron.php"
+          put config.php -o "$REMOTE_PATH/config.php"
+          bye
+          DEPLOY
+
+      - name: Deployment summary
+        run: echo "IONOS production deployment completed successfully."
+
