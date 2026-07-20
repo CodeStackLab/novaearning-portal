@@ -44,7 +44,7 @@ async function adminRequest(endpoint, options = {}) {
 function logout() {
     localStorage.removeItem('nova_token');
     localStorage.removeItem('nova_role');
-    window.location.href = '/login';
+    window.location.href = '/login.html';
 }
 
 // Switch tabs inside admin dashboard
@@ -95,10 +95,82 @@ async function fetchActiveTabDetails(tabId) {
         } else if (tabId === 'tickets') {
             const tickets = await adminRequest('/admin/tickets');
             renderTicketsTable(tickets);
+        } else if (tabId === 'smtp') {
+            await loadSmtpSettings();
         }
     } catch (e) {
         console.error('Error fetching tab details:', e.message);
     }
+}
+
+async function loadSmtpSettings() {
+    const status = document.getElementById('smtp-config-status');
+    if (!document.getElementById('smtp-settings-form')) return;
+    try {
+        const smtp = await adminRequest('/admin/settings/smtp');
+        document.getElementById('smtp-host').value = smtp.host || '';
+        document.getElementById('smtp-port').value = smtp.port || 587;
+        document.getElementById('smtp-encryption').value = smtp.encryption || 'tls';
+        document.getElementById('smtp-username').value = smtp.username || '';
+        document.getElementById('smtp-password').value = '';
+        document.getElementById('smtp-from-email').value = smtp.fromEmail || '';
+        document.getElementById('smtp-from-name').value = smtp.fromName || 'NOVA';
+        const configured = Boolean(smtp.host && smtp.fromEmail && smtp.passwordConfigured);
+        if (status) {
+            status.textContent = configured ? 'Configured' : 'Setup required';
+            status.classList.toggle('configured', configured);
+        }
+        const help = document.getElementById('smtp-password-help');
+        if (help) help.textContent = smtp.passwordConfigured
+            ? 'A password is already saved. Leave blank to keep it.'
+            : 'Enter the SMTP or app password supplied by your provider.';
+    } catch (error) {
+        if (status) status.textContent = 'Unable to load';
+        showToast(error.message || 'Unable to load SMTP settings');
+    }
+}
+
+async function saveSmtpSettings(event) {
+    event.preventDefault();
+    const button = document.getElementById('smtp-save-btn');
+    const payload = {
+        host: document.getElementById('smtp-host').value.trim(),
+        port: Number(document.getElementById('smtp-port').value),
+        encryption: document.getElementById('smtp-encryption').value,
+        username: document.getElementById('smtp-username').value.trim(),
+        password: document.getElementById('smtp-password').value,
+        fromEmail: document.getElementById('smtp-from-email').value.trim(),
+        fromName: document.getElementById('smtp-from-name').value.trim()
+    };
+
+    if (button) {
+        button.disabled = true;
+        button.classList.add('is-loading');
+    }
+    try {
+        const result = await adminRequest('/admin/settings/smtp', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        showToast(result.message || 'SMTP configuration saved!');
+        await loadSmtpSettings();
+    } catch (error) {
+        showToast(error.message || 'Unable to save SMTP configuration');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.classList.remove('is-loading');
+        }
+    }
+}
+
+function toggleSmtpPassword() {
+    const input = document.getElementById('smtp-password');
+    const icon = document.getElementById('smtp-password-icon');
+    if (!input) return;
+    const reveal = input.type === 'password';
+    input.type = reveal ? 'text' : 'password';
+    if (icon) icon.textContent = reveal ? 'visibility_off' : 'visibility';
 }
 
 // Toast notification trigger

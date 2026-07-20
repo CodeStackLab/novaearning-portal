@@ -15,6 +15,40 @@ function formatUSD(amount) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
 
+async function refreshDashboard(button) {
+    if (button) button.classList.add('is-loading');
+    try {
+        await fetchAllDashboardData();
+        showToast('Dashboard refreshed!');
+    } finally {
+        if (button) button.classList.remove('is-loading');
+    }
+}
+
+async function shareDashboardReferral() {
+    const code = document.getElementById('db-referral-code')?.textContent?.trim();
+    if (!code || code === '-') return showToast('Referral code is still loading.');
+    const url = `${window.location.origin}/login?ref=${encodeURIComponent(code)}`;
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: 'Join Nova', text: `Join Nova with my referral code ${code}`, url });
+            return;
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+        }
+    }
+    copyToClipboard(url, 'Referral link copied!');
+}
+
+function updateWithdrawalPreview() {
+    const amount = Math.max(0, parseFloat(document.getElementById('withdraw-amount-val')?.value) || 0);
+    const fee = amount * 0.02;
+    const feeEl = document.getElementById('withdraw-fee-preview');
+    const totalEl = document.getElementById('withdraw-total-preview');
+    if (feeEl) feeEl.textContent = amount ? `- ${formatUSD(fee)}` : '—';
+    if (totalEl) totalEl.textContent = amount ? formatUSD(amount - fee) : '—';
+}
+
 // Fetch helper with token injection
 async function apiRequest(endpoint, options = {}) {
     const token = localStorage.getItem('nova_token');
@@ -75,7 +109,7 @@ async function handleLoginSubmit(event) {
 function logout() {
     localStorage.removeItem('nova_token');
     localStorage.removeItem('nova_role');
-    window.location.href = '/login';
+    window.location.href = '/login.html';
 }
 
 // Switch tabs inside dashboard
@@ -139,6 +173,9 @@ async function fetchAllDashboardData() {
         
         const dbTotalBalance = document.getElementById('db-total-balance');
         if (dbTotalBalance) dbTotalBalance.textContent = formatUSD(profile.balance);
+
+        const withdrawAvailable = document.getElementById('withdraw-available-balance');
+        if (withdrawAvailable) withdrawAvailable.textContent = formatUSD(profile.balance);
         
         const dbTodayProfit = document.getElementById('db-today-profit');
         if (dbTodayProfit) dbTodayProfit.textContent = formatUSD(profile.today_profit || 0.00);
@@ -235,6 +272,7 @@ async function fetchAllDashboardData() {
 
 // Initialize Application Routing & Listeners
 document.addEventListener("DOMContentLoaded", async () => {
+    document.getElementById('withdraw-amount-val')?.addEventListener('input', updateWithdrawalPreview);
     // 1. Session Auth check
     const token = localStorage.getItem('nova_token');
     const role = localStorage.getItem('nova_role');
