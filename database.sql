@@ -83,7 +83,7 @@ INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_name', 'Nova Sup
 
 -- Seed Admin
 INSERT IGNORE INTO users (name, email, username, password, role, referral_code) 
-VALUES ('Nova Admin', 'admin@nova.com', 'novadmin', '$2a$10$wYm/w/Q9/kM/z7b7D/4.4.yO.7C6qM7oYp2hO6Hqg2u.w6b.aU/XG', 'admin', 'ADMIN9999'); 
+VALUES ('Nova Admin', 'admin@novaearning.com', 'novadmin', '$2a$10$wYm/w/Q9/kM/z7b7D/4.4.yO.7C6qM7oYp2hO6Hqg2u.w6b.aU/XG', 'admin', 'ADMIN9999'); 
 -- Note: Password is 'admin123' bcrypt hashed
 
 -- Seed Demo Admin
