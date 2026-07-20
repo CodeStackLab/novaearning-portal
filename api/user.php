@@ -69,51 +69,7 @@ function handleUser($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'change-email') {
-        if ($subaction === 'send-otp') {
-            $password = $body['password'] ?? '';
-            $newEmail = $body['newEmail'] ?? '';
-
-            if (!$password || !$newEmail) {
-                sendJson(['message' => 'Current password and new email are required'], 400);
-            }
-
-            $stmt = $pdo->prepare('SELECT password, email FROM users WHERE id = ?');
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch();
-
-            if (!$user || !password_verify($password, $user['password'])) {
-                sendJson(['message' => 'Incorrect password'], 400);
-            }
-
-            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
-            $stmt->execute([$newEmail, $userId]);
-            if ($stmt->fetch()) {
-                sendJson(['message' => 'New email address is already in use'], 400);
-            }
-
-            file_put_contents('../otp_' . $userId . '_email.txt', '123456'); // Mocking OTP
-            sendJson(['message' => 'OTP sent to your new email! (Use 123456 for now)']);
-        }
-
-        if ($subaction === 'verify') {
-            $newEmail = $body['newEmail'] ?? '';
-            $otpCode = $body['otpCode'] ?? '';
-
-            if (!$newEmail || !$otpCode) {
-                sendJson(['message' => 'New email and OTP code are required'], 400);
-            }
-
-            $storedOtp = @file_get_contents('../otp_' . $userId . '_email.txt');
-            if ($otpCode !== '123456' && $otpCode !== $storedOtp) {
-                sendJson(['message' => 'Invalid OTP code'], 400);
-            }
-
-            @unlink('../otp_' . $userId . '_email.txt');
-            $stmt = $pdo->prepare('UPDATE users SET email = ?, username = ? WHERE id = ?');
-            $stmt->execute([$newEmail, $newEmail, $userId]);
-
-            sendJson(['message' => 'Email address updated successfully!']);
-        }
+        sendJson(['message' => 'Email changes are handled by support. Please create a support ticket.'], 403);
     }
 
     sendJson(['message' => 'Invalid User Action'], 404);

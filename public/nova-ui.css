@@ -76,6 +76,7 @@ html, body {
         box-shadow: 4px 0 25px rgba(0,0,0,0.5) !important;
     }
 
+    .dashboard-sidebar.active,
     .dashboard-sidebar.mobile-open {
         left: 0 !important;
     }

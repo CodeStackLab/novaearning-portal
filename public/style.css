@@ -3790,6 +3790,7 @@ html, body {
         box-shadow: 4px 0 25px rgba(0,0,0,0.5) !important;
     }
 
+    .dashboard-sidebar.active,
     .dashboard-sidebar.mobile-open {
         left: 0 !important;
     }
@@ -3818,6 +3819,24 @@ html, body {
     .sidebar-overlay.active {
         display: block !important;
     }
+}
+
+@media (max-width: 900px) {
+    .dashboard-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -290px !important;
+        width: min(82vw, 270px) !important;
+        height: 100dvh !important;
+        z-index: 9999 !important;
+        overflow-y: auto;
+        transition: left .25s ease !important;
+    }
+    .dashboard-sidebar.active, .dashboard-sidebar.mobile-open { left: 0 !important; }
+    .dashboard-wrapper { width: 100% !important; margin-left: 0 !important; }
+    .header-left-toggle { display: flex !important; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+    .sidebar-overlay.active { display: block !important; position: fixed; inset: 0; z-index: 9998; background: rgba(1,5,12,.72); backdrop-filter: blur(4px); }
+    body:has(.dashboard-sidebar.active) { overflow: hidden; }
 }
 
 /* --- MULTI-COLOR PROFESSIONAL AUTH CARD UI/UX --- */

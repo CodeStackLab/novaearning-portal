@@ -1144,19 +1144,7 @@ async function saveUserMgmt() {
         localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
         showToast('New user added successfully!');
     } else {
-        // Edit existing user
         const userId = parseInt(id);
-        let advancedUsers = JSON.parse(localStorage.getItem('nova_advanced_users') || '{}');
-        advancedUsers[userId] = {
-            ...advancedUsers[userId],
-            name: name,
-            email: email,
-            role: role,
-            status: status
-        };
-        localStorage.setItem('nova_advanced_users', JSON.stringify(advancedUsers));
-        
-        // Also update custom users array if they were custom added
         let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
         const cIdx = customUsers.findIndex(u => u.id === userId);
         if (cIdx > -1) {
@@ -1165,9 +1153,24 @@ async function saveUserMgmt() {
             customUsers[cIdx].role = role;
             customUsers[cIdx].status = status;
             localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
+            showToast('User details updated!');
+        } else {
+            try {
+                const result = await adminRequest('/admin/users/profile', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        userId,
+                        name,
+                        email,
+                        password: document.getElementById('user-mgmt-password').value
+                    })
+                });
+                showToast(result.message || 'User details updated!');
+            } catch (error) {
+                showToast(error.message || 'Unable to update user details.');
+                return;
+            }
         }
-
-        showToast('User details updated!');
     }
 
     closeUserMgmtModal();
@@ -1256,90 +1259,6 @@ function closeReferredMembersModal() {
     document.getElementById('referred-members-modal').classList.remove('active');
 }
 
-// Admin Change Email Flow (OTP)
-function openAdminChangeEmailModal() {
-    const adminDropdown = document.getElementById('admin-dropdown-menu');
-    if (adminDropdown) adminDropdown.classList.remove('show');
-
-    const modal = document.getElementById('admin-change-email-modal');
-    if (modal) {
-        modal.classList.add('active');
-        document.getElementById('admin-email-step-1').style.display = 'block';
-        document.getElementById('admin-email-step-2').style.display = 'none';
-        document.getElementById('admin-change-email-password').value = '';
-        document.getElementById('admin-change-email-new').value = '';
-        document.getElementById('admin-change-email-otp').value = '';
-    }
-}
-
-function closeAdminChangeEmailModal() {
-    const modal = document.getElementById('admin-change-email-modal');
-    if (modal) modal.classList.remove('active');
-}
-
-async function adminSendChangeEmailOtp() {
-    const password = document.getElementById('admin-change-email-password').value;
-    const newEmail = document.getElementById('admin-change-email-new').value;
-
-    if (!password || !newEmail) {
-        showToast('Please enter password and new email');
-        return;
-    }
-
-    try {
-        const token = localStorage.getItem('nova_token');
-        const response = await fetch('/api/user/change-email/send-otp', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ password, newEmail })
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to send OTP');
-
-        document.getElementById('admin-email-step-1').style.display = 'none';
-        document.getElementById('admin-email-step-2').style.display = 'block';
-        showToast('OTP sent to new email!');
-    } catch (err) {
-        showToast(err.message);
-    }
-}
-
-async function adminVerifyChangeEmailOtp() {
-    const newEmail = document.getElementById('admin-change-email-new').value;
-    const otpCode = document.getElementById('admin-change-email-otp').value;
-
-    if (!otpCode) {
-        showToast('Please enter OTP');
-        return;
-    }
-
-    try {
-        const token = localStorage.getItem('nova_token');
-        const response = await fetch('/api/user/change-email/verify', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ newEmail, otpCode })
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Verification failed');
-
-        showToast('Email changed successfully!');
-        closeAdminChangeEmailModal();
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-    } catch (err) {
-        showToast(err.message);
-    }
-}
 
 // TRON Deposit Address Management
 let globalTronAddress = 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX';

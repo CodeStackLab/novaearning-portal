@@ -36,17 +36,33 @@
         }
 
         html, body {
-            height: 100%;
+            min-height: 100%;
             background: var(--bg);
             color: var(--text);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             -webkit-font-smoothing: antialiased;
         }
+        body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+
+        .login-header {
+            min-height: 64px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(5,10,20,.88);
+            backdrop-filter: blur(16px);
+            position: relative;
+            z-index: 10;
+        }
+        .login-header-inner { width: min(100% - 2rem, 1100px); min-height: 64px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .login-header-brand { display: flex; align-items: center; gap: .55rem; color: var(--text); text-decoration: none; font-size: 1rem; font-weight: 800; letter-spacing: .08em; }
+        .login-header-brand img { width: 82px; height: auto; display: block; }
+        .login-help-link { color: var(--muted); text-decoration: none; font-size: .8rem; font-weight: 600; padding: .55rem .8rem; border: 1px solid var(--border); border-radius: 9px; }
+        .login-help-link:hover { color: var(--text); border-color: var(--border-focus); }
+        .login-footer { padding: 1rem; text-align: center; color: #65758d; font-size: .7rem; border-top: 1px solid var(--border); }
 
         /* Full-screen layout */
         .page {
-            min-height: 100vh;
-            min-height: 100dvh;
+            min-height: 0;
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -377,6 +393,11 @@
         }
 
         @media (max-width: 768px) {
+            .login-header, .login-header-inner { min-height: 56px; }
+            .login-header-inner { width: calc(100% - 1.5rem); }
+            .login-header-brand img { width: 70px; }
+            .login-help-link { padding: .45rem .65rem; }
+            .login-footer { padding: .75rem; }
             .page { justify-content: flex-start; padding: max(1rem, env(safe-area-inset-top)) 0.75rem; overflow: auto; }
             .auth-card { padding: 1.35rem 1.1rem; border-radius: 16px; margin: auto 0; }
             .field input { min-height: 48px; font-size: 1rem; }
@@ -415,6 +436,12 @@
     </style>
 </head>
 <body>
+<header class="login-header">
+    <div class="login-header-inner">
+        <a href="/login" class="login-header-brand" aria-label="Nova login"><img src="images/nova-logo-full.svg" alt="Nova"></a>
+        <a href="/help" class="login-help-link">Help & Support</a>
+    </div>
+</header>
 <div class="page">
 
     <!-- Auth Card -->
@@ -522,6 +549,8 @@
     </div>
 
 </div>
+
+<footer class="login-footer">© 2026 Nova Portal · Secure account access</footer>
 
 <!-- PWA Install Banner -->
 <div id="pwa-install-banner">

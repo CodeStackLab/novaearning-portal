@@ -14,7 +14,7 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=5.1">
+    <link rel="stylesheet" href="/style.css?v=5.3">
     <link rel="stylesheet" href="/nova-ui.css?v=5.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
@@ -119,10 +119,6 @@
                     
                     <!-- Dropdown Menu -->
                     <div class="profile-dropdown-menu" id="profile-dropdown-menu" style="display: none; position: absolute; top: 115%; right: 0; background-color: #111622; border: 1px solid #1e2538; border-radius: 8px; width: 140px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); z-index: 1000; padding: 0.5rem 0;">
-                        <a href="#" class="dropdown-item change-email-action-btn" onclick="openChangeEmailModal(event)" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #3b82f6; font-size: 0.85rem; text-decoration: none; font-weight: 500;">
-                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">mail</span>
-                            <span>Change Email</span>
-                        </a>
                         <a href="#referrals" onclick="switchTab('referrals')" class="dropdown-item" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; color: #fbbf24; font-size: 0.85rem; text-decoration: none; font-weight: 500; border-top: 1px solid #1e2538;">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #fbbf24;">group</span>
                             <span>My Referrals</span>
@@ -558,7 +554,7 @@
 
 
     <!-- MODAL OVERLAY: CHANGE EMAIL (OTP BASED) -->
-    <div id="change-email-modal" class="modal-overlay">
+    <div id="change-email-modal" class="modal-overlay" hidden aria-hidden="true">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
                 <h3 class="modal-title font-display">Change Email Address</h3>
@@ -681,6 +677,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js?v=2.7"></script>
+    <script src="app.js?v=2.8"></script>
 </body>
 </html>

@@ -33,7 +33,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'users') {
-            $stmt = $pdo->query('SELECT id, name, email, balance, earnings, role, referral_code, referred_by FROM users ORDER BY id DESC');
+            $stmt = $pdo->query("SELECT id, name, email, balance, earnings, role, referral_code, referred_by FROM users WHERE role = 'user' ORDER BY id DESC");
             sendJson($stmt->fetchAll());
         }
 
@@ -150,6 +150,37 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->prepare('UPDATE users SET balance = ? WHERE id = ?');
             $stmt->execute([(float)$newBalance, $targetUserId]);
             sendJson(['message' => 'User balance updated successfully.']);
+        }
+
+        if ($action === 'users' && $subaction === 'profile') {
+            $targetUserId = (int)($body['userId'] ?? 0);
+            $name = trim($body['name'] ?? '');
+            $email = strtolower(trim($body['email'] ?? ''));
+            $newPassword = (string)($body['password'] ?? '');
+
+            if ($targetUserId < 1 || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                sendJson(['message' => 'Valid user, name, and email are required.'], 400);
+            }
+            $stmt = $pdo->prepare('SELECT id, role FROM users WHERE id = ?');
+            $stmt->execute([$targetUserId]);
+            $target = $stmt->fetch();
+            if (!$target) sendJson(['message' => 'User not found.'], 404);
+            if ($target['role'] === 'admin') {
+                sendJson(['message' => 'Admin email cannot be changed from Manage Users.'], 403);
+            }
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
+            $stmt->execute([$email, $targetUserId]);
+            if ($stmt->fetch()) sendJson(['message' => 'This email address is already in use.'], 409);
+
+            if ($newPassword !== '') {
+                if (strlen($newPassword) < 6) sendJson(['message' => 'Password must be at least 6 characters.'], 400);
+                $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ?, password = ? WHERE id = ? AND role = ?');
+                $stmt->execute([$name, $email, $email, password_hash($newPassword, PASSWORD_BCRYPT), $targetUserId, 'user']);
+            } else {
+                $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ? WHERE id = ? AND role = ?');
+                $stmt->execute([$name, $email, $email, $targetUserId, 'user']);
+            }
+            sendJson(['message' => 'User profile and login email updated successfully.']);
         }
 
         if ($action === 'deposits' && $subaction === 'verify') {
