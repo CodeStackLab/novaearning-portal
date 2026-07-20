@@ -56,10 +56,10 @@ jobs:
 
           lftp <<DEPLOY
           set cmd:fail-exit yes
-          set net:max-retries 2
-          set net:timeout 20
+          set net:max-retries 3
+          set net:timeout 30
           set sftp:auto-confirm yes
-          open --user "$SFTP_USER" --password "$SFTP_PASSWORD" "sftp://$SFTP_HOST:$SFTP_PORT"
+          open -u "$SFTP_USER","$SFTP_PASSWORD" -p "$SFTP_PORT" "$SFTP_HOST"
           mkdir -p "$REMOTE_PATH"
           mirror --reverse --verbose --parallel=4 \
             --exclude-glob "uploads/**" \
