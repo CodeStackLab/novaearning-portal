@@ -57,33 +57,36 @@ jobs:
           SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
           node -e "
-          const Client = require('ssh2-sftp-client');
+          const { Client } = require('ssh2');
           const sftp = new Client();
 
-          async function deploy() {
-            try {
-              console.log('Connecting to IONOS SFTP server...');
-              await sftp.connect({
-                host: process.env.SFTP_HOST,
-                port: parseInt(process.env.SFTP_PORT || '22'),
-                username: process.env.SFTP_USER,
-                password: process.env.SFTP_PASSWORD,
-                tryKeyboard: true,
-                retries: 3,
-                timeout: 30000
-              });
-              console.log('Connected successfully. Uploading files...');
-              await sftp.uploadDir('dist', '.');
-              console.log('SFTP deployment finished successfully.');
-            } catch (err) {
-              console.error('Deployment error:', err);
-              process.exit(1);
-            } finally {
-              await sftp.end();
-            }
-          }
+          sftp.on('debug', (msg) => console.log('DEBUG:', msg));
 
-          deploy();
+          sftp.on('ready', async () => {
+            console.log('SFTP Ready! Opening SFTP session...');
+            sftp.sftp((err, sftpSession) => {
+              if (err) {
+                console.error('SFTP session error:', err);
+                process.exit(1);
+              }
+              console.log('SFTP Session established successfully!');
+              sftpSession.readdir('.', (err, list) => {
+                if (err) console.error('Readdir error:', err);
+                else console.log('Remote Files:', list.map(f => f.filename));
+                sftp.end();
+              });
+            });
+          }).on('error', (err) => {
+            console.error('Connection error:', err);
+            process.exit(1);
+          }).connect({
+            host: process.env.SFTP_HOST,
+            port: parseInt(process.env.SFTP_PORT || '22'),
+            username: process.env.SFTP_USER,
+            password: process.env.SFTP_PASSWORD,
+            tryKeyboard: true,
+            authHandler: ['password', 'keyboard-interactive', 'publickey']
+          });
           "
 
       - name: Deployment summary
