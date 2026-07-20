@@ -57,46 +57,33 @@ jobs:
           SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
           node -e "
-          const { Client } = require('ssh2');
+          const Client = require('ssh2-sftp-client');
+          const sftp = new Client();
 
-          const passwords = [
-            process.env.SFTP_PASSWORD,
-            '\"Easy@9129881899\"',
-            'Easy@9129881899\"',
-            '\"Easy@9129881899',
-            'Easy@9129881899'
-          ];
-
-          async function tryConnect(pass) {
-            return new Promise((resolve, reject) => {
-              const conn = new Client();
-              conn.on('ready', () => {
-                console.log('SUCCESS with password:', pass);
-                conn.end();
-                resolve(true);
-              }).on('error', (err) => {
-                resolve(false);
-              }).connect({
+          async function deploy() {
+            try {
+              console.log('Connecting to IONOS SFTP server...');
+              await sftp.connect({
                 host: process.env.SFTP_HOST,
                 port: parseInt(process.env.SFTP_PORT || '22'),
                 username: process.env.SFTP_USER,
-                password: pass,
-                tryKeyboard: true
+                password: process.env.SFTP_PASSWORD,
+                tryKeyboard: true,
+                retries: 3,
+                timeout: 30000
               });
-            });
-          }
-
-          async function main() {
-            for (const pass of passwords) {
-              console.log('Testing password candidate length:', pass.length);
-              const ok = await tryConnect(pass);
-              if (ok) return;
+              console.log('Connected successfully. Uploading files...');
+              await sftp.uploadDir('dist', '.');
+              console.log('SFTP deployment finished successfully.');
+            } catch (err) {
+              console.error('Deployment error:', err.message);
+              process.exit(1);
+            } finally {
+              await sftp.end();
             }
-            console.error('All password candidates failed!');
-            process.exit(1);
           }
 
-          main();
+          deploy();
           "
 
       - name: Deployment summary
