@@ -136,6 +136,8 @@ html, body {
 .sidebar-product-label { flex: 0 0 auto; padding: .2rem 1.25rem .65rem; color: #dbe5f4; font-size: .73rem; font-weight: 750; letter-spacing: .025em; text-transform: uppercase; }
 .admin-dashboard-body .sidebar-logo { display: none !important; }
 .admin-dashboard-body .sidebar-product-label { padding-top: 1.25rem; }
+.user-dashboard-body .sidebar-logo { display: none !important; }
+.user-dashboard-body .sidebar-product-label { padding-top: 1.25rem; }
 .sidebar-menu { flex: 1 1 auto !important; min-height: 0; margin: 0 !important; padding: .25rem .7rem !important; overflow-x: hidden !important; overflow-y: auto !important; scrollbar-width: thin; }
 .sidebar-menu li { width: 100%; }
 .sidebar-item-link { width: 100%; min-height: 44px; padding: .68rem .85rem !important; gap: .75rem !important; white-space: nowrap; }
