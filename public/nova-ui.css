@@ -285,6 +285,36 @@ html, body {
     .transactions-table-wrap tr { padding: .8rem; gap: .65rem .75rem; }
 }
 
+/* Deposit history: compact, complete and swipe-free on phones */
+.recent-deposits-empty-row td { padding: 2.25rem 1rem !important; text-align: center !important; color: #718096 !important; }
+.recent-deposits-empty-row span, .recent-deposits-empty-row strong, .recent-deposits-empty-row small { display: block; margin-inline: auto; }
+.recent-deposits-empty-row span { margin-bottom: .55rem; color: #5685d6; font-size: 1.9rem; }
+.recent-deposits-empty-row strong { color: #dce6f5; font-size: .92rem; }
+.recent-deposits-empty-row small { margin-top: .3rem; font-size: .72rem; }
+
+@media (max-width: 700px) {
+    .recent-deposits-card { padding: .9rem !important; border-radius: 16px !important; }
+    .recent-deposits-heading { margin-bottom: .8rem !important; }
+    .recent-deposits-heading .recent-deposits-title { font-size: 1.05rem !important; }
+    .recent-deposits-heading button { min-height: 42px; padding: .55rem .75rem !important; border-radius: 9px !important; }
+    .recent-deposits-table-wrap { overflow: visible !important; border: 0 !important; background: transparent !important; }
+    .recent-deposits-table-wrap .deposits-table-list { display: block; width: 100%; min-width: 0 !important; }
+    .recent-deposits-table-wrap thead { display: none; }
+    .recent-deposits-table-wrap tbody { display: grid; gap: .7rem; width: 100%; }
+    .recent-deposits-table-wrap tr { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1rem; width: 100%; padding: .9rem; background: rgba(5,12,24,.72); border: 1px solid rgba(126,156,205,.16) !important; border-radius: 13px; }
+    .recent-deposits-table-wrap td { display: flex; min-width: 0; padding: 0 !important; border: 0 !important; flex-direction: column; align-items: flex-start; gap: .22rem; }
+    .recent-deposits-table-wrap td::before { content: attr(data-label); color: #6f7e94; font: 650 .62rem/1.2 'Inter',sans-serif; letter-spacing: .045em; text-transform: uppercase; }
+    .recent-deposits-table-wrap td:nth-child(3) { grid-column: 1 / -1; padding-top: .65rem !important; border-top: 1px solid rgba(126,156,205,.11) !important; }
+    .recent-deposits-table-wrap td:nth-child(4) { position: absolute; top: .8rem; right: .8rem; }
+    .recent-deposits-table-wrap td:nth-child(4)::before { content: none; }
+    .recent-deposits-table-wrap td:nth-child(2) { padding-right: 5rem !important; }
+    .recent-deposits-table-wrap .deposit-tx-hash { width: 100%; white-space: normal !important; }
+    .recent-deposits-table-wrap .deposit-tx-hash > span { max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .recent-deposits-table-wrap .recent-deposits-empty-row { display: block; padding: 0; }
+    .recent-deposits-table-wrap .recent-deposits-empty-row td { display: block; width: 100%; }
+    .recent-deposits-table-wrap .recent-deposits-empty-row td::before { content: none; }
+}
+
 @media (max-width: 380px) {
     .dashboard-main-content { padding-inline: .6rem !important; }
     .user-card-info { max-width: 118px !important; }

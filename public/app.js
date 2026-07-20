@@ -719,7 +719,7 @@ function renderDepositsTable(deposits) {
     if (!tbody) return;
 
     if (deposits.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">No recent deposits found.</td></tr>`;
+        tbody.innerHTML = `<tr class="recent-deposits-empty-row"><td colspan="4"><span class="material-symbols-outlined">account_balance_wallet</span><strong>No recent deposits</strong><small>Your submitted deposits will appear here.</small></td></tr>`;
         return;
     }
 
@@ -733,15 +733,15 @@ function renderDepositsTable(deposits) {
         
         return `
         <tr style="border-bottom: 1px solid #1e2538;">
-            <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem;">${dep.date || 'Today'}</td>
-            <td style="padding: 1rem 1.25rem; font-weight: 700; color: #f8fafc; font-size: 0.85rem;">${formattedAmount}</td>
-            <td style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem; font-family: monospace; white-space: nowrap;">
+            <td data-label="Date" style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem;">${dep.date || 'Today'}</td>
+            <td data-label="Amount" style="padding: 1rem 1.25rem; font-weight: 700; color: #f8fafc; font-size: 0.85rem;">${formattedAmount}</td>
+            <td data-label="Transaction ID" class="deposit-tx-hash" style="padding: 1rem 1.25rem; color: #cbd5e1; font-size: 0.85rem; font-family: monospace; white-space: nowrap;">
                 <span>${dep.txn_id || 'TXN7f3e8d9c2a1b4f...'}</span>
                 <button onclick="copyToClipboard('${dep.txn_id || ''}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Transaction ID">
                     <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
                 </button>
             </td>
-            <td style="padding: 1rem 1.25rem;">
+            <td data-label="Status" style="padding: 1rem 1.25rem;">
                 <span style="background-color: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeBorder}; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${dep.status}</span>
             </td>
         </tr>
