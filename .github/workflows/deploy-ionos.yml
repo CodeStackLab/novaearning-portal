@@ -58,6 +58,7 @@ jobs:
           SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
           SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
           SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          SFTP_REMOTE_PATH: ${{ secrets.IONOS_REMOTE_PATH }}
         run: |
           node -e "
           const Client = require('ssh2-sftp-client');
@@ -75,8 +76,9 @@ jobs:
                 retries: 3,
                 timeout: 30000
               });
-              console.log('Connected successfully. Uploading files...');
-              await sftp.uploadDir('dist', '.');
+              const targetDir = process.env.SFTP_REMOTE_PATH || '.';
+              console.log('Connected successfully. Uploading files to ' + targetDir + '...');
+              await sftp.uploadDir('dist', targetDir);
               console.log('SFTP deployment finished successfully.');
             } catch (err) {
               console.error('Deployment error:', err.message);
