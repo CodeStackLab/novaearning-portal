@@ -53,15 +53,17 @@ jobs:
           cp database.sql dist/
 
       - name: Deploy to IONOS via SFTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.IONOS_SFTP_HOST }}
-          username: ${{ secrets.IONOS_SFTP_USER }}
-          password: ${{ secrets.IONOS_SFTP_PASSWORD }}
-          port: ${{ secrets.IONOS_SFTP_PORT }}
-          protocol: sftp
-          local-dir: ./dist/
-          server-dir: ./${{ secrets.IONOS_REMOTE_PATH }}/
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          TARGET_DIR="${{ secrets.IONOS_REMOTE_PATH }}"
+          [ -z "$TARGET_DIR" ] && TARGET_DIR="."
+          echo "Connecting to IONOS SFTP server and uploading to $TARGET_DIR..."
+          sshpass -p "${{ secrets.IONOS_SFTP_PASSWORD }}" sftp -o StrictHostKeyChecking=no -P ${{ secrets.IONOS_SFTP_PORT }} ${{ secrets.IONOS_SFTP_USER }}@${{ secrets.IONOS_SFTP_HOST }} <<EOF
+          -mkdir $TARGET_DIR
+          cd $TARGET_DIR
+          put -r dist/* .
+          quit
+          EOF
 
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
