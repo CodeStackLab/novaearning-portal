@@ -3765,3 +3765,101 @@ html, body {
         display: block !important;
     }
 }
+
+/* --- MULTI-COLOR PROFESSIONAL AUTH CARD UI/UX --- */
+.auth-main-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 80px);
+    padding: 2.5rem 1rem;
+    background: radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.15), transparent 40rem),
+                radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.12), transparent 35rem),
+                radial-gradient(circle at 15% 85%, rgba(251, 191, 36, 0.1), transparent 30rem),
+                #050a14 !important;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: linear-gradient(145deg, rgba(17, 22, 34, 0.95), rgba(13, 17, 27, 0.98)) !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    border-radius: 20px !important;
+    padding: 2.25rem 2rem !important;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7),
+                0 0 40px rgba(59, 130, 246, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(20px) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #fbbf24 0%, #3b82f6 50%, #10b981 100%);
+}
+
+.auth-tabs {
+    display: flex;
+    background: rgba(12, 16, 26, 0.8) !important;
+    border: 1px solid #1e2538 !important;
+    border-radius: 12px !important;
+    padding: 4px !important;
+    margin: 1.5rem 0 1.75rem !important;
+}
+
+.auth-tab-btn {
+    flex: 1;
+    padding: 0.65rem 1rem !important;
+    border: none !important;
+    background: none !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    border-radius: 9px !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.auth-tab-btn.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35) !important;
+}
+
+.auth-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #7c3aed 100%) !important;
+    border: 1px solid rgba(147, 197, 253, 0.3) !important;
+    border-radius: 12px !important;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5) !important;
+}
+
+.forgot-link {
+    color: #fbbf24 !important;
+    font-weight: 600 !important;
+    font-size: 0.82rem !important;
+    text-decoration: none !important;
+}
+
+.forgot-link:hover {
+    text-decoration: underline !important;
+    color: #f59e0b !important;
+}

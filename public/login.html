@@ -801,7 +801,7 @@
             // Check stored role to redirect
             const role = localStorage.getItem('nova_role');
             if (role === 'admin') {
-                window.location.href = '/admin.html';
+                window.location.href = '/admin';
             } else {
                 window.location.href = redirectTarget ? redirectTarget : '/dashboard';
             }
@@ -904,7 +904,7 @@
                 localStorage.setItem('nova_role', data.user.role);
 
                 if (data.user.role === 'admin') {
-                    window.location.href = '/admin.html';
+                    window.location.href = '/admin';
                 } else {
                     window.location.href = redirectTarget ? redirectTarget : '/dashboard';
                 }
@@ -1112,7 +1112,7 @@ async function submitNewPassword() {
         if (loginResp.ok) {
             localStorage.setItem('nova_token', loginData.token);
             localStorage.setItem('nova_role', loginData.user.role);
-            window.location.href = loginData.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+            window.location.href = loginData.user.role === 'admin' ? '/admin' : '/dashboard';
         } else {
             switchAuthTab('signin');
         }
