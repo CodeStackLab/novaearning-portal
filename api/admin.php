@@ -51,9 +51,76 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->query('SELECT tickets.*, users.name as user_name, users.email as user_email FROM tickets JOIN users ON tickets.user_id = users.id ORDER BY tickets.id DESC');
             sendJson($stmt->fetchAll());
         }
+
+        if ($action === 'settings' && $subaction === 'smtp') {
+            $keys = ['smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name'];
+            $placeholders = implode(',', array_fill(0, count($keys), '?'));
+            $stmt = $pdo->prepare("SELECT `key`, value FROM settings WHERE `key` IN ($placeholders)");
+            $stmt->execute($keys);
+            $stored = [];
+            foreach ($stmt->fetchAll() as $row) $stored[$row['key']] = $row['value'];
+
+            sendJson([
+                'host' => $stored['smtp_host'] ?? '',
+                'port' => (int)($stored['smtp_port'] ?? 587),
+                'encryption' => $stored['smtp_encryption'] ?? 'tls',
+                'username' => $stored['smtp_username'] ?? '',
+                'fromEmail' => $stored['smtp_from_email'] ?? '',
+                'fromName' => $stored['smtp_from_name'] ?? 'NOVA',
+                'passwordConfigured' => !empty($stored['smtp_password'])
+            ]);
+        }
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($action === 'settings' && $subaction === 'smtp') {
+            $host = trim($body['host'] ?? '');
+            $port = (int)($body['port'] ?? 0);
+            $encryption = strtolower(trim($body['encryption'] ?? 'tls'));
+            $username = trim($body['username'] ?? '');
+            $password = (string)($body['password'] ?? '');
+            $fromEmail = trim($body['fromEmail'] ?? '');
+            $fromName = trim($body['fromName'] ?? 'NOVA');
+
+            if ($host === '' || $port < 1 || $port > 65535 || !in_array($encryption, ['tls', 'ssl', 'none'], true)) {
+                sendJson(['message' => 'Valid SMTP host, port, and encryption are required'], 400);
+            }
+            if ($fromEmail === '' || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+                sendJson(['message' => 'A valid sender email address is required'], 400);
+            }
+            if ($username !== '' && !filter_var($username, FILTER_VALIDATE_EMAIL) && strlen($username) < 3) {
+                sendJson(['message' => 'SMTP username is invalid'], 400);
+            }
+
+            $values = [
+                'smtp_host' => $host,
+                'smtp_port' => (string)$port,
+                'smtp_encryption' => $encryption,
+                'smtp_username' => $username,
+                'smtp_from_email' => $fromEmail,
+                'smtp_from_name' => $fromName ?: 'NOVA'
+            ];
+            if ($password !== '') {
+                $key = hash('sha256', JWT_SECRET, true);
+                $iv = random_bytes(12);
+                $tag = '';
+                $ciphertext = openssl_encrypt($password, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+                if ($ciphertext === false) sendJson(['message' => 'Unable to protect SMTP password'], 500);
+                $values['smtp_password'] = 'enc:v1:' . base64_encode($iv . $tag . $ciphertext);
+            }
+
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare('INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)');
+                foreach ($values as $keyName => $value) $stmt->execute([$keyName, $value]);
+                $pdo->commit();
+                sendJson(['message' => 'SMTP configuration saved securely.']);
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to save SMTP configuration'], 500);
+            }
+        }
+
         if ($action === 'users' && $subaction === 'balance') {
             $targetUserId = $body['userId'] ?? null;
             $newBalance = $body['newBalance'] ?? null;
@@ -171,6 +238,21 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             $stmt = $pdo->prepare('INSERT INTO tickets (user_id, title, ticket_id, date, status, message, admin_reply, admin_image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([$targetUserId, 'Support Reply', $ticketId, $dateStr, 'Open', '', $reply, $savedImagePath]);
+
+            // Notify User via Email
+            $uStmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
+            $uStmt->execute([$targetUserId]);
+            $targetUser = $uStmt->fetch();
+
+            if ($targetUser && !empty($targetUser['email'])) {
+                $emailSubject = "New Reply from Nova Support {$ticketId}";
+                $emailBody = "<h2>Support Reply from Nova</h2>" .
+                             "<p>Hi <strong>" . htmlspecialchars($targetUser['name']) . "</strong>,</p>" .
+                             "<p>You have received a reply from Nova Support team:</p>" .
+                             "<blockquote style='background:#f4f4f4; padding: 12px; border-left:4px solid #0070f3;'>" . nl2br(htmlspecialchars($reply)) . "</blockquote>" .
+                             "<p>Log in to your Nova Portal dashboard to view full chat history.</p>";
+                sendSmtpEmail($targetUser['email'], $targetUser['name'], $emailSubject, $emailBody, $pdo);
+            }
 
             sendJson(['message' => 'Reply sent successfully.']);
         }

@@ -46,6 +46,24 @@ function handleTickets($action, $pdo, $body) {
             $stmt = $pdo->prepare('INSERT INTO tickets (user_id, title, ticket_id, date, status, message, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([$userId, $title, $ticketId, $dateStr, 'Open', $message, $savedImagePath]);
 
+            // Notify Admin via Email (contact@novaearning.com)
+            $uStmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
+            $uStmt->execute([$userId]);
+            $userInfo = $uStmt->fetch();
+            $userName = $userInfo ? $userInfo['name'] : 'User';
+            $userEmail = $userInfo ? $userInfo['email'] : '';
+
+            $adminEmail = defined('SITE_EMAIL') ? SITE_EMAIL : 'contact@novaearning.com';
+            $emailSubject = "New Support Message {$ticketId} from {$userName}";
+            $emailBody = "<h2>New Support Ticket Message</h2>" .
+                         "<p><strong>Ticket ID:</strong> {$ticketId}</p>" .
+                         "<p><strong>User:</strong> " . htmlspecialchars($userName) . " ({$userEmail})</p>" .
+                         "<p><strong>Subject:</strong> " . htmlspecialchars($title) . "</p>" .
+                         "<p><strong>Message:</strong></p>" .
+                         "<blockquote style='background:#f4f4f4; padding: 12px; border-left:4px solid #0070f3;'>" . nl2br(htmlspecialchars($message)) . "</blockquote>";
+
+            sendSmtpEmail($adminEmail, 'Nova Admin', $emailSubject, $emailBody, $pdo);
+
             sendJson(['message' => 'Support ticket submitted.']);
         } catch (Exception $e) {
             sendJson(['message' => 'Server error'], 500);

@@ -74,6 +74,12 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.com');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_port', '587');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_encryption', 'tls');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_username', 'contact@novaearning.com');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_email', 'contact@novaearning.com');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_name', 'Nova Support');
 
 -- Seed Admin
 INSERT IGNORE INTO users (name, email, username, password, role, referral_code) 

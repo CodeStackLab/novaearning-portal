@@ -11,11 +11,12 @@ define('DB_PASS', 'DB@9129881899');
 // JWT Secret Key (Keep this secret!)
 define('JWT_SECRET', 'nova-super-secret-key-2026');
 
-// SMTP Configuration (if using PHPMailer later, or just simple mail)
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 465);
-define('SMTP_USER', '');
+// SMTP Configuration (IONOS Email)
+define('SMTP_HOST', 'smtp.ionos.com');
+define('SMTP_PORT', 587);
+define('SMTP_USER', 'contact@novaearning.com');
 define('SMTP_PASS', '');
+define('SITE_EMAIL', 'contact@novaearning.com');
 
 // Connect to Database using PDO
 try {
@@ -34,6 +35,92 @@ function sendJson($data, $statusCode = 200) {
     header('Content-Type: application/json');
     echo json_encode($data);
     exit;
+}
+
+// SMTP Email Helper Function (IONOS & Generic SMTP)
+function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
+    $host = defined('SMTP_HOST') ? SMTP_HOST : 'smtp.ionos.com';
+    $port = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
+    $username = defined('SMTP_USER') ? SMTP_USER : 'contact@novaearning.com';
+    $password = defined('SMTP_PASS') ? SMTP_PASS : '';
+    $fromEmail = defined('SITE_EMAIL') ? SITE_EMAIL : 'contact@novaearning.com';
+    $fromName = 'Nova Support';
+    $encryption = 'tls';
+
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT `key`, value FROM settings WHERE `key` LIKE 'smtp_%'");
+            $settings = [];
+            foreach ($stmt->fetchAll() as $row) {
+                $settings[$row['key']] = $row['value'];
+            }
+            if (!empty($settings['smtp_host'])) $host = $settings['smtp_host'];
+            if (!empty($settings['smtp_port'])) $port = (int)$settings['smtp_port'];
+            if (!empty($settings['smtp_username'])) $username = $settings['smtp_username'];
+            if (!empty($settings['smtp_password'])) $password = $settings['smtp_password'];
+            if (!empty($settings['smtp_from_email'])) $fromEmail = $settings['smtp_from_email'];
+            if (!empty($settings['smtp_from_name'])) $fromName = $settings['smtp_from_name'];
+            if (!empty($settings['smtp_encryption'])) $encryption = $settings['smtp_encryption'];
+        } catch (Exception $e) {}
+    }
+
+    $headers = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: {$fromName} <{$fromEmail}>\r\n";
+    $headers .= "Reply-To: {$fromEmail}\r\n";
+    $headers .= "X-Mailer: PHP/" . phpversion();
+
+    if (!empty($username) && !empty($password)) {
+        try {
+            $socketHost = ($encryption === 'ssl' ? 'ssl://' : '') . $host;
+            $socket = @fsockopen($socketHost, $port, $errno, $errstr, 8);
+            if ($socket) {
+                fgets($socket, 512);
+                fputs($socket, "EHLO " . gethostname() . "\r\n");
+                fgets($socket, 512);
+
+                if ($encryption === 'tls') {
+                    fputs($socket, "STARTTLS\r\n");
+                    fgets($socket, 512);
+                    stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+                    fputs($socket, "EHLO " . gethostname() . "\r\n");
+                    fgets($socket, 512);
+                }
+
+                fputs($socket, "AUTH LOGIN\r\n");
+                fgets($socket, 512);
+                fputs($socket, base64_encode($username) . "\r\n");
+                fgets($socket, 512);
+                fputs($socket, base64_encode($password) . "\r\n");
+                $authRes = fgets($socket, 512);
+
+                if (strpos($authRes, '235') !== false) {
+                    fputs($socket, "MAIL FROM: <{$fromEmail}>\r\n");
+                    fgets($socket, 512);
+                    fputs($socket, "RCPT TO: <{$toEmail}>\r\n");
+                    fgets($socket, 512);
+                    fputs($socket, "DATA\r\n");
+                    fgets($socket, 512);
+
+                    $mailData = "To: {$toName} <{$toEmail}>\r\n";
+                    $mailData .= "From: {$fromName} <{$fromEmail}>\r\n";
+                    $mailData .= "Subject: {$subject}\r\n";
+                    $mailData .= "MIME-Version: 1.0\r\n";
+                    $mailData .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+                    $mailData .= $bodyHtml . "\r\n.\r\n";
+
+                    fputs($socket, $mailData);
+                    fgets($socket, 512);
+                    fputs($socket, "QUIT\r\n");
+                    fclose($socket);
+                    return true;
+                }
+                fclose($socket);
+            }
+        } catch (Exception $e) {}
+    }
+
+    return @mail($toEmail, $subject, $bodyHtml, $headers);
 }
 
 // Very basic JWT Implementation in PHP to avoid external dependencies
