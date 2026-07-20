@@ -7,13 +7,13 @@ RewriteBase /
 RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
 
 # 2. Clean URL aliases (Serves .html files seamlessly without .html in URL bar)
-RewriteRule ^login/?$ /login.html [L,QSA]
-RewriteRule ^admin/?$ /admin.html [L,QSA]
-RewriteRule ^admin-dashboard/?$ /admin.html [L,QSA]
-RewriteRule ^dashboard/?$ /dashboard.html [L,QSA]
-RewriteRule ^user-dashboard/?$ /dashboard.html [L,QSA]
-RewriteRule ^investments/?$ /investments.html [L,QSA]
-RewriteRule ^help/?$ /help.html [L,QSA]
+RewriteRule ^login/?$ login.html [L,QSA]
+RewriteRule ^admin/?$ admin.html [L,QSA]
+RewriteRule ^admin-dashboard/?$ admin.html [L,QSA]
+RewriteRule ^dashboard/?$ dashboard.html [L,QSA]
+RewriteRule ^user-dashboard/?$ dashboard.html [L,QSA]
+RewriteRule ^investments/?$ investments.html [L,QSA]
+RewriteRule ^help/?$ help.html [L,QSA]
 
 # 3. Do not rewrite existing real files or directories
 RewriteCond %{REQUEST_FILENAME} -f [OR]
