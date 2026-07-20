@@ -52,18 +52,16 @@ jobs:
           cp migrate.php dist/
           cp database.sql dist/
 
-      - name: Deploy application over SFTP
-        env:
-          SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
-          SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
-          SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
-          SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
-          SFTP_REMOTE_PATH: ${{ secrets.IONOS_REMOTE_PATH }}
-        run: |
-          sudo apt-get update && sudo apt-get install -y lftp
-          TARGET_DIR="${SFTP_REMOTE_PATH:-.}"
-          echo "Deploying to target directory: $TARGET_DIR"
-          lftp -u "$SFTP_USER","$SFTP_PASSWORD" -e "set sftp:auto-confirm yes; mkdir -p $TARGET_DIR; mirror -R dist/ $TARGET_DIR/; quit" sftp://$SFTP_HOST:${SFTP_PORT:-22}
+      - name: Deploy to IONOS via SFTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.IONOS_SFTP_HOST }}
+          username: ${{ secrets.IONOS_SFTP_USER }}
+          password: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          port: ${{ secrets.IONOS_SFTP_PORT }}
+          protocol: sftp
+          local-dir: ./dist/
+          server-dir: ./${{ secrets.IONOS_REMOTE_PATH }}/
 
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
