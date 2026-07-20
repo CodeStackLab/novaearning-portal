@@ -1,27 +1,14 @@
+DirectoryIndex index.php login.html index.html
+FallbackResource /index.php
+ErrorDocument 404 /index.php
+
 RewriteEngine On
 RewriteBase /
 
-# 1. Primary SEO-friendly Clean URLs
 RewriteRule ^dashboard/?$ dashboard.html [L,QSA]
 RewriteRule ^user-dashboard/?$ dashboard.html [L,QSA]
-
 RewriteRule ^admin/?$ admin.html [L,QSA]
 RewriteRule ^admin-dashboard/?$ admin.html [L,QSA]
-
 RewriteRule ^login/?$ login.html [L,QSA]
 RewriteRule ^investments/?$ investments.html [L,QSA]
 RewriteRule ^help/?$ help.html [L,QSA]
-
-# 2. Redirect .html URLs to SEO clean URLs (301 Permanent Redirect)
-RewriteCond %{THE_REQUEST} \s/([^.]+)\.html[\s?] [NC]
-RewriteRule ^ /%1 [L,R=301]
-
-# 3. Auto-append .html internally if requested file exists without extension
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}.html -f
-RewriteRule ^(.*)$ $1.html [L,QSA]
-
-# 4. Fallback for non-existent routes
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ login.html [L]
