@@ -63,7 +63,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y lftp
           TARGET_DIR="${SFTP_REMOTE_PATH:-.}"
           echo "Deploying to target directory: $TARGET_DIR"
-          lftp -e "set sftp:auto-confirm yes; user \"$SFTP_USER\" \"$SFTP_PASSWORD\"; mkdir -p $TARGET_DIR; mirror -R dist/ $TARGET_DIR/; quit" sftp://$SFTP_HOST:${SFTP_PORT:-22}
+          lftp -u "$SFTP_USER","$SFTP_PASSWORD" -e "set sftp:auto-confirm yes; mkdir -p $TARGET_DIR; mirror -R dist/ $TARGET_DIR/; quit" sftp://$SFTP_HOST:${SFTP_PORT:-22}
 
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
