@@ -73,6 +73,24 @@ function handleAdmin($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($action === 'settings' && $subaction === 'smtp-test') {
+            $config = loadSmtpConfiguration($pdo);
+            foreach (['host', 'username', 'fromEmail', 'fromName', 'encryption'] as $field) {
+                if (array_key_exists($field, $body)) $config[$field] = trim((string)$body[$field]);
+            }
+            if (array_key_exists('port', $body)) $config['port'] = (int)$body['port'];
+            if (!empty($body['password'])) $config['password'] = (string)$body['password'];
+
+            if (!in_array(strtolower($config['encryption'] ?? ''), ['tls', 'ssl', 'none'], true)) {
+                sendJson(['message' => 'Select a valid SMTP encryption method.'], 400);
+            }
+            $error = '';
+            if (!testSmtpConfiguration($config, $error)) {
+                sendJson(['message' => $error ?: 'SMTP connection test failed.'], 422);
+            }
+            sendJson(['message' => 'SMTP connection and authentication succeeded.']);
+        }
+
         if ($action === 'settings' && $subaction === 'smtp') {
             $host = trim($body['host'] ?? '');
             $port = (int)($body['port'] ?? 0);

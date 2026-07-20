@@ -14,7 +14,7 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=5.0">
+    <link rel="stylesheet" href="/style.css?v=5.2">
     <link rel="stylesheet" href="/nova-ui.css?v=5.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
@@ -541,7 +541,9 @@
                             <span class="material-symbols-outlined">shield_lock</span>
                             <span>The saved SMTP password is encrypted and is never returned to the browser.</span>
                         </div>
+                        <div id="smtp-test-result" class="smtp-test-result" role="status" aria-live="polite"></div>
                         <div class="smtp-actions">
+                            <button type="button" class="smtp-test-btn" id="smtp-test-btn" onclick="testSmtpSettings()"><span class="material-symbols-outlined">network_check</span> Test Connection</button>
                             <button type="submit" class="form-btn-db" id="smtp-save-btn"><span class="material-symbols-outlined">save</span> Save Configuration</button>
                         </div>
                     </form>
@@ -790,6 +792,6 @@
     </div>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=2.8"></script>
+    <script src="admin-app.js?v=2.9"></script>
 </body>
 </html>

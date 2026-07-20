@@ -37,8 +37,19 @@ function sendJson($data, $statusCode = 200) {
     exit;
 }
 
-// SMTP Email Helper Function (IONOS & Generic SMTP)
-function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
+function decryptSmtpPassword($value) {
+    if (strpos((string)$value, 'enc:v1:') !== 0) return (string)$value;
+    $packed = base64_decode(substr($value, 7), true);
+    if ($packed === false || strlen($packed) < 29) return '';
+    $iv = substr($packed, 0, 12);
+    $tag = substr($packed, 12, 16);
+    $ciphertext = substr($packed, 28);
+    $key = hash('sha256', JWT_SECRET, true);
+    $plain = openssl_decrypt($ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+    return $plain === false ? '' : $plain;
+}
+
+function loadSmtpConfiguration($pdo = null) {
     $host = defined('SMTP_HOST') ? SMTP_HOST : 'smtp.ionos.com';
     $port = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
     $username = defined('SMTP_USER') ? SMTP_USER : 'contact@novaearning.com';
@@ -57,12 +68,102 @@ function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
             if (!empty($settings['smtp_host'])) $host = $settings['smtp_host'];
             if (!empty($settings['smtp_port'])) $port = (int)$settings['smtp_port'];
             if (!empty($settings['smtp_username'])) $username = $settings['smtp_username'];
-            if (!empty($settings['smtp_password'])) $password = $settings['smtp_password'];
+            if (!empty($settings['smtp_password'])) $password = decryptSmtpPassword($settings['smtp_password']);
             if (!empty($settings['smtp_from_email'])) $fromEmail = $settings['smtp_from_email'];
             if (!empty($settings['smtp_from_name'])) $fromName = $settings['smtp_from_name'];
             if (!empty($settings['smtp_encryption'])) $encryption = $settings['smtp_encryption'];
         } catch (Exception $e) {}
     }
+
+    return compact('host', 'port', 'username', 'password', 'fromEmail', 'fromName', 'encryption');
+}
+
+function smtpReadResponse($socket) {
+    $response = '';
+    while (($line = fgets($socket, 1024)) !== false) {
+        $response .= $line;
+        if (strlen($line) < 4 || $line[3] !== '-') break;
+    }
+    return $response;
+}
+
+function smtpResponseCode($response) {
+    return (int)substr(trim((string)$response), 0, 3);
+}
+
+function smtpCommand($socket, $command, $expectedCodes, &$error) {
+    if ($command !== null && fwrite($socket, $command . "\r\n") === false) {
+        $error = 'Unable to write to the SMTP server.';
+        return false;
+    }
+    $response = smtpReadResponse($socket);
+    $code = smtpResponseCode($response);
+    if (!in_array($code, (array)$expectedCodes, true)) {
+        $error = 'SMTP server rejected the request (code ' . ($code ?: 'unknown') . ').';
+        return false;
+    }
+    return true;
+}
+
+function openSmtpConnection($config, &$error) {
+    $host = trim($config['host'] ?? '');
+    $port = (int)($config['port'] ?? 0);
+    $encryption = strtolower($config['encryption'] ?? 'tls');
+    $username = (string)($config['username'] ?? '');
+    $password = (string)($config['password'] ?? '');
+    if ($host === '' || $port < 1 || $port > 65535) {
+        $error = 'SMTP host or port is invalid.';
+        return false;
+    }
+    if ($username === '' || $password === '') {
+        $error = 'SMTP username and password are required.';
+        return false;
+    }
+
+    $target = ($encryption === 'ssl' ? 'ssl://' : '') . $host;
+    $socket = @fsockopen($target, $port, $errno, $errstr, 10);
+    if (!$socket) {
+        $error = 'Could not connect to the SMTP server (' . $errno . ').';
+        return false;
+    }
+    stream_set_timeout($socket, 10);
+    if (!smtpCommand($socket, null, [220], $error)) { fclose($socket); return false; }
+
+    $clientName = preg_replace('/[^a-z0-9.-]/i', '', gethostname() ?: 'localhost') ?: 'localhost';
+    if (!smtpCommand($socket, 'EHLO ' . $clientName, [250], $error)) { fclose($socket); return false; }
+
+    if ($encryption === 'tls') {
+        if (!smtpCommand($socket, 'STARTTLS', [220], $error)) { fclose($socket); return false; }
+        if (!@stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            $error = 'TLS negotiation failed. Check the encryption and port.';
+            fclose($socket);
+            return false;
+        }
+        if (!smtpCommand($socket, 'EHLO ' . $clientName, [250], $error)) { fclose($socket); return false; }
+    }
+
+    if (!smtpCommand($socket, 'AUTH LOGIN', [334], $error) ||
+        !smtpCommand($socket, base64_encode($username), [334], $error) ||
+        !smtpCommand($socket, base64_encode($password), [235], $error)) {
+        fclose($socket);
+        return false;
+    }
+    return $socket;
+}
+
+function testSmtpConfiguration($config, &$error) {
+    $socket = openSmtpConnection($config, $error);
+    if (!$socket) return false;
+    @fwrite($socket, "QUIT\r\n");
+    @smtpReadResponse($socket);
+    fclose($socket);
+    return true;
+}
+
+// SMTP Email Helper Function (IONOS & Generic SMTP)
+function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
+    $config = loadSmtpConfiguration($pdo);
+    extract($config);
 
     $headers = "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
@@ -71,53 +172,26 @@ function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
     $headers .= "X-Mailer: PHP/" . phpversion();
 
     if (!empty($username) && !empty($password)) {
-        try {
-            $socketHost = ($encryption === 'ssl' ? 'ssl://' : '') . $host;
-            $socket = @fsockopen($socketHost, $port, $errno, $errstr, 8);
-            if ($socket) {
-                fgets($socket, 512);
-                fputs($socket, "EHLO " . gethostname() . "\r\n");
-                fgets($socket, 512);
-
-                if ($encryption === 'tls') {
-                    fputs($socket, "STARTTLS\r\n");
-                    fgets($socket, 512);
-                    stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-                    fputs($socket, "EHLO " . gethostname() . "\r\n");
-                    fgets($socket, 512);
-                }
-
-                fputs($socket, "AUTH LOGIN\r\n");
-                fgets($socket, 512);
-                fputs($socket, base64_encode($username) . "\r\n");
-                fgets($socket, 512);
-                fputs($socket, base64_encode($password) . "\r\n");
-                $authRes = fgets($socket, 512);
-
-                if (strpos($authRes, '235') !== false) {
-                    fputs($socket, "MAIL FROM: <{$fromEmail}>\r\n");
-                    fgets($socket, 512);
-                    fputs($socket, "RCPT TO: <{$toEmail}>\r\n");
-                    fgets($socket, 512);
-                    fputs($socket, "DATA\r\n");
-                    fgets($socket, 512);
-
-                    $mailData = "To: {$toName} <{$toEmail}>\r\n";
-                    $mailData .= "From: {$fromName} <{$fromEmail}>\r\n";
-                    $mailData .= "Subject: {$subject}\r\n";
-                    $mailData .= "MIME-Version: 1.0\r\n";
-                    $mailData .= "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-                    $mailData .= $bodyHtml . "\r\n.\r\n";
-
-                    fputs($socket, $mailData);
-                    fgets($socket, 512);
-                    fputs($socket, "QUIT\r\n");
+        $error = '';
+        $socket = openSmtpConnection($config, $error);
+        if ($socket) {
+            $safeFrom = str_replace(["\r", "\n"], '', $fromEmail);
+            $safeTo = str_replace(["\r", "\n"], '', $toEmail);
+            $safeName = str_replace(["\r", "\n"], '', $toName);
+            $safeSubject = str_replace(["\r", "\n"], '', $subject);
+            if (smtpCommand($socket, "MAIL FROM: <{$safeFrom}>", [250], $error) &&
+                smtpCommand($socket, "RCPT TO: <{$safeTo}>", [250, 251], $error) &&
+                smtpCommand($socket, 'DATA', [354], $error)) {
+                $safeBody = preg_replace('/(^|\r\n|\n)\./', '$1..', $bodyHtml);
+                $mailData = "To: {$safeName} <{$safeTo}>\r\nFrom: {$fromName} <{$safeFrom}>\r\nSubject: {$safeSubject}\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n{$safeBody}\r\n.";
+                if (smtpCommand($socket, $mailData, [250], $error)) {
+                    @fwrite($socket, "QUIT\r\n");
                     fclose($socket);
                     return true;
                 }
-                fclose($socket);
             }
-        } catch (Exception $e) {}
+            fclose($socket);
+        }
     }
 
     return @mail($toEmail, $subject, $bodyHtml, $headers);

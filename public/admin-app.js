@@ -164,6 +164,45 @@ async function saveSmtpSettings(event) {
     }
 }
 
+function getSmtpFormPayload() {
+    return {
+        host: document.getElementById('smtp-host').value.trim(),
+        port: Number(document.getElementById('smtp-port').value),
+        encryption: document.getElementById('smtp-encryption').value,
+        username: document.getElementById('smtp-username').value.trim(),
+        password: document.getElementById('smtp-password').value,
+        fromEmail: document.getElementById('smtp-from-email').value.trim(),
+        fromName: document.getElementById('smtp-from-name').value.trim()
+    };
+}
+
+async function testSmtpSettings() {
+    const form = document.getElementById('smtp-settings-form');
+    const button = document.getElementById('smtp-test-btn');
+    const resultBox = document.getElementById('smtp-test-result');
+    if (!form || !form.reportValidity()) return;
+
+    button.disabled = true;
+    button.classList.add('is-loading');
+    resultBox.className = 'smtp-test-result testing';
+    resultBox.textContent = 'Connecting securely to the SMTP server…';
+    try {
+        const result = await adminRequest('/admin/settings/smtp-test', {
+            method: 'POST',
+            body: JSON.stringify(getSmtpFormPayload())
+        });
+        resultBox.className = 'smtp-test-result success';
+        resultBox.textContent = result.message || 'SMTP connection succeeded.';
+        showToast('SMTP connection successful!');
+    } catch (error) {
+        resultBox.className = 'smtp-test-result error';
+        resultBox.textContent = error.message || 'SMTP connection failed.';
+    } finally {
+        button.disabled = false;
+        button.classList.remove('is-loading');
+    }
+}
+
 function toggleSmtpPassword() {
     const input = document.getElementById('smtp-password');
     const icon = document.getElementById('smtp-password-icon');
