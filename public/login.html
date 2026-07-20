@@ -324,16 +324,20 @@
         /* ---- PWA Install Banner ---- */
         #pwa-install-banner {
             position: fixed;
-            bottom: 0; left: 0; right: 0;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            width: 20%;
+            min-width: 280px;
             z-index: 9999;
-            padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom));
+            padding: 1rem;
             background: linear-gradient(135deg, #0f172a, #111827);
-            border-top: 1px solid rgba(59,130,246,0.3);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.55);
             display: none;
             animation: slideUp 0.4s ease;
         }
-        #pwa-install-banner.show { display: flex; align-items: center; gap: 1rem; }
+        #pwa-install-banner.show { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
         @keyframes slideUp {
             from { transform: translateY(100%); }
             to   { transform: translateY(0); }
@@ -346,10 +350,10 @@
             flex-shrink: 0;
         }
         .pwa-icon .material-symbols-outlined { font-size: 1.4rem; color: white; }
-        .pwa-text { flex: 1; }
+        .pwa-text { flex: 1; min-width: 170px; }
         .pwa-text strong { display: block; font-size: 0.9rem; font-weight: 700; color: var(--text); }
         .pwa-text small { font-size: 0.75rem; color: var(--muted); }
-        .pwa-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .pwa-actions { display: flex; width: 100%; gap: 0.5rem; flex-shrink: 0; }
         .btn-pwa-install {
             padding: 0.6rem 1.1rem;
             background: linear-gradient(135deg, var(--blue), var(--purple));
@@ -372,15 +376,32 @@
             font-family: inherit;
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .page { justify-content: flex-start; padding: max(1rem, env(safe-area-inset-top)) 0.75rem; overflow: auto; }
             .auth-card { padding: 1.35rem 1.1rem; border-radius: 16px; margin: auto 0; }
             .field input { min-height: 48px; font-size: 1rem; }
             .auth-logo { margin-bottom: 1.25rem; }
             .auth-tabs { margin-bottom: 1.25rem; }
+            #pwa-install-banner {
+                left: 50%;
+                top: 50%;
+                bottom: auto;
+                width: calc(100% - 2rem);
+                min-width: 0;
+                max-width: 360px;
+                padding: 1.1rem;
+                transform: translate(-50%, -50%);
+                border-radius: 18px;
+                animation: pwaMobileIn 0.3s ease;
+            }
             #pwa-install-banner.show { flex-wrap: wrap; }
             .pwa-actions { width: 100%; }
             .btn-pwa-install, .btn-pwa-dismiss { flex: 1; text-align: center; }
+        }
+
+        @keyframes pwaMobileIn {
+            from { opacity: 0; transform: translate(-50%, -44%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
         }
 
         @media (max-height: 680px) {
@@ -507,7 +528,7 @@
     <div class="pwa-icon" aria-hidden="true">↓</div>
     <div class="pwa-text">
         <strong>Add Nova to Home Screen</strong>
-        <small id="pwa-install-help">Fast access from your home screen.</small>
+        <small id="pwa-install-help">Access your portfolio instantly — like an app!</small>
     </div>
     <div class="pwa-actions">
         <button class="btn-pwa-install" id="pwa-install-btn">Install</button>
