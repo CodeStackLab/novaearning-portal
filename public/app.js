@@ -756,7 +756,7 @@ function renderAllTransactionsTable(transactions) {
     const filtered = transactions.filter(tx => ['Deposit', 'Withdrawal', 'Investment'].includes(tx.type));
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No transactions logged.</td></tr>`;
+        tbody.innerHTML = `<tr class="transactions-empty-row"><td colspan="5"><span class="material-symbols-outlined">receipt_long</span><strong>No transactions yet</strong><small>Your deposits, investments and withdrawals will appear here.</small></td></tr>`;
         return;
     }
 
@@ -773,16 +773,16 @@ function renderAllTransactionsTable(transactions) {
 
         return `
             <tr>
-                <td>${tx.date}</td>
-                <td style="font-weight:600; color: ${typeColor};">${tx.type}</td>
-                <td style="font-weight: 700; color: ${amountColor};">${amountText}</td>
-                <td class="deposit-tx-hash" style="font-family: monospace; white-space: nowrap;">
+                <td data-label="Date">${tx.date}</td>
+                <td data-label="Type" style="font-weight:600; color: ${typeColor};">${tx.type}</td>
+                <td data-label="Amount" style="font-weight: 700; color: ${amountColor};">${amountText}</td>
+                <td data-label="Reference" class="deposit-tx-hash" style="font-family: monospace; white-space: nowrap;">
                     <span>${reference.substring(0, 16)}${reference.length > 16 ? '...' : ''}</span>
                     <button onclick="copyToClipboard('${reference.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Full Reference">
                         <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
                     </button>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span class="status-badge-lbl ${tx.status.toLowerCase()}">${tx.status}</span>
                 </td>
             </tr>

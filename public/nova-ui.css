@@ -248,6 +248,43 @@ html, body {
     .profile-dropdown-menu { max-width: calc(100vw - 1.5rem); }
 }
 
+/* Transactions: native mobile cards instead of a clipped horizontal table */
+.transactions-empty-row td { padding: 2.5rem 1rem !important; text-align: center !important; color: #76859a !important; }
+.transactions-empty-row td > span, .transactions-empty-row td > strong, .transactions-empty-row td > small { display: block; margin-inline: auto; }
+.transactions-empty-row td > span { margin-bottom: .6rem; color: #5279bd; font-size: 2rem; }
+.transactions-empty-row td > strong { color: #dce6f5; font-size: .95rem; }
+.transactions-empty-row td > small { max-width: 320px; margin-top: .35rem; font-size: .74rem; line-height: 1.45; }
+
+@media (max-width: 700px) {
+    .mobile-header-logo { display: block !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%,-50%) !important; z-index: 2; }
+    .mobile-header-logo img { display: block; width: 78px !important; height: auto; }
+    .dashboard-header > .header-left-toggle, .dashboard-header > .header-right-user { position: relative; z-index: 3; }
+    .transactions-card { padding: .8rem !important; border-radius: 16px !important; }
+    .transactions-table-wrap { overflow: visible !important; border: 0 !important; background: transparent !important; }
+    .transactions-table-wrap .deposits-table-list { display: block; width: 100%; min-width: 0 !important; }
+    .transactions-table-wrap thead { display: none; }
+    .transactions-table-wrap tbody { display: grid; gap: .75rem; width: 100%; }
+    .transactions-table-wrap tr { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1rem; width: 100%; padding: .9rem; background: rgba(5,12,24,.72); border: 1px solid rgba(126,156,205,.16); border-radius: 13px; }
+    .transactions-table-wrap td { display: flex; min-width: 0; padding: 0 !important; border: 0 !important; flex-direction: column; align-items: flex-start; gap: .22rem; overflow-wrap: anywhere; }
+    .transactions-table-wrap td::before { content: attr(data-label); color: #6f7e94; font: 650 .62rem/1.2 'Inter',sans-serif; letter-spacing: .045em; text-transform: uppercase; }
+    .transactions-table-wrap td:nth-child(4) { grid-column: 1 / -1; padding-top: .65rem !important; border-top: 1px solid rgba(126,156,205,.11) !important; }
+    .transactions-table-wrap td:nth-child(5) { position: absolute; top: .8rem; right: .8rem; align-self: start; justify-self: end; }
+    .transactions-table-wrap td:nth-child(5)::before { content: none; }
+    .transactions-table-wrap tr { position: relative; }
+    .transactions-table-wrap td:nth-child(2) { padding-right: 5rem !important; }
+    .transactions-table-wrap .deposit-tx-hash { white-space: normal !important; width: 100%; }
+    .transactions-table-wrap .deposit-tx-hash > span { max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .transactions-table-wrap .transactions-empty-row { display: block; padding: 0; }
+    .transactions-table-wrap .transactions-empty-row td { display: block; width: 100%; }
+    .transactions-table-wrap .transactions-empty-row td::before { content: none; }
+    .table-scroll-hint { display: none !important; }
+}
+
+@media (max-width: 380px) {
+    .mobile-header-logo img { width: 66px !important; }
+    .transactions-table-wrap tr { padding: .8rem; gap: .65rem .75rem; }
+}
+
 @media (max-width: 380px) {
     .dashboard-main-content { padding-inline: .6rem !important; }
     .user-card-info { max-width: 118px !important; }
