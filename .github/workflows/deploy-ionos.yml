@@ -45,8 +45,10 @@ jobs:
         run: |
           mkdir -p dist
           cp -r public/* dist/
+          cp public/.htaccess dist/.htaccess
           mkdir -p dist/api
           cp -r api/* dist/api/
+          cp api/.htaccess dist/api/.htaccess
           cp cron.php dist/
           cp config.php dist/
           cp migrate.php dist/
