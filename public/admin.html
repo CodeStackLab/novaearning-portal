@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Nova Portal</title>
@@ -13,11 +14,12 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css?v=2.5">
+    <link rel="stylesheet" href="/style.css?v=5.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=5.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body dark-theme admin-dashboard-body">
 
     <!-- Sidebar Navigation -->
     <aside class="dashboard-sidebar" style="border-right-color: #1e2538; background-color: #111622;">
@@ -26,6 +28,7 @@
                 <img src="images/nova-logo-full.svg" alt="Nova Admin Logo" class="logo-img-gold" style="height: 38px; width: auto;">
             </a>
         </div>
+        <div class="sidebar-product-label">Administration</div>
         
         <ul class="sidebar-menu">
 
@@ -65,7 +68,17 @@
                     <span>Support Tickets</span>
                 </a>
             </li>
+            <li>
+                <a href="#smtp" class="sidebar-item-link" data-tab="smtp">
+                    <span class="material-symbols-outlined sidebar-icon">outgoing_mail</span>
+                    <span>SMTP Settings</span>
+                </a>
+            </li>
         </ul>
+        <div class="sidebar-system-card admin-system-card">
+            <span class="system-status-dot"></span>
+            <div><strong>Admin session</strong><span>Protected workspace</span></div>
+        </div>
     </aside>
     
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -78,6 +91,15 @@
             <button class="header-left-toggle" aria-label="Toggle Menu">
                 <span class="material-symbols-outlined">menu</span>
             </button>
+
+            <div class="dashboard-header-context">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <div><strong>Operations Console</strong><span>Administration workspace</span></div>
+            </div>
+
+            <a href="#overview" class="mobile-header-logo" onclick="switchTab('overview')" aria-label="Nova admin overview">
+                <img src="images/nova-logo-full.svg" alt="Nova">
+            </a>
             
             <div class="header-right-user" style="margin-left: auto;">
                 <div class="user-card-info" id="admin-profile-menu-btn" style="cursor: pointer; position: relative; background: none; border: none; padding: 0; display: flex; align-items: center; gap: 0.5rem;">
@@ -461,6 +483,71 @@
                 </div>
             </section>
 
+            <!-- PANEL: SMTP SETTINGS -->
+            <section id="panel-smtp" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">SMTP Configuration</h1>
+                <p class="panel-desc">Configure the secure outgoing mail server used for OTPs, account recovery, and system notifications.</p>
+
+                <div class="smtp-settings-card">
+                    <div class="smtp-card-heading">
+                        <div class="smtp-heading-icon"><span class="material-symbols-outlined">mark_email_read</span></div>
+                        <div>
+                            <h2 class="font-display">Outgoing mail server</h2>
+                            <p>Use the SMTP credentials supplied by your email provider.</p>
+                        </div>
+                        <span id="smtp-config-status" class="smtp-status-badge">Not configured</span>
+                    </div>
+
+                    <form id="smtp-settings-form" onsubmit="saveSmtpSettings(event)">
+                        <div class="smtp-form-grid">
+                            <div class="form-group-db smtp-host-field">
+                                <label class="form-label-db" for="smtp-host">SMTP Host</label>
+                                <input class="form-input-db" id="smtp-host" type="text" placeholder="smtp.gmail.com" autocomplete="off" required>
+                            </div>
+                            <div class="form-group-db">
+                                <label class="form-label-db" for="smtp-port">Port</label>
+                                <input class="form-input-db" id="smtp-port" type="number" min="1" max="65535" value="587" required>
+                            </div>
+                            <div class="form-group-db">
+                                <label class="form-label-db" for="smtp-encryption">Encryption</label>
+                                <select class="form-input-db" id="smtp-encryption" required>
+                                    <option value="tls">TLS (Recommended)</option>
+                                    <option value="ssl">SSL</option>
+                                    <option value="none">None</option>
+                                </select>
+                            </div>
+                            <div class="form-group-db">
+                                <label class="form-label-db" for="smtp-username">SMTP Username</label>
+                                <input class="form-input-db" id="smtp-username" type="text" placeholder="mail@example.com" autocomplete="username">
+                            </div>
+                            <div class="form-group-db">
+                                <label class="form-label-db" for="smtp-password">SMTP Password</label>
+                                <div class="smtp-password-wrap">
+                                    <input class="form-input-db" id="smtp-password" type="password" placeholder="Enter password" autocomplete="new-password">
+                                    <button type="button" onclick="toggleSmtpPassword()" aria-label="Show or hide SMTP password"><span class="material-symbols-outlined" id="smtp-password-icon">visibility</span></button>
+                                </div>
+                                <small id="smtp-password-help">Leave blank to keep the saved password.</small>
+                            </div>
+                            <div class="form-group-db">
+                                <label class="form-label-db" for="smtp-from-email">From Email</label>
+                                <input class="form-input-db" id="smtp-from-email" type="email" placeholder="no-reply@example.com" required>
+                            </div>
+                            <div class="form-group-db">
+                                <label class="form-label-db" for="smtp-from-name">From Name</label>
+                                <input class="form-input-db" id="smtp-from-name" type="text" value="NOVA" placeholder="NOVA">
+                            </div>
+                        </div>
+                        <div class="smtp-security-note">
+                            <span class="material-symbols-outlined">shield_lock</span>
+                            <span>The saved SMTP password is encrypted and is never returned to the browser.</span>
+                        </div>
+                        <div class="smtp-actions">
+                            <button type="submit" class="form-btn-db" id="smtp-save-btn"><span class="material-symbols-outlined">save</span> Save Configuration</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
         </main>
 
         <!-- Footer -->
@@ -703,6 +790,6 @@
     </div>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=2.7"></script>
+    <script src="admin-app.js?v=2.8"></script>
 </body>
 </html>

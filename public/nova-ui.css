@@ -1,0 +1,107 @@
+/* NOVA Portal 5.0 - Unified Design System & Mobile UX Optimization */
+
+:root {
+    --nova-canvas: #050a14;
+    --nova-surface: #111622;
+    --nova-surface-card: #171d2c;
+    --nova-border: #1e2538;
+    --nova-border-highlight: #2e384e;
+    --nova-copy: #f8fafc;
+    --nova-muted: #94a3b8;
+    --nova-gold: #fbbf24;
+    --nova-blue: #3b82f6;
+    --nova-green: #10b981;
+    --nova-red: #ef4444;
+}
+
+/* Force Dark Mode Globally */
+html, body {
+    background-color: var(--nova-canvas) !important;
+    color: var(--nova-copy) !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Admin & User Layout Surfaces */
+.dashboard-body, .admin-dashboard-body, .landing-body {
+    background-color: var(--nova-canvas) !important;
+    color: var(--nova-copy) !important;
+}
+
+.dashboard-sidebar {
+    background-color: #111622 !important;
+    border-right: 1px solid #1e2538 !important;
+}
+
+.dashboard-header {
+    background-color: #111622 !important;
+    border-bottom: 1px solid #1e2538 !important;
+}
+
+.metric-card-box, .deposit-step-box, .recent-deposits-section, .smtp-settings-card {
+    background-color: #111622 !important;
+    border: 1px solid #1e2538 !important;
+    border-radius: 12px !important;
+}
+
+/* Table Responsive Mobile Box */
+.table-responsive-box {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 1px solid #1e2538 !important;
+    border-radius: 10px !important;
+}
+
+.deposits-table-list th {
+    background-color: #171d2c !important;
+    color: #94a3b8 !important;
+    border-bottom: 1px solid #1e2538 !important;
+}
+
+.deposits-table-list td {
+    border-bottom: 1px solid #1e2538 !important;
+    color: #f8fafc !important;
+}
+
+/* Mobile Sidebar Drawer Navigation */
+@media (max-width: 768px) {
+    .dashboard-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -280px !important;
+        width: 260px !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        transition: left 0.3s ease-in-out !important;
+        box-shadow: 4px 0 25px rgba(0,0,0,0.5) !important;
+    }
+
+    .dashboard-sidebar.mobile-open {
+        left: 0 !important;
+    }
+
+    .dashboard-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .header-left-toggle {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        z-index: 9998;
+    }
+
+    .sidebar-overlay.active {
+        display: block !important;
+    }
+}

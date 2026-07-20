@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard - Nova Portal</title>
@@ -13,11 +14,12 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css?v=2.5">
+    <link rel="stylesheet" href="/style.css?v=5.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=5.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
-<body class="dashboard-body dark-theme">
+<body class="dashboard-body dark-theme user-dashboard-body">
 
     <!-- Sidebar Navigation -->
     <aside class="dashboard-sidebar">
@@ -26,9 +28,9 @@
                 <img src="images/nova-logo-full.svg" alt="Nova Logo" class="logo-img-gold" style="height: 38px; width: auto;">
             </a>
         </div>
+        <div class="sidebar-product-label">Client Portal</div>
         
         <ul class="sidebar-menu">
-            <li>
             <li>
                 <a href="#dashboard" class="sidebar-item-link" data-tab="dashboard">
                     <span class="material-symbols-outlined sidebar-icon">person</span>
@@ -75,6 +77,10 @@
                 </a>
             </li>
         </ul>
+        <div class="sidebar-system-card">
+            <span class="system-status-dot"></span>
+            <div><strong>Platform online</strong><span>Secure account session</span></div>
+        </div>
     </aside>
     
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -87,6 +93,15 @@
             <button class="header-left-toggle" aria-label="Toggle Menu">
                 <span class="material-symbols-outlined">menu</span>
             </button>
+
+            <div class="dashboard-header-context">
+                <span class="material-symbols-outlined">space_dashboard</span>
+                <div><strong>Client Portal</strong><span>Account workspace</span></div>
+            </div>
+
+            <a href="#dashboard" class="mobile-header-logo" onclick="switchTab('dashboard')" aria-label="Nova dashboard">
+                <img src="images/nova-logo-full.svg" alt="Nova">
+            </a>
             
             <div class="header-right-user">
 
@@ -126,97 +141,56 @@
             
             <!-- PANEL: MY PROFILE -->
             <section id="panel-dashboard" class="dashboard-panel-view active">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap;">
+                <div class="profile-welcome-row">
                     <div>
-                        <h1 class="panel-title font-display" style="margin: 0; font-size: 1.75rem; font-weight: 800; color: #f8fafc;">Welcome back, <span id="db-user-name">Demo User</span></h1>
-                        <p class="panel-desc" style="margin: 0.35rem 0 0 0; font-size: 0.95rem; color: #94a3b8; font-weight: 500;">
-                            Account: <span id="db-account-id" style="color: #94a3b8; font-weight: 600;">02</span> &nbsp;&bull;&nbsp; Status: <span style="color: #22c55e; font-weight: 600;">Active</span>
+                        <h1 class="profile-welcome-title font-display">Welcome back, <span id="db-user-name">Demo User</span></h1>
+                        <p class="profile-account-line">
+                            Account: <span id="db-account-id">02</span><span class="status-separator"></span>Status: <span class="account-active">Active</span>
                         </p>
                     </div>
                 </div>
-                
-                <!-- VIP Cinema Club Tier Banner -->
-                <!-- VIP Cinema Club Tier Banner Removed -->
 
-                <!-- Daily Check-In & Loyalty Reward Card -->
-                <!-- Daily Check-In & Loyalty Reward Card Removed -->
-
-                <div class="dashboard-metrics-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; width: 100%; margin-bottom: 2rem;">
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">Total Balance</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-total-balance">$0.00</span>
-                            <div class="metric-card-icon-box">
-                                <span class="material-symbols-outlined">account_balance_wallet</span>
-                            </div>
+                <div class="profile-balance-card">
+                    <div class="balance-card-top">
+                        <div>
+                            <div class="balance-eyebrow">Total Balance</div>
+                            <div class="balance-value" id="db-total-balance">$0.00</div>
+                        </div>
+                        <div class="balance-wallet-icon" aria-hidden="true">
+                            <span class="material-symbols-outlined">account_balance_wallet</span>
                         </div>
                     </div>
-                    
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">Today's Profit</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-today-profit" style="color: #10b981;">$0.00</span>
-                            <div class="metric-card-icon-box" style="color: #10b981; background-color: rgba(16, 185, 129, 0.15);">
-                                <span class="material-symbols-outlined">trending_up</span>
-                            </div>
-                        </div>
+                    <button class="dashboard-refresh-btn" onclick="refreshDashboard(this)">
+                        <span class="material-symbols-outlined">refresh</span><span>Refresh Data</span>
+                    </button>
+                    <div class="balance-stats-grid">
+                        <div class="balance-stat"><span class="stat-label">Today's Profit</span><strong class="stat-value profit-value" id="db-today-profit">$0.00</strong></div>
+                        <div class="balance-stat"><span class="stat-label">Total Earned</span><strong class="stat-value earned-value" id="db-total-earned">$0.00</strong></div>
+                        <div class="balance-stat"><span class="stat-label">Total Referrals</span><strong class="stat-value referral-value" id="db-total-referrals">0</strong></div>
                     </div>
-
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">Total Earned</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-total-earned" style="color: #3b82f6;">$0.00</span>
-                            <div class="metric-card-icon-box" style="color: #3b82f6; background-color: rgba(59, 130, 246, 0.15);">
-                                <span class="material-symbols-outlined">payments</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">Total Referrals</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-total-referrals" style="color: #a855f7;">0</span>
-                            <div class="metric-card-icon-box" style="color: #a855f7; background-color: rgba(168, 85, 247, 0.15);">
-                                <span class="material-symbols-outlined">group</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">Total Deposits</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-total-deposits" style="color: #10b981;">$0.00</span>
-                            <div class="metric-card-icon-box" style="color: #10b981; background-color: rgba(16, 185, 129, 0.15);">
-                                <span class="material-symbols-outlined">input</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">Total Withdrawals</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-total-withdrawals" style="color: #ef4444;">$0.00</span>
-                            <div class="metric-card-icon-box" style="color: #ef4444; background-color: rgba(239, 68, 68, 0.15);">
-                                <span class="material-symbols-outlined">output</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="metric-card-box">
-                        <div class="metric-card-label">My Referral Code</div>
-                        <div class="metric-card-val-row">
-                            <span class="metric-card-value-txt" id="db-referral-code" style="color: #fbbf24; font-family: monospace; letter-spacing: 1px;">-</span>
-                            <div class="metric-card-icon-box" style="color: #fbbf24; background-color: rgba(251, 191, 36, 0.15);">
-                                <span class="material-symbols-outlined">qr_code</span>
-                            </div>
-                        </div>
+                    <div class="balance-secondary-grid">
+                        <div><span>Total Deposits</span><strong id="db-total-deposits">$0.00</strong></div>
+                        <div><span>Total Withdrawals</span><strong id="db-total-withdrawals">$0.00</strong></div>
                     </div>
                 </div>
 
+                <div class="referral-share-card">
+                    <div>
+                        <span class="referral-card-label">Referral Code</span>
+                        <strong id="db-referral-code">-</strong>
+                    </div>
+                    <button onclick="shareDashboardReferral()" class="referral-share-btn">
+                        <span class="material-symbols-outlined">share</span><span>Share</span>
+                    </button>
+                </div>
+
                 <!-- Track Today's Investments -->
-                <div class="recent-deposits-section" style="margin-top: 2rem;">
-                    <h2 class="recent-deposits-title font-display" style="font-size: 1.2rem; margin-bottom: 1rem;">My Active Investments (Today)</h2>
-                    <div class="table-responsive-box" style="background-color: #111622; border: 1px solid #1e2538; border-radius: 8px; overflow-x: auto;">
+                <div class="recent-deposits-section active-investments-card">
+                    <div class="section-title-row">
+                        <h2 class="recent-deposits-title font-display">Active Investments</h2>
+                        <button class="section-link-btn" onclick="switchTab('invest')">View plans <span class="material-symbols-outlined">arrow_forward</span></button>
+                    </div>
+                    <div class="table-responsive-box active-investments-table-wrap">
                         <table class="deposits-table-list" style="width: 100%; border-collapse: collapse; min-width: 600px;">
                             <thead>
                                 <tr style="border-bottom: 1px solid #1e2538;">
@@ -441,8 +415,16 @@
                         <label class="form-label-db">Amount to Withdraw (USD)</label>
                         <input type="number" id="withdraw-amount-val" placeholder="Min. $20.00 (2% Fee applies)" class="form-input-db">
                     </div>
-                    
-                    <button onclick="requestWithdrawal()" class="form-btn-db">Submit Request</button>
+
+                    <div class="withdraw-summary" aria-live="polite">
+                        <div><span>Available Balance</span><strong id="withdraw-available-balance">—</strong></div>
+                        <div><span>Fee (2%)</span><strong id="withdraw-fee-preview">—</strong></div>
+                        <div class="withdraw-summary-total"><span>Total Receive</span><strong id="withdraw-total-preview">—</strong></div>
+                    </div>
+                    <div class="withdraw-action-row">
+                        <button onclick="requestWithdrawal()" class="form-btn-db">Submit Request</button>
+                        <span class="secure-transaction-label"><span class="material-symbols-outlined">lock</span> Secure Transaction</span>
+                    </div>
                 </div>
             </section>
 

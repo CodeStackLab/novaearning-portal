@@ -46,6 +46,7 @@ jobs:
           mkdir -p dist
           cp -r public/* dist/
           cp public/.htaccess dist/.htaccess
+          cp public/nova-ui.css dist/nova-ui.css
           cp public/admin/.htaccess dist/admin/.htaccess
           cp public/admin-dashboard/.htaccess dist/admin-dashboard/.htaccess
           mkdir -p dist/api
@@ -55,6 +56,7 @@ jobs:
           cp config.php dist/
           cp migrate.php dist/
           cp database.sql dist/
+          cp PROJECT_SETUP_DOCUMENTATION.md dist/
 
       - name: Deploy to IONOS via SFTP
         env:
