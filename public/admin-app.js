@@ -1288,15 +1288,31 @@ function openTronAddressModal() {
     const modal = document.getElementById('tron-address-modal');
     const displayEl = document.getElementById('tron-address-current-display');
     const inputEl = document.getElementById('tron-address-new-input');
-    
+
+    if (!modal) {
+        console.error('TRON address modal element not found!');
+        return;
+    }
+
     if (displayEl) displayEl.value = globalTronAddress;
     if (inputEl) inputEl.value = '';
-    if (modal) modal.classList.add('active');
+
+    // Use both class and direct style for maximum compatibility
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
 }
 
 function closeTronAddressModal() {
     const modal = document.getElementById('tron-address-modal');
-    if (modal) modal.classList.remove('active');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.style.display = '';
+    modal.style.alignItems = '';
+    modal.style.justifyContent = '';
+    document.body.style.overflow = '';
 }
 
 async function saveTronAddress() {
