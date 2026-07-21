@@ -559,3 +559,83 @@ html, body,
     .metric-card-box, .deposit-step-box, .recent-deposits-section, .smtp-settings-card, .notification-inbox-card, .referral-share-card { border-radius: 15px !important; box-shadow: 0 12px 28px rgba(4,10,18,.14) !important; }
     .transactions-table-wrap tr, .recent-deposits-table-wrap tr { background: rgba(13,22,33,.34) !important; border-color: var(--nova-border) !important; }
 }
+
+/* Public pages — Help and Investment catalogue */
+.landing-body, .investments-body {
+    color: var(--nova-copy) !important;
+    background:
+        radial-gradient(circle at 82% 6%, rgba(80,116,160,.18), transparent 30rem),
+        radial-gradient(circle at 12% 82%, rgba(174,126,76,.08), transparent 30rem),
+        linear-gradient(145deg,#182330,#111923 58%,#192431) fixed !important;
+}
+.landing-header {
+    background: rgba(28,39,53,.84) !important;
+    border-color: var(--nova-border) !important;
+    box-shadow: 0 8px 28px rgba(4,10,18,.12) !important;
+    backdrop-filter: blur(20px) saturate(120%) !important;
+}
+.landing-header .nav-link { color: #b5bfcc !important; border-radius: 9px; }
+.landing-header .nav-link:hover { color: #f4f0e9 !important; background: rgba(255,255,255,.04); }
+.landing-header .profile-dropdown-btn { color: #eef1f5 !important; background: rgba(255,255,255,.035) !important; border: 1px solid var(--nova-border) !important; border-radius: 11px !important; }
+.landing-header .nav-toggle-btn { color: #e7ebf0 !important; background: rgba(255,255,255,.04) !important; border-color: var(--nova-border) !important; border-radius: 10px !important; }
+.landing-footer { color: #8794a5 !important; background: rgba(24,34,47,.62) !important; border-color: var(--nova-border) !important; }
+
+.help-main { width: min(900px,100%); }
+.help-main > h1 { color: #f5f1e9 !important; letter-spacing: -.04em; line-height: 1.1; }
+.help-main > p { color: #aab4c1 !important; }
+.help-card {
+    background: linear-gradient(145deg,rgba(35,48,64,.95),rgba(27,38,52,.97)) !important;
+    border: 1px solid var(--nova-border) !important;
+    border-radius: 17px !important;
+    box-shadow: 0 15px 36px rgba(4,10,18,.13), inset 0 1px rgba(255,255,255,.035);
+    transition: transform .18s ease, border-color .18s ease;
+}
+.help-card:hover { transform: translateY(-2px); border-color: var(--nova-border-highlight) !important; }
+.help-card h3 { color: #f1eee8 !important; }
+.help-card p { color: #aab4c1 !important; }
+.help-support-btn { background: linear-gradient(135deg,#648fd3,#7563bd) !important; border-radius: 11px !important; box-shadow: 0 9px 24px rgba(63,100,170,.24); }
+
+.browse-hero { margin-top: 64px; background: linear-gradient(180deg,rgba(45,62,81,.42),rgba(22,31,43,.12)) !important; border-color: var(--nova-border) !important; }
+.browse-hero h1, .section-title { color: #f5f1e9 !important; }
+.browse-hero p { color: #acb6c4 !important; }
+.gradient-text { color: #dfb56f !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
+.pop-cat-card, .investment-card {
+    background: linear-gradient(145deg,rgba(36,50,67,.96),rgba(27,38,52,.98)) !important;
+    border: 1px solid var(--nova-border) !important;
+    border-radius: 17px !important;
+    box-shadow: 0 15px 36px rgba(4,10,18,.14), inset 0 1px rgba(255,255,255,.035) !important;
+}
+.pop-cat-card:hover, .investment-card:hover { transform: translateY(-4px) !important; border-color: rgba(214,168,95,.34) !important; box-shadow: 0 22px 48px rgba(4,10,18,.23) !important; }
+.pop-cat-icon-circle { background: rgba(214,168,95,.13) !important; border: 1px solid rgba(214,168,95,.2); }
+.pop-cat-icon { color: #dfb56f !important; }
+.pop-cat-title, .investment-title { color: #f2eee7 !important; }
+.pop-cat-desc, .investment-card p { color: #a7b0bd !important; }
+.investment-img-container { background: rgba(10,17,26,.26) !important; }
+.investment-card .invest-btn { background: linear-gradient(135deg,#648fd3,#7563bd) !important; border-radius: 10px !important; box-shadow: 0 8px 22px rgba(58,94,159,.22); }
+#pagination-controls button { min-width: 42px; min-height: 42px; color: #dce4ef !important; background: rgba(35,48,64,.95) !important; border: 1px solid var(--nova-border) !important; border-radius: 10px !important; }
+
+@media (max-width: 768px) {
+    .landing-header .container-header { min-height: 60px; padding-inline: .8rem !important; }
+    .landing-header .logo-container img { width: 82px !important; }
+    .landing-header .nav-links.active { top: calc(100% + 8px); left: .75rem; right: .75rem; width: auto; padding: .65rem; background: rgba(35,48,64,.98) !important; border: 1px solid var(--nova-border-highlight); border-radius: 14px; box-shadow: 0 20px 45px rgba(3,8,14,.38); }
+    .landing-header .nav-links.active .nav-link { min-height: 44px; display: flex; align-items: center; padding-inline: .85rem; }
+    .help-main { margin: 5.5rem auto 2.5rem !important; padding: 1rem .8rem !important; }
+    .help-main > h1 { font-size: clamp(2rem,10vw,2.6rem) !important; }
+    .help-main > p { margin-bottom: 1.75rem !important; font-size: .92rem !important; }
+    .help-main > div { gap: .8rem !important; }
+    .help-card { padding: 1.05rem !important; border-radius: 14px !important; }
+    .help-card h3 { font-size: 1rem !important; }
+    .help-card p { font-size: .82rem; }
+    .browse-hero { margin-top: 60px; padding: 2.1rem .8rem 1.35rem !important; }
+    .section-container { padding-inline: .8rem !important; }
+    .popular-categories-grid { gap: .7rem !important; }
+    .pop-cat-card { min-width: 0; padding: .9rem !important; }
+    .investment-grid { gap: .85rem !important; }
+    .investment-card { border-radius: 15px !important; }
+}
+
+@media (max-width: 420px) {
+    .popular-categories-grid { grid-template-columns: 1fr 1fr !important; }
+    .pop-cat-card { text-align: left !important; }
+    .pop-cat-desc { font-size: .7rem !important; line-height: 1.4; }
+}

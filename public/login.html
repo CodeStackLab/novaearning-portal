@@ -13,31 +13,31 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#050a14">
+    <meta name="theme-color" content="#17212e">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg: #050a14;
-            --surface: #0f1624;
-            --card: #111827;
-            --border: rgba(99,120,170,0.18);
+            --bg: #151e29;
+            --surface: #1c2735;
+            --card: #222f3f;
+            --border: rgba(173,190,211,0.16);
             --border-focus: rgba(99,150,255,0.55);
-            --text: #f0f4ff;
-            --muted: #8496b0;
-            --blue: #3b82f6;
+            --text: #f3f0e9;
+            --muted: #a7b0bd;
+            --blue: #648fd3;
             --green: #10b981;
-            --gold: #fbbf24;
+            --gold: #d6a85f;
             --red: #f87171;
-            --purple: #8b5cf6;
+            --purple: #8069ca;
             --radius: 14px;
         }
 
         html, body {
             min-height: 100%;
-            background: var(--bg);
+            background: radial-gradient(circle at 82% 8%, rgba(80,116,160,.18), transparent 28rem), linear-gradient(145deg,#182330,#111923 58%,#192431) fixed;
             color: var(--text);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -47,7 +47,7 @@
         .login-header {
             min-height: 64px;
             border-bottom: 1px solid var(--border);
-            background: rgba(5,10,20,.88);
+            background: rgba(28,39,53,.84);
             backdrop-filter: blur(16px);
             position: relative;
             z-index: 10;
@@ -99,11 +99,11 @@
         .auth-card {
             width: 100%;
             max-width: 400px;
-            background: var(--card);
+            background: linear-gradient(145deg, rgba(38,52,70,.97), rgba(29,41,56,.98));
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 2rem 1.75rem;
-            box-shadow: 0 25px 60px -10px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+            box-shadow: 0 25px 60px -10px rgba(4,10,18,.42), 0 0 0 1px rgba(255,255,255,0.035);
             position: relative;
             overflow: hidden;
             animation: cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
@@ -203,7 +203,7 @@
             width: 100%;
             padding: 0.82rem;
             margin-top: 1.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 60%, #7c3aed 100%);
+            background: linear-gradient(135deg, var(--blue) 0%, #527dbf 58%, var(--purple) 100%);
             color: #fff;
             font-size: 0.9rem;
             font-weight: 700;
@@ -211,7 +211,7 @@
             border-radius: 10px;
             cursor: pointer;
             font-family: inherit;
-            box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+            box-shadow: 0 6px 20px rgba(66,103,171,.3);
             transition: transform 0.15s, box-shadow 0.15s;
         }
         .btn-primary:hover {

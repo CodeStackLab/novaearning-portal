@@ -4,7 +4,7 @@
     <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova</title>
+    <title>Help Center — Nova</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,12 +12,12 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=5.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=5.0">
+    <link rel="stylesheet" href="/style.css?v=5.3">
+    <link rel="stylesheet" href="/nova-ui.css?v=7.1">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
-<body class="landing-body dark-theme">
+<body class="landing-body dark-theme help-body">
     <!-- Header Navigation -->
     <header class="landing-header">
         <div class="container-header">
@@ -62,31 +62,31 @@
         </div>
     </header>
 
-    <main style="max-width: 900px; margin: 8rem auto 4rem; padding: 2rem; position: relative; z-index: 10;">
+    <main class="help-main" style="max-width: 900px; margin: 8rem auto 4rem; padding: 2rem; position: relative; z-index: 10;">
         <h1 class="font-display" style="font-size: 2.5rem; color: var(--text-primary); text-align: center; margin-bottom: 1rem;">How can we help you?</h1>
         <p style="color: var(--text-muted); text-align: center; margin-bottom: 3rem; font-size: 1.1rem;">Find answers to our most frequently asked questions.</p>
 
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             <!-- FAQ 1 -->
-            <div style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <div class="help-card" style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
                 <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600;">How do I make a deposit?</h3>
                 <p style="color: var(--text-muted); line-height: 1.6;">You can make a deposit by navigating to the <strong>Deposit</strong> page in your dashboard. Select one of the preset amounts or click "Custom Amount" to enter your desired investment. Send the exact USDT (TRC20) to the displayed wallet address, and don't forget to upload a screenshot of your transaction receipt for quick verification.</p>
             </div>
 
             <!-- FAQ 2 -->
-            <div style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <div class="help-card" style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
                 <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600;">When do I get my investment returns?</h3>
                 <p style="color: var(--text-muted); line-height: 1.6;">Once your deposit is approved by our team, your investment cycle begins automatically. Our automated system calculates your 2.5% daily profit, and exactly 24 hours after approval, your principal amount plus the accrued profit will be credited directly to your account balance.</p>
             </div>
 
             <!-- FAQ 3 -->
-            <div style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <div class="help-card" style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
                 <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600;">How does the referral program work?</h3>
                 <p style="color: var(--text-muted); line-height: 1.6;">You earn a generous 10% commission on every approved deposit made by your referrals! Furthermore, as they earn daily profits, you also earn a 10% commission on their earnings. Simply share your unique referral link found in the <strong>Referrals</strong> section of your dashboard.</p>
             </div>
 
             <!-- FAQ 4 -->
-            <div style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <div class="help-card" style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
                 <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600;">How do I request a withdrawal?</h3>
                 <p style="color: var(--text-muted); line-height: 1.6;">Go to the <strong>Withdraw</strong> page in your dashboard. Ensure your TRON wallet address is correctly set up in your Profile. Enter the amount you wish to withdraw, and submit your request. Our team processes withdrawals swiftly once verified.</p>
             </div>
@@ -94,7 +94,7 @@
 
         <div style="text-align: center; margin-top: 3rem;">
             <p style="color: var(--text-muted); margin-bottom: 1rem;">Still need help?</p>
-            <a href="/dashboard.html?tab=support" style="background-color: var(--primary-color); color: white; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1rem; display: inline-block;">Contact Support</a>
+            <a class="help-support-btn" href="/dashboard.html?tab=support" style="background-color: var(--primary-color); color: white; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1rem; display: inline-block;">Contact Support</a>
         </div>
     </main>
 
