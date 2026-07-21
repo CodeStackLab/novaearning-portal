@@ -1387,7 +1387,7 @@ async function adminSendChangeEmailOtp() {
 }
 
 async function adminVerifyChangeEmailOtp() {
-    const otp = document.getElementById('admin-ce-otp-code')?.value?.trim();
+    const otp = document.getElementById('admin-change-email-otp')?.value?.trim();
     const newEmail = document.getElementById('admin-ce-new-email')?.value?.trim();
     if (!otp || otp.length < 4) {
         showToast('Please enter the OTP code from your email.');
