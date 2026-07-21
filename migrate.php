@@ -3,8 +3,57 @@
 require_once 'config.php';
 
 if (PHP_SAPI !== 'cli') {
-    $migrationUserId = authenticateToken();
-    requireAdmin($pdo, $migrationUserId);
+    // If running via browser, allow execution if a specific key is provided or if no users exist
+    // Check if users table exists and has admins
+    $adminExists = false;
+    try {
+        $stmt = $pdo->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+        if ($stmt && $stmt->fetch()) {
+            $adminExists = true;
+        }
+    } catch (Exception $e) {
+        // Table doesn't exist yet
+    }
+
+    if ($adminExists) {
+        // Require token via header or query string
+        $token = '';
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            if (preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
+                $token = $matches[1];
+            }
+        } elseif (isset($_GET['token'])) {
+            $token = $_GET['token'];
+        }
+        
+        $decoded = null;
+        if ($token) {
+            $decoded = verifyJWT($token);
+        }
+
+        if (!$decoded || !isset($decoded['userId'])) {
+            // Provide a simple HTML form to paste the token if accessed directly via browser
+            die("
+            <div style='font-family: Arial; max-width: 500px; margin: 50px auto; text-align: center;'>
+                <h2>Migration Requires Admin Access</h2>
+                <p>Please enter your Admin JWT Token to run the migration.</p>
+                <form method='GET'>
+                    <input type='text' name='token' placeholder='Paste token here...' style='width: 100%; padding: 10px; margin-bottom: 10px;'>
+                    <button type='submit' style='padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 5px;'>Run Migration</button>
+                </form>
+                <p style='font-size: 12px; color: #666;'>You can find your token in your browser's Developer Tools -> Application -> Local Storage -> nova_token.</p>
+            </div>
+            ");
+        }
+        
+        // Verify user is actually admin
+        $stmt = $pdo->prepare('SELECT role FROM users WHERE id = ?');
+        $stmt->execute([$decoded['userId']]);
+        $user = $stmt->fetch();
+        if (!$user || $user['role'] !== 'admin') {
+            die("Access denied: Admin role required");
+        }
+    }
 }
 
 header('Content-Type: text/html; charset=utf-8');
