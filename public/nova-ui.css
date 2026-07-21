@@ -348,3 +348,37 @@ html, body {
     .user-card-info { max-width: 118px !important; }
     .notification-setting { padding-inline: .75rem !important; }
 }
+
+/* Final small-screen hardening across the full user/admin application */
+img, svg, video, canvas { max-width:100%; }
+.dashboard-panel-view, .recent-deposits-section, .deposit-step-box, .metric-card-box { min-width:0; }
+.admin-support-layout { min-width:0; }
+
+@media (max-width:700px) {
+    .admin-support-layout { height:auto !important; min-height:620px; grid-template-columns:1fr !important; grid-template-rows:auto minmax(430px,62vh); gap:0 !important; overflow:hidden; }
+    .admin-support-users { max-height:190px; border-right:0 !important; border-bottom:1px solid #1e2538; }
+    .admin-support-chat { min-height:430px; height:62vh !important; }
+    #admin-chat-users-list { max-height:145px; }
+    #admin-chat-messages-container { padding:.85rem !important; }
+    #admin-chat-header { padding:.7rem .8rem !important; gap:.5rem; }
+    #admin-chat-user-email { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #admin-chat-status-toggle-container { flex-wrap:wrap; justify-content:flex-end; }
+    .admin-dashboard-body .table-responsive-box { max-width:100%; overflow-x:auto !important; }
+    .admin-dashboard-body .deposits-table-list { min-width:680px; }
+    .admin-dashboard-body .dashboard-footer, .user-dashboard-body .dashboard-footer { text-align:center; justify-content:center; padding-block:.7rem; line-height:1.45; }
+    .modal-overlay { padding:.65rem !important; }
+    .modal-content-box, .modal-content { width:100% !important; max-width:calc(100vw - 1.3rem) !important; max-height:calc(100dvh - 1.3rem); overflow-y:auto; padding:1rem !important; border-radius:14px !important; }
+    .modal-footer { position:sticky; bottom:0; padding-top:.75rem; background:inherit; }
+}
+
+@media (max-width:430px) {
+    html, body { max-width:100%; overflow-x:hidden; }
+    .admin-dashboard-body .dashboard-metrics-row { grid-template-columns:1fr !important; }
+    .admin-dashboard-body .metric-card-box { min-height:96px; }
+    .db-search-filters-bar { padding:.75rem !important; gap:.65rem !important; }
+    .db-search-filters-bar > div, .db-search-filters-bar select { width:100% !important; min-width:0 !important; }
+    .dashboard-footer p { margin:0; font-size:.65rem; }
+    .profile-dropdown-menu { right:0 !important; left:auto !important; }
+    .panel-title { overflow-wrap:anywhere; }
+    .statement-download-btn { max-width:110px; }
+}
