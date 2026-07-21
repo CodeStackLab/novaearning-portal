@@ -1,3 +1,2 @@
-DirectorySlash Off
 RewriteEngine On
 RewriteRule ^$ /dashboard.html [L,QSA]
