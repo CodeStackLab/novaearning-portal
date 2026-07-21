@@ -138,16 +138,23 @@ function handleAuth($action, $subaction, $pdo, $body) {
     if ($action === 'forgot-password') {
         if ($subaction === 'send-otp') {
             $email = trim($body['email'] ?? '');
-            if (!$email) sendJson(['message' => 'Email is required'], 400);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) sendJson(['message' => 'A valid email is required'], 400);
 
             $stmt = $pdo->prepare('SELECT id, name FROM users WHERE email = ?');
             $stmt->execute([$email]);
             $user = $stmt->fetch();
             if (!$user) sendJson(['message' => 'Email address not found'], 404);
 
-            // Generate real 6-digit OTP
-            $otp = (string)rand(100000, 999999);
-            file_put_contents('../otp_' . md5($email) . '.txt', $otp);
+            $pdo->exec("DELETE FROM password_reset_tokens WHERE expires_at < NOW() OR used_at IS NOT NULL");
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM password_reset_tokens WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)');
+            $stmt->execute([$user['id']]);
+            if ((int)$stmt->fetchColumn() >= 3) sendJson(['message' => 'Too many reset requests. Please wait 15 minutes.'], 429);
+
+            $otp = (string)random_int(100000, 999999);
+            $tokenHash = password_hash($otp, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare('INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))');
+            $stmt->execute([$user['id'], $tokenHash]);
+            $tokenId = (int)$pdo->lastInsertId();
 
             // Send real OTP email via IONOS SMTP
             $subject = "Your Password Reset OTP - Nova Portal";
@@ -162,9 +169,31 @@ function handleAuth($action, $subaction, $pdo, $body) {
                         "<p style='color: #888; font-size: 12px; margin-top: 30px;'>If you did not request this password reset, please ignore this email.</p>" .
                         "</div>";
 
-            sendSmtpEmail($email, $user['name'] ?? 'User', $subject, $bodyHtml, $pdo);
+            if (!sendSmtpEmail($email, $user['name'] ?? 'User', $subject, $bodyHtml, $pdo)) {
+                $stmt = $pdo->prepare('DELETE FROM password_reset_tokens WHERE id = ?');
+                $stmt->execute([$tokenId]);
+                sendJson(['message' => 'Unable to send the reset email. Please contact support or try again later.'], 503);
+            }
 
-            sendJson(['message' => 'Password reset OTP has been sent to your email address!']);
+            sendJson(['message' => 'A 6-digit code was sent. It expires in 10 minutes.']);
+        }
+
+        if ($subaction === 'verify') {
+            $email = trim($body['email'] ?? '');
+            $otpCode = trim($body['otpCode'] ?? '');
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^\d{6}$/', $otpCode)) sendJson(['message' => 'Enter a valid email and 6-digit code.'], 400);
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            if (!$user) sendJson(['message' => 'Invalid or expired reset code.'], 400);
+            $stmt = $pdo->prepare('SELECT id, token_hash, attempts FROM password_reset_tokens WHERE user_id = ? AND used_at IS NULL AND expires_at >= NOW() ORDER BY id DESC LIMIT 1');
+            $stmt->execute([$user['id']]);
+            $reset = $stmt->fetch();
+            if (!$reset || (int)$reset['attempts'] >= 5 || !password_verify($otpCode, $reset['token_hash'])) {
+                if ($reset) { $stmt = $pdo->prepare('UPDATE password_reset_tokens SET attempts = attempts + 1 WHERE id = ?'); $stmt->execute([$reset['id']]); }
+                sendJson(['message' => 'Invalid or expired reset code.'], 400);
+            }
+            sendJson(['message' => 'Code verified.']);
         }
 
         if ($subaction === 'reset') {
@@ -172,23 +201,35 @@ function handleAuth($action, $subaction, $pdo, $body) {
             $otpCode = trim($body['otpCode'] ?? '');
             $newPassword = $body['newPassword'] ?? '';
 
-            if (!$email || !$otpCode || !$newPassword) sendJson(['message' => 'All fields required'], 400);
+            if (!$email || !preg_match('/^\d{6}$/', $otpCode) || strlen($newPassword) < 8) sendJson(['message' => 'Enter the 6-digit code and a password of at least 8 characters.'], 400);
 
             $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
             $stmt->execute([$email]);
             $user = $stmt->fetch();
             if (!$user) sendJson(['message' => 'Email address not found'], 404);
 
-            $storedOtp = @file_get_contents('../otp_' . md5($email) . '.txt');
-            if ($otpCode !== $storedOtp && $otpCode !== '123456') {
-                sendJson(['message' => 'Invalid or expired OTP code'], 400);
+            $stmt = $pdo->prepare('SELECT id, token_hash, attempts FROM password_reset_tokens WHERE user_id = ? AND used_at IS NULL AND expires_at >= NOW() ORDER BY id DESC LIMIT 1');
+            $stmt->execute([$user['id']]);
+            $reset = $stmt->fetch();
+            if (!$reset || (int)$reset['attempts'] >= 5) sendJson(['message' => 'The reset code is invalid or expired. Request a new code.'], 400);
+            if (!password_verify($otpCode, $reset['token_hash'])) {
+                $stmt = $pdo->prepare('UPDATE password_reset_tokens SET attempts = attempts + 1 WHERE id = ?');
+                $stmt->execute([$reset['id']]);
+                sendJson(['message' => 'The reset code is invalid or expired.'], 400);
             }
 
-            @unlink('../otp_' . md5($email) . '.txt');
-
             $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
-            $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
-            $stmt->execute([$hashedPassword, $user['id']]);
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+                $stmt->execute([$hashedPassword, $user['id']]);
+                $stmt = $pdo->prepare('UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL');
+                $stmt->execute([$user['id']]);
+                $pdo->commit();
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to reset the password.'], 500);
+            }
 
             sendJson(['message' => 'Password reset successfully! You can now log in with your new password.']);
         }

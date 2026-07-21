@@ -85,6 +85,10 @@ async function fetchActiveTabDetails(tabId) {
             if (activeUsersEl) activeUsersEl.textContent = stats.activeUsers || 0;
             document.getElementById('stat-deposits').textContent = formatUSD(stats.deposits);
             document.getElementById('stat-payouts').textContent = stats.pendingWithdrawals;
+            const cronStatus = document.getElementById('admin-cron-status');
+            const cronLastRun = document.getElementById('admin-cron-last-run');
+            if (cronStatus) { cronStatus.textContent = stats.cronHealthy ? 'Healthy' : 'Needs attention'; cronStatus.style.color = stats.cronHealthy ? '#51bd91' : '#f59e0b'; }
+            if (cronLastRun) cronLastRun.textContent = stats.cronLastRun ? ` · Last run (UTC): ${stats.cronLastRun}` : ' · No run recorded yet';
         } else if (tabId === 'users') {
             const users = await adminRequest('/admin/users');
             globalUsersList = users;
@@ -416,21 +420,13 @@ function renderUsersTable(serverUsers) {
     const tbody = document.getElementById('admin-users-table-body');
     if (!tbody) return;
 
-    // Load custom advanced users state from localStorage
-    let advancedUsers = JSON.parse(localStorage.getItem('nova_advanced_users') || '{}');
-    let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
-    let deletedUserIds = JSON.parse(localStorage.getItem('nova_deleted_user_ids') || '[]');
-
-    // Combine server users and custom users, filtering out deleted
-    let allUsers = [...serverUsers, ...customUsers].filter(u => !deletedUserIds.includes(u.id));
+    let allUsers = [...serverUsers];
 
     // Pre-calculate referral counts dynamically based on the current list of users
     allUsers = allUsers.map(user => {
-        const advancedState = advancedUsers[user.id] || {};
-        const merged = { ...user, ...advancedState };
         const refCount = allUsers.filter(u => u.referred_by === user.id).length;
         return {
-            ...merged,
+            ...user,
             referral_count: refCount
         };
     });
@@ -727,21 +723,10 @@ async function applyEditBalance() {
         finalBalance -= amountInput;
     }
 
-    // Save finalBalance to advanced_users in localStorage so it applies instantly
-    let advancedUsers = JSON.parse(localStorage.getItem('nova_advanced_users') || '{}');
-    if (!advancedUsers[activeEditUserId]) advancedUsers[activeEditUserId] = {};
-    advancedUsers[activeEditUserId].balance = finalBalance;
-    localStorage.setItem('nova_advanced_users', JSON.stringify(advancedUsers));
-
-    // Update custom users if it belongs to them
-    let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
-    let customIdx = customUsers.findIndex(u => u.id === activeEditUserId);
-    if (customIdx > -1) {
-        customUsers[customIdx].balance = finalBalance;
-        localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
-    }
-
-    showToast(`User balance updated to ${formatUSD(finalBalance)}`);
+    try {
+        const result = await adminRequest('/admin/users/balance', { method:'POST', body:JSON.stringify({ userId:activeEditUserId, newBalance:finalBalance }) });
+        showToast(result.message || `User balance updated to ${formatUSD(finalBalance)}`);
+    } catch (error) { alert(error.message); return; }
     closeEditBalanceModal();
     
     // Refresh the table
@@ -959,31 +944,18 @@ async function toggleCurrentThreadStatus() {
 // =========================================================
 // ADMIN MANAGE PLANS & PRODUCTS LOGIC
 // =========================================================
-function renderAdminPlans() {
+async function renderAdminPlans() {
     const tbody = document.getElementById('admin-plans-table-body');
     if (!tbody) return;
-    
-    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
-    let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
-    let deletedDefaultPlans = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
-
-    const defaultPlans = [
-        { name: 'AMC Movie Ticket', price: 100, roi: '2.5% Flat', duration: '24 Hours' },
-        { name: 'Avengers Movie Plan', price: 150, roi: '2.5% Flat', duration: '24 Hours' },
-        { name: 'Netflix Gift Card', price: 100, roi: '2.5% Flat', duration: '24 Hours' },
-        { name: 'Amazon Gift Card', price: 200, roi: '2.5% Flat', duration: '24 Hours' }
-    ];
-
-    const activeDefaultPlans = defaultPlans
-        .filter(p => !deletedDefaultPlans.includes(p.name))
-        .map(p => editedPlans[p.name] ? { ...p, ...editedPlans[p.name] } : p);
-
-    const allPlans = [...activeDefaultPlans, ...customPlans];
-    
+    tbody.innerHTML = '<tr><td colspan="5">Loading plans…</td></tr>';
+    let allPlans;
+    try { allPlans = await adminRequest('/admin/plans'); }
+    catch (error) { tbody.innerHTML = `<tr><td colspan="5">${escapeAdminUi(error.message)}</td></tr>`; return; }
+    allPlans = allPlans.filter(plan => Number(plan.is_active) === 1);
     tbody.innerHTML = allPlans.map(plan => {
         const planImg = plan.img || 'images/amc_theater.png';
         const safeName = plan.name.replace(/'/g, "\\'");
-        const safeRoi = (plan.roi || '2.5% Flat').replace(/'/g, "\\'");
+        const roi = Number(plan.roi || 2.5);
 
         return `
             <tr>
@@ -994,11 +966,11 @@ function renderAdminPlans() {
                     </div>
                 </td>
                 <td style="font-weight: 700; color: #10b981;">$${Number(plan.price).toFixed(2)}</td>
-                <td>${plan.roi || '2.5% Flat'}</td>
-                <td>${plan.duration || '24 Hours'}</td>
+                <td>${roi.toFixed(2)}%</td>
+                <td>${Number(plan.duration_days || 1)} day(s)</td>
                 <td style="white-space: nowrap;">
-                    <button onclick="openEditPlanModal('${safeName}', ${plan.price}, '${safeRoi}', '${planImg}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.4rem;">Edit</button>
-                    <button onclick="adminDeletePlan('${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
+                    <button onclick="openEditPlanModal(${Number(plan.id)}, '${safeName}', ${plan.price}, ${roi}, '${planImg}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 0.4rem;">Edit</button>
+                    <button onclick="adminDeletePlan(${Number(plan.id)}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
                 </td>
             </tr>
         `;
@@ -1030,7 +1002,7 @@ function handlePlanImageSelect(event, formType) {
     reader.readAsDataURL(file);
 }
 
-function openEditPlanModal(name, price, roi, currentImg) {
+function openEditPlanModal(id, name, price, roi, currentImg) {
     const origInput = document.getElementById('edit-plan-original-name');
     const nameInput = document.getElementById('edit-plan-name');
     const priceInput = document.getElementById('edit-plan-price');
@@ -1039,7 +1011,7 @@ function openEditPlanModal(name, price, roi, currentImg) {
     const imgPreview = document.getElementById('edit-plan-img-preview');
     const imgPreviewWrap = document.getElementById('edit-plan-img-preview-wrap');
 
-    if (origInput) origInput.value = name;
+    if (origInput) origInput.value = id;
     if (nameInput) nameInput.value = name;
     if (priceInput) priceInput.value = price;
     if (roiInput) roiInput.value = roi || '2.5% Flat';
@@ -1068,11 +1040,11 @@ function closeEditPlanModal() {
     if (modal) modal.classList.remove('active');
 }
 
-function saveEditPlan() {
-    const origName = document.getElementById('edit-plan-original-name').value;
+async function saveEditPlan() {
+    const planId = Number(document.getElementById('edit-plan-original-name').value);
     const newName = document.getElementById('edit-plan-name').value.trim();
     const newPrice = parseFloat(document.getElementById('edit-plan-price').value);
-    const newROI = document.getElementById('edit-plan-roi').value.trim() || '2.5% Flat';
+    const newROI = parseFloat(document.getElementById('edit-plan-roi').value) || 2.5;
     const imgUrlVal = document.getElementById('edit-plan-image-url').value.trim();
     const newImg = _editPlanImageBase64 || imgUrlVal || '';
 
@@ -1081,37 +1053,13 @@ function saveEditPlan() {
         return;
     }
 
-    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
-    const customIdx = customPlans.findIndex(p => p.name === origName);
-
-    if (customIdx !== -1) {
-        customPlans[customIdx] = {
-            name: newName,
-            price: newPrice,
-            roi: newROI,
-            img: newImg,
-            duration: '24 Hours'
-        };
-        localStorage.setItem('nova_custom_plans', JSON.stringify(customPlans));
-    } else {
-        let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
-        editedPlans[origName] = {
-            name: newName,
-            price: newPrice,
-            roi: newROI,
-            img: newImg,
-            duration: '24 Hours'
-        };
-        localStorage.setItem('nova_edited_plans', JSON.stringify(editedPlans));
-    }
-
-    _editPlanImageBase64 = null;
-    closeEditPlanModal();
-    renderAdminPlans();
-    showToast(`Plan updated: ${newName}`);
+    try {
+        const result = await adminRequest('/admin/plans', { method:'POST', body:JSON.stringify({ operation:'update', id:planId, name:newName, price:newPrice, roi:newROI, durationDays:1, image:newImg }) });
+        _editPlanImageBase64 = null; closeEditPlanModal(); await renderAdminPlans(); showToast(result.message);
+    } catch (error) { alert(error.message); }
 }
 
-function adminCreatePlan() {
+async function adminCreatePlan() {
     const nameEl = document.getElementById('admin-plan-name');
     const priceEl = document.getElementById('admin-plan-price');
     const imgUrlEl = document.getElementById('admin-plan-image-url');
@@ -1123,17 +1071,9 @@ function adminCreatePlan() {
 
     const imgVal = _createPlanImageBase64 || (imgUrlEl ? imgUrlEl.value.trim() : '');
     
-    const newPlan = {
-        name: nameEl.value.trim(),
-        price: parseFloat(priceEl.value),
-        img: imgVal,
-        roi: '2.5% Flat',
-        duration: '24 Hours'
-    };
-    
-    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
-    customPlans.push(newPlan);
-    localStorage.setItem('nova_custom_plans', JSON.stringify(customPlans));
+    const newPlan = { operation:'create', name:nameEl.value.trim(), price:parseFloat(priceEl.value), image:imgVal, roi:2.5, durationDays:1 };
+    try { await adminRequest('/admin/plans', { method:'POST', body:JSON.stringify(newPlan) }); }
+    catch (error) { alert(error.message); return; }
     
     // Reset form
     nameEl.value = '';
@@ -1143,28 +1083,14 @@ function adminCreatePlan() {
     document.getElementById('admin-plan-image-file').value = '';
     document.getElementById('create-plan-img-preview-wrap').style.display = 'none';
     
-    renderAdminPlans();
+    await renderAdminPlans();
     showToast(`Created plan: ${newPlan.name} ($${newPlan.price})`);
 }
 
-function adminDeletePlan(name) {
+async function adminDeletePlan(id, name) {
     if (!confirm(`Are you sure you want to remove plan "${name}"?`)) return;
-    let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
-    const isCustom = customPlans.some(p => p.name === name);
-
-    if (isCustom) {
-        customPlans = customPlans.filter(p => p.name !== name);
-        localStorage.setItem('nova_custom_plans', JSON.stringify(customPlans));
-    } else {
-        let deletedDefault = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
-        if (!deletedDefault.includes(name)) {
-            deletedDefault.push(name);
-            localStorage.setItem('nova_deleted_default_plans', JSON.stringify(deletedDefault));
-        }
-    }
-
-    renderAdminPlans();
-    showToast(`Removed plan: ${name}`);
+    try { const result = await adminRequest('/admin/plans', { method:'POST', body:JSON.stringify({operation:'delete', id}) }); await renderAdminPlans(); showToast(result.message); }
+    catch (error) { alert(error.message); }
 }
 
 // Automatically render plans when admin loads
@@ -1215,47 +1141,16 @@ async function saveUserMgmt() {
     }
 
     if (!id) {
-        // Add new custom user
-        let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
-        const newId = Date.now(); // pseudo-id
-        customUsers.push({
-            id: newId,
-            name: name,
-            email: email,
-            balance: 0,
-            role: role,
-            status: status
-        });
-        localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
-        showToast('New user added successfully!');
+        try {
+            const result = await adminRequest('/admin/users/create', { method:'POST', body:JSON.stringify({ name, email, password:document.getElementById('user-mgmt-password').value }) });
+            showToast(result.message);
+        } catch (error) { alert(error.message); return; }
     } else {
         const userId = parseInt(id);
-        let customUsers = JSON.parse(localStorage.getItem('nova_custom_added_users') || '[]');
-        const cIdx = customUsers.findIndex(u => u.id === userId);
-        if (cIdx > -1) {
-            customUsers[cIdx].name = name;
-            customUsers[cIdx].email = email;
-            customUsers[cIdx].role = role;
-            customUsers[cIdx].status = status;
-            localStorage.setItem('nova_custom_added_users', JSON.stringify(customUsers));
-            showToast('User details updated!');
-        } else {
-            try {
-                const result = await adminRequest('/admin/users/profile', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        userId,
-                        name,
-                        email,
-                        password: document.getElementById('user-mgmt-password').value
-                    })
-                });
-                showToast(result.message || 'User details updated!');
-            } catch (error) {
-                showToast(error.message || 'Unable to update user details.');
-                return;
-            }
-        }
+        try {
+            const result = await adminRequest('/admin/users/profile', { method:'POST', body:JSON.stringify({ userId, name, email, password:document.getElementById('user-mgmt-password').value }) });
+            showToast(result.message || 'User details updated!');
+        } catch (error) { showToast(error.message || 'Unable to update user details.'); return; }
     }
 
     closeUserMgmtModal();

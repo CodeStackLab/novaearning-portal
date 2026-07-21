@@ -594,18 +594,23 @@
         } catch (err) { alert(err.message); }
     }
 
-    function verifyForgotOTP() {
+    async function verifyForgotOTP() {
         const otp = document.getElementById('forgot-otp').value;
         if (!otp) { alert('Enter the OTP'); return; }
-        document.getElementById('forgot-s2').classList.remove('active');
-        document.getElementById('forgot-s3').classList.add('active');
+        try {
+            const res = await fetch('/api/auth/forgot-password/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email:document.getElementById('forgot-email').value, otpCode:otp }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Invalid code');
+            document.getElementById('forgot-s2').classList.remove('active');
+            document.getElementById('forgot-s3').classList.add('active');
+        } catch (err) { alert(err.message); }
     }
 
     async function submitNewPassword() {
         const email = document.getElementById('forgot-email').value;
         const otpCode = document.getElementById('forgot-otp').value;
         const newPassword = document.getElementById('forgot-new-password').value;
-        if (!newPassword || newPassword.length < 6) { alert('Password must be at least 6 chars'); return; }
+        if (!newPassword || newPassword.length < 8) { alert('Password must be at least 8 characters'); return; }
         try {
             const res = await fetch('/api/auth/forgot-password/reset', {
                 method: 'POST',

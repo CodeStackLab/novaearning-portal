@@ -10,6 +10,14 @@ RewriteBase /
 # 1. Route API requests to PHP router
 RewriteRule ^api/(.*)$ /api/index.php?request=$1 [L,QSA]
 
+# Canonical application routes before Apache's directory-slash redirect.
+RewriteRule ^(?:login)/?$ /login.html [L,QSA]
+RewriteRule ^(?:dashboard|user-dashboard)/?$ /dashboard.html [L,QSA]
+RewriteRule ^(?:admin|admin-dashboard)/?$ /admin.html [L,QSA]
+RewriteRule ^(?:help)/?$ /help.html [L,QSA]
+RewriteRule ^(?:investments)/?$ /investments.html [L,QSA]
+RewriteRule ^(?:disclosures)/?$ /disclosures.html [L,QSA]
+
 # 2. Don't rewrite real existing files
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]

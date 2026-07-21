@@ -23,13 +23,13 @@ try {
     // Execute multi-statement SQL
     $pdo->exec($sql);
 
+    // Forward-compatible production upgrades for installations created before these columns/tables existed.
+    $pdo->exec("DELETE FROM password_reset_tokens WHERE expires_at < DATE_SUB(NOW(), INTERVAL 1 DAY) OR used_at IS NOT NULL");
+
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");
 
-    // Ensure Admin credentials for main admin: email = admin@novaearning.com, password = admin123
-    $adminHash = password_hash('admin123', PASSWORD_BCRYPT);
-    $stmt = $pdo->prepare("UPDATE users SET email = 'admin@novaearning.com', password = ? WHERE id = 1 OR username = 'novadmin'");
-    $stmt->execute([$adminHash]);
+    // database.sql creates a missing seed admin; never reset an existing production password.
 
     echo "<p style='color: green; font-size: 16px;'><strong>✓ Success! All database tables and initial seed data have been created in IONOS MySQL!</strong></p>";
     echo "<ul>";
@@ -39,6 +39,7 @@ try {
     echo "<li>transactions</li>";
     echo "<li>tickets</li>";
     echo "<li>settings</li>";
+    echo "<li>plans and secure password reset tokens</li>";
     echo "</ul>";
 
 } catch (PDOException $e) {

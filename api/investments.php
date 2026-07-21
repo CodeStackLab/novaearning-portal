@@ -3,6 +3,10 @@
 
 function handleInvestments($action, $pdo, $body) {
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit();
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'plans') {
+        $stmt = $pdo->query('SELECT id, name, price, daily_profit_pct AS roi, duration_days, image_url AS img FROM plans WHERE is_active = 1 ORDER BY id');
+        sendJson($stmt->fetchAll());
+    }
     $userId = authenticateToken();
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$action) {
@@ -19,16 +23,13 @@ function handleInvestments($action, $pdo, $body) {
             sendJson(['message' => 'Invalid plan purchase parameters'], 400);
         }
 
-        $singlePlanPrice = 100.00;
+        if ($quantity > 100) sendJson(['message' => 'Quantity is too large.'], 400);
+        $stmt = $pdo->prepare('SELECT id, name, price, daily_profit_pct, duration_days FROM plans WHERE name = ? AND is_active = 1');
+        $stmt->execute([$name]);
+        $plan = $stmt->fetch();
+        if (!$plan) sendJson(['message' => 'This investment plan is unavailable.'], 404);
+        $singlePlanPrice = (float)$plan['price'];
         $totalCost = $singlePlanPrice * $quantity;
-
-        $stmt = $pdo->prepare('SELECT name, email, balance FROM users WHERE id = ?');
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
-
-        if (!$user || $user['balance'] < $totalCost) {
-            sendJson(['message' => 'Insufficient balance'], 400);
-        }
 
         $dateStr = date('M j, Y h:i A');
         $randomRef = "INV" . strtoupper(substr(md5(uniqid()), 0, 8));
@@ -36,11 +37,19 @@ function handleInvestments($action, $pdo, $body) {
 
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ?');
-            $stmt->execute([$totalCost, $userId]);
+            $stmt = $pdo->prepare('SELECT name, email, balance FROM users WHERE id = ? FOR UPDATE');
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+            if (!$user || (float)$user['balance'] < $totalCost) {
+                $pdo->rollBack();
+                sendJson(['message' => 'Insufficient balance'], 400);
+            }
+            $stmt = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
+            $stmt->execute([$totalCost, $userId, $totalCost]);
+            if ($stmt->rowCount() !== 1) throw new Exception('Balance changed during purchase');
 
-            $stmt = $pdo->prepare('INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, 2.5, 1, ?, ?, ?)');
-            $stmt->execute([$userId, "$name (x$quantity)", $totalCost, 'Active', $dateStr, $nowMs]);
+            $stmt = $pdo->prepare('INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$userId, $plan['name'] . " (x$quantity)", $totalCost, $plan['daily_profit_pct'], $plan['duration_days'], 'Active', $dateStr, $nowMs]);
 
             $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
             $stmt->execute([$userId, $dateStr, 'Investment', $totalCost, $randomRef, 'Confirmed']);

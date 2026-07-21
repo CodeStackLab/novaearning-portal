@@ -586,6 +586,14 @@
             <section id="panel-security" class="dashboard-panel-view">
                 <h1 class="panel-title font-display">Account Security</h1><p class="panel-desc">Review recent sign-ins and protect your Nova account.</p>
                 <div class="security-summary-card"><span class="material-symbols-outlined">verified_user</span><div><strong>Password protected</strong><small>Never share your password or verification codes. Contact support if an activity is unfamiliar.</small></div></div>
+                <form class="notification-inbox-card" onsubmit="changeUserPassword(event)">
+                    <div class="notification-inbox-heading"><div><h2 class="font-display">Change password</h2><p>Confirm your current password before setting a new one.</p></div></div>
+                    <div class="smtp-form-grid">
+                        <div class="form-group-db"><label class="form-label-db" for="profile-current-password">Current password</label><input class="form-input-db" id="profile-current-password" type="password" autocomplete="current-password" required></div>
+                        <div class="form-group-db"><label class="form-label-db" for="profile-new-password">New password</label><input class="form-input-db" id="profile-new-password" type="password" minlength="8" autocomplete="new-password" required><small>Use at least 8 characters.</small></div>
+                    </div>
+                    <div class="smtp-actions"><button class="form-btn-db" type="submit"><span class="material-symbols-outlined">password</span> Update Password</button></div>
+                </form>
                 <div class="notification-inbox-card"><div class="notification-inbox-heading"><div><h2 class="font-display">Recent login activity</h2><p>Latest devices and network addresses.</p></div><button type="button" onclick="loadLoginActivity()">Refresh</button></div><div id="login-activity-list" class="audit-log-list"><div class="notification-inbox-empty">Loading login activity…</div></div></div>
             </section>
 
@@ -741,6 +749,6 @@
     </aside>
 
     <!-- Scripts -->
-    <script src="app.js?v=3.1"></script>
+    <script src="app.js?v=3.2"></script>
 </body>
 </html>

@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/upload-security.php';
 
 $request = isset($_GET['request']) ? explode('/', trim($_GET['request'], '/')) : [];
 if (empty($request) || empty($request[0])) {

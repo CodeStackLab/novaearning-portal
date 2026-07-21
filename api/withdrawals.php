@@ -14,13 +14,8 @@ function handleWithdrawals($action, $pdo, $body) {
             sendJson(['message' => 'Valid address and amount (minimum $20) are required'], 400);
         }
 
-        $stmt = $pdo->prepare('SELECT name, email, balance FROM users WHERE id = ?');
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
-
-        if (!$user || $user['balance'] < $withdrawAmt) {
-            sendJson(['message' => 'Insufficient balance'], 400);
-        }
+        if ($withdrawAmt > 1000000) sendJson(['message' => 'Withdrawal amount exceeds the allowed limit.'], 400);
+        if (!preg_match('/^T[1-9A-HJ-NP-Za-km-z]{33}$/', $address)) sendJson(['message' => 'Enter a valid TRON (TRC20) wallet address.'], 400);
 
         $dateStr = date('M j, Y h:i A');
         $randomRef = "WD" . strtoupper(substr(md5(uniqid()), 0, 8));
@@ -29,8 +24,16 @@ function handleWithdrawals($action, $pdo, $body) {
 
         $pdo->beginTransaction();
         try {
-            $stmt = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ?');
-            $stmt->execute([$withdrawAmt, $userId]);
+            $stmt = $pdo->prepare('SELECT name, email, balance FROM users WHERE id = ? FOR UPDATE');
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+            if (!$user || (float)$user['balance'] < $withdrawAmt) {
+                $pdo->rollBack();
+                sendJson(['message' => 'Insufficient balance'], 400);
+            }
+            $stmt = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
+            $stmt->execute([$withdrawAmt, $userId, $withdrawAmt]);
+            if ($stmt->rowCount() !== 1) throw new Exception('Balance changed during withdrawal');
 
             $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status, wallet_address) VALUES (?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([$userId, $dateStr, 'Withdrawal', $withdrawAmt, $randomRef, 'Pending', $address]);

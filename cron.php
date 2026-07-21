@@ -117,5 +117,8 @@ foreach ($activeInvestments as $inv) {
     }
 }
 
+$stmt = $pdo->prepare("INSERT INTO settings (`key`, value) VALUES ('cron_last_run', ?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
+$stmt->execute([gmdate('Y-m-d H:i:s')]);
+
 echo 'Cron executed successfully at ' . date('Y-m-d H:i:s');
 ?>

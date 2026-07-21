@@ -120,6 +120,27 @@ CREATE TABLE IF NOT EXISTS auth_attempts (
     INDEX idx_auth_attempt (identifier_hash, ip_address, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, token_hash VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    used_at DATETIME DEFAULT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_reset_user (user_id, created_at), INDEX idx_reset_expiry (expires_at),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS plans (
+    id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(120) NOT NULL UNIQUE,
+    price DECIMAL(15,2) NOT NULL, daily_profit_pct DECIMAL(5,2) NOT NULL DEFAULT 2.50,
+    duration_days INT NOT NULL DEFAULT 1, image_url TEXT, is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO plans (name, price, daily_profit_pct, duration_days, image_url) VALUES
+('AMC Movie Ticket', 100.00, 2.50, 1, 'images/amc_theater.png'),
+('Avengers Movie Plan', 150.00, 2.50, 1, 'images/avengers_theme.png'),
+('Netflix Gift Card', 100.00, 2.50, 1, 'images/netflix_card.png'),
+('Amazon Gift Card', 200.00, 2.50, 1, 'images/netflix_card.png');
+
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.com');

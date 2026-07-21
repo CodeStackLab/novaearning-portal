@@ -29,7 +29,7 @@ function handleUser($action, $subaction, $pdo, $body) {
         $activeRefRow = $stmt->fetch();
         $activeReferralsCount = $activeRefRow['activeRefCount'] ? (int)$activeRefRow['activeRefCount'] : 0;
 
-        $stmt = $pdo->prepare("SELECT SUM(amount) as comSum FROM transactions WHERE user_id = ? AND type = 'Referral Bonus'");
+        $stmt = $pdo->prepare("SELECT SUM(amount) as comSum FROM transactions WHERE user_id = ? AND type IN ('Referral Bonus', 'Referral Commission')");
         $stmt->execute([$userId]);
         $comSumRow = $stmt->fetch();
         $totalComEarned = $comSumRow['comSum'] ? (float)$comSumRow['comSum'] : 0.00;
@@ -58,13 +58,20 @@ function handleUser($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'password') {
+        $currentPassword = $body['currentPassword'] ?? '';
         $newPassword = $body['newPassword'] ?? '';
-        if (strlen($newPassword) < 6) {
-            sendJson(['message' => 'Password must be at least 6 characters'], 400);
+        if ($currentPassword === '' || strlen($newPassword) < 8) {
+            sendJson(['message' => 'Current password and a new password of at least 8 characters are required.'], 400);
         }
+        $stmt = $pdo->prepare('SELECT password FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        if (!$user || !password_verify($currentPassword, $user['password'])) sendJson(['message' => 'Current password is incorrect.'], 403);
+        if (password_verify($newPassword, $user['password'])) sendJson(['message' => 'New password must be different.'], 400);
         $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
         $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
         $stmt->execute([$hashedPassword, $userId]);
+        notifyUserById($pdo, $userId, 'Password changed', '<p>Your Nova account password was changed successfully.</p><p>If this was not you, contact support immediately.</p>', 'support');
         sendJson(['message' => 'Password updated successfully']);
     }
 

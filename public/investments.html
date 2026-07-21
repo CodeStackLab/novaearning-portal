@@ -176,6 +176,7 @@
 
         let currentPage = 1;
         const itemsPerPage = 6;
+        let catalogPlans = [];
 
         let activeCategory = 'all';
 
@@ -194,28 +195,19 @@
             renderPlans();
         }
 
-        function renderPlans() {
+        async function renderPlans() {
             const grid = document.getElementById('investments-container-grid');
             if (!grid) return;
-
-            let editedPlans = JSON.parse(localStorage.getItem('nova_edited_plans') || '{}');
-            let deletedDefault = JSON.parse(localStorage.getItem('nova_deleted_default_plans') || '[]');
-            let customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
-
-            const activeDefault = plans
-                .filter(p => !deletedDefault.includes(p.name))
-                .map(p => editedPlans[p.name] ? { ...p, ...editedPlans[p.name], price: Number(editedPlans[p.name].price || p.price) } : p);
-
-            const customMapped = customPlans.map((cp, idx) => ({
-                id: 'custom_' + idx,
-                name: cp.name,
-                image: 'images/amc_theater.png',
-                profit: cp.roi || '2.5%',
-                price: Number(cp.price || 100),
-                duration: cp.duration || '24 Hours'
-            }));
-
-            const combinedPlans = [...activeDefault, ...customMapped];
+            let combinedPlans;
+            try {
+                const response = await fetch('/api/investments/plans');
+                if (!response.ok) throw new Error('Unable to load plans');
+                combinedPlans = (await response.json()).map(p => ({ id:p.id, name:p.name, image:p.img || 'images/amc_theater.png', profit:`${Number(p.roi)}%`, price:Number(p.price), duration:`${Number(p.duration_days)} day(s)` }));
+                catalogPlans = combinedPlans;
+            } catch (error) {
+                grid.innerHTML = '<p style="grid-column:1/-1;text-align:center">Unable to load investment plans.</p>';
+                return;
+            }
 
             const filteredPlans = combinedPlans;
 
@@ -292,9 +284,7 @@
         }
 
         function changePage(page) {
-            const filteredPlans = activeCategory === 'all' 
-                ? plans 
-                : plans.filter(p => p.category === activeCategory);
+            const filteredPlans = catalogPlans;
             const totalPages = Math.ceil(filteredPlans.length / itemsPerPage);
             if (page < 1 || page > totalPages) return;
             currentPage = page;
@@ -305,16 +295,8 @@
         // Featured Investment CTA logic (Direct Invest or Direct Deposit)
         function handleInvestClick(event, plan) {
             event.preventDefault();
-            const planPrices = {
-                'amc': { name: 'AMC Movie Ticket', price: 100 },
-                'avengers': { name: 'Avengers Movie Plan', price: 150 },
-                'movie_combo': { name: 'Cinema VIP Combo', price: 250 },
-                'netflix_card': { name: 'Netflix Share Pass', price: 50 }
-            };
-            const info = planPrices[plan] || { name: 'Compounding Investment Plan', price: 100 };
-            
             const token = localStorage.getItem('nova_token');
-            const targetUrl = `/dashboard.html?tab=deposit&amount=${info.price}&plan=${encodeURIComponent(info.name)}`;
+            const targetUrl = '/dashboard?tab=invest';
 
             if (token) {
                 window.location.href = targetUrl;

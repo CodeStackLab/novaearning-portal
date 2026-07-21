@@ -22,18 +22,9 @@ function handleTickets($action, $pdo, $body) {
 
         $savedImagePath = null;
         if ($screenshotBase64) {
-            if (preg_match('/^data:([A-Za-z-+\/]+);base64,(.+)$/', $screenshotBase64, $matches)) {
-                $type = $matches[1];
-                $base64Data = base64_decode($matches[2]);
-                $ext = explode('/', $type)[1] ?? 'png';
-                $fileName = 'support_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.' . $ext;
-                $uploadsDir = '../public/uploads/';
-                if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
-                
-                $fullSavePath = $uploadsDir . $fileName;
-                file_put_contents($fullSavePath, $base64Data);
-                $savedImagePath = '/uploads/' . $fileName;
-            }
+            $uploadError = '';
+            $savedImagePath = saveValidatedBase64Image($screenshotBase64, 'support', $uploadError);
+            if (!$savedImagePath) sendJson(['message' => $uploadError], 400);
         }
 
         $dateStr = date('M j, Y h:i A');

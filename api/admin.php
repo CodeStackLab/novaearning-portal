@@ -23,17 +23,26 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->query("SELECT COUNT(DISTINCT user_id) as activeUsers FROM investments WHERE status = 'Active'");
             $activeUsersCount = $stmt->fetch()['activeUsers'];
 
+            $cronLastRun = $pdo->query("SELECT value FROM settings WHERE `key` = 'cron_last_run'")->fetchColumn() ?: null;
+            $cronHealthy = $cronLastRun && (time() - strtotime($cronLastRun . ' UTC') < 3600);
             sendJson([
                 'users' => (int)$totalUsers,
                 'deposits' => (float)$totalDeposits,
                 'pendingWithdrawals' => (int)$pendingWithdrawals,
                 'activeInvestments' => (float)$activeInvestmentsSum,
-                'activeUsers' => (int)$activeUsersCount
+                'activeUsers' => (int)$activeUsersCount,
+                'cronLastRun' => $cronLastRun,
+                'cronHealthy' => (bool)$cronHealthy
             ]);
         }
 
         if ($action === 'users') {
             $stmt = $pdo->query("SELECT id, name, email, balance, earnings, role, referral_code, referred_by FROM users WHERE role = 'user' ORDER BY id DESC");
+            sendJson($stmt->fetchAll());
+        }
+
+        if ($action === 'plans') {
+            $stmt = $pdo->query('SELECT id, name, price, daily_profit_pct AS roi, duration_days, image_url AS img, is_active FROM plans ORDER BY id');
             sendJson($stmt->fetchAll());
         }
 
@@ -89,6 +98,50 @@ function handleAdmin($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($action === 'plans') {
+            $operation = strtolower(trim($body['operation'] ?? ''));
+            $planId = (int)($body['id'] ?? 0);
+            if ($operation === 'delete') {
+                if ($planId < 1) sendJson(['message' => 'Valid plan ID required.'], 400);
+                $stmt = $pdo->prepare('UPDATE plans SET is_active = 0 WHERE id = ?');
+                $stmt->execute([$planId]);
+                auditAdminAction($pdo, $userId, 'plan.disabled', 'plan', $planId);
+                sendJson(['message' => 'Plan removed from the catalogue.']);
+            }
+
+            $name = trim($body['name'] ?? '');
+            $price = (float)($body['price'] ?? 0);
+            $roi = (float)($body['roi'] ?? 2.5);
+            $durationDays = (int)($body['durationDays'] ?? 1);
+            $image = trim($body['image'] ?? '');
+            if ($name === '' || strlen($name) > 120 || $price <= 0 || $price > 1000000 || $roi <= 0 || $roi > 100 || $durationDays < 1 || $durationDays > 365) {
+                sendJson(['message' => 'Enter a valid name, price, return rate, and duration.'], 400);
+            }
+            if (strpos($image, 'data:') === 0) {
+                $uploadError = '';
+                $image = saveValidatedBase64Image($image, 'plan', $uploadError, 3145728);
+                if (!$image) sendJson(['message' => $uploadError], 400);
+            } elseif ($image !== '' && !preg_match('#^(?:https://|/|images/)#i', $image)) {
+                sendJson(['message' => 'Plan image must be HTTPS or a local image path.'], 400);
+            }
+
+            try {
+                if ($operation === 'update' && $planId > 0) {
+                    $stmt = $pdo->prepare('UPDATE plans SET name = ?, price = ?, daily_profit_pct = ?, duration_days = ?, image_url = ?, is_active = 1 WHERE id = ?');
+                    $stmt->execute([$name, $price, $roi, $durationDays, $image, $planId]);
+                    auditAdminAction($pdo, $userId, 'plan.updated', 'plan', $planId, ['name' => $name, 'price' => $price]);
+                    sendJson(['message' => 'Plan updated and published.']);
+                }
+                $stmt = $pdo->prepare('INSERT INTO plans (name, price, daily_profit_pct, duration_days, image_url) VALUES (?, ?, ?, ?, ?)');
+                $stmt->execute([$name, $price, $roi, $durationDays, $image]);
+                auditAdminAction($pdo, $userId, 'plan.created', 'plan', $pdo->lastInsertId(), ['name' => $name, 'price' => $price]);
+                sendJson(['message' => 'Plan created and published.']);
+            } catch (PDOException $e) {
+                if ((int)($e->errorInfo[1] ?? 0) === 1062) sendJson(['message' => 'A plan with this name already exists.'], 409);
+                sendJson(['message' => 'Unable to save the plan.'], 500);
+            }
+        }
+
         if ($action === 'settings' && $subaction === 'smtp-test') {
             $config = loadSmtpConfiguration($pdo);
             foreach (['host', 'username', 'fromEmail', 'fromName', 'encryption'] as $field) {
@@ -188,6 +241,24 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             sendJson(['message' => 'User balance updated successfully.']);
         }
 
+        if ($action === 'users' && $subaction === 'create') {
+            $name = trim($body['name'] ?? '');
+            $email = strtolower(trim($body['email'] ?? ''));
+            $password = (string)($body['password'] ?? '');
+            if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) sendJson(['message' => 'Name, valid email, and password of at least 8 characters are required.'], 400);
+            $code = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 4)) . random_int(1000, 9999);
+            try {
+                $stmt = $pdo->prepare("INSERT INTO users (name,email,username,password,balance,earnings,active_investments,role,referral_code) VALUES (?,?,?,?,0,0,0,'user',?)");
+                $stmt->execute([$name, $email, $email, password_hash($password, PASSWORD_BCRYPT), $code]);
+                $newId = (int)$pdo->lastInsertId();
+                auditAdminAction($pdo, $userId, 'user.created', 'user', $newId, ['email' => $email]);
+                sendJson(['message' => 'User account created successfully.']);
+            } catch (PDOException $e) {
+                if ((int)($e->errorInfo[1] ?? 0) === 1062) sendJson(['message' => 'Email or referral code already exists.'], 409);
+                sendJson(['message' => 'Unable to create user.'], 500);
+            }
+        }
+
         if ($action === 'users' && $subaction === 'profile') {
             $targetUserId = (int)($body['userId'] ?? 0);
             $name = trim($body['name'] ?? '');
@@ -238,8 +309,9 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             
             $pdo->beginTransaction();
             try {
-                $stmt = $pdo->prepare('UPDATE deposits SET status = ? WHERE id = ?');
+                $stmt = $pdo->prepare("UPDATE deposits SET status = ? WHERE id = ? AND status = 'Pending'");
                 $stmt->execute([$newStatus, $depositId]);
+                if ($stmt->rowCount() !== 1) throw new Exception('Deposit was already processed');
 
                 $stmt = $pdo->prepare('UPDATE transactions SET status = ? WHERE ref = ?');
                 $stmt->execute([$newStatus, $deposit['txn_id']]);
@@ -305,8 +377,9 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             if (!$tx) sendJson(['message' => 'Withdrawal not found'], 404);
             if ($tx['status'] !== 'Pending') sendJson(['message' => 'Already processed'], 400);
 
-            $stmt = $pdo->prepare('UPDATE transactions SET status = ? WHERE id = ?');
+            $stmt = $pdo->prepare("UPDATE transactions SET status = ? WHERE id = ? AND status = 'Pending'");
             $stmt->execute(['Confirmed', $transactionId]);
+            if ($stmt->rowCount() !== 1) sendJson(['message' => 'Withdrawal was already processed'], 409);
             auditAdminAction($pdo, $userId, 'withdrawal.confirmed', 'transaction', $transactionId, ['amount' => (float)$tx['amount'], 'userId' => $tx['user_id']]);
             $amountText = number_format((float)$tx['amount'], 2);
             notifyUserById($pdo, $tx['user_id'], 'Withdrawal completed', "<p>Your withdrawal of <strong>\${$amountText}</strong> has been approved and marked completed.</p><p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>', 'withdrawal');
@@ -324,17 +397,9 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             $savedImagePath = null;
             if ($screenshotBase64) {
-                if (preg_match('/^data:([A-Za-z-+\/]+);base64,(.+)$/', $screenshotBase64, $matches)) {
-                    $type = $matches[1];
-                    $base64Data = base64_decode($matches[2]);
-                    $ext = explode('/', $type)[1] ?? 'png';
-                    $fileName = 'support_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.' . $ext;
-                    $uploadsDir = '../public/uploads/';
-                    if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
-                    $fullSavePath = $uploadsDir . $fileName;
-                    file_put_contents($fullSavePath, $base64Data);
-                    $savedImagePath = '/uploads/' . $fileName;
-                }
+                $uploadError = '';
+                $savedImagePath = saveValidatedBase64Image($screenshotBase64, 'support', $uploadError);
+                if (!$savedImagePath) sendJson(['message' => $uploadError], 400);
             }
 
             $dateStr = date('M j, Y h:i A');

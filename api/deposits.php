@@ -23,32 +23,29 @@ function handleDeposits($action, $pdo, $body) {
 
         $dateStr = date('M j, Y h:i A');
 
-        if (preg_match('/^data:([A-Za-z-+\/]+);base64,(.+)$/', $screenshotBase64, $matches)) {
-            $type = $matches[1];
-            $base64Data = base64_decode($matches[2]);
-            $ext = explode('/', $type)[1] ?? 'png';
-            $fileName = 'receipt_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.' . $ext;
-            
-            // Ensure uploads directory exists
-            $uploadsDir = '../public/uploads/';
-            if (!is_dir($uploadsDir)) {
-                mkdir($uploadsDir, 0755, true);
-            }
-            
-            $fullSavePath = $uploadsDir . $fileName;
-            file_put_contents($fullSavePath, $base64Data);
-            $relativePath = '/uploads/' . $fileName;
-        } else {
-            sendJson(['message' => 'Invalid screenshot file format'], 400);
-        }
+        $uploadError = '';
+        $relativePath = saveValidatedBase64Image($screenshotBase64, 'receipt', $uploadError);
+        if (!$relativePath) sendJson(['message' => $uploadError], 400);
 
         $finalTxnCode = $txnId ?: ("TX" . substr(time(), -6) . strtoupper(substr(md5(uniqid()), 0, 4)));
+        if (!preg_match('/^[A-Za-z0-9_-]{6,120}$/', $finalTxnCode)) {
+            @unlink(__DIR__ . '/../public' . $relativePath);
+            sendJson(['message' => 'Enter a valid transaction reference (6–120 letters, numbers, dashes, or underscores).'], 400);
+        }
 
-        $stmt = $pdo->prepare('INSERT INTO deposits (user_id, date, amount, txn_id, screenshot_path, plan_name, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$userId, $dateStr, $amount, $finalTxnCode, $relativePath, $planName, 'Pending']);
-
-        $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$userId, $dateStr, 'Deposit', $amount, $finalTxnCode, 'Pending']);
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare('INSERT INTO deposits (user_id, date, amount, txn_id, screenshot_path, plan_name, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$userId, $dateStr, $amount, $finalTxnCode, $relativePath, $planName, 'Pending']);
+            $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$userId, $dateStr, 'Deposit', $amount, $finalTxnCode, 'Pending']);
+            $pdo->commit();
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            @unlink(__DIR__ . '/../public' . $relativePath);
+            if ((int)($e->errorInfo[1] ?? 0) === 1062) sendJson(['message' => 'This transaction reference was already submitted.'], 409);
+            sendJson(['message' => 'Unable to submit the deposit.'], 500);
+        }
 
         $safeAmount = number_format((float)$amount, 2);
         $safeRef = htmlspecialchars($finalTxnCode);

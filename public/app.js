@@ -1220,7 +1220,7 @@ function handleFileSelect(input) {
 // DYNAMIC INVEST PANEL — Category Filter + Pagination
 // ============================================================
 
-const ALL_INVESTMENT_PLANS = [
+let ALL_INVESTMENT_PLANS = [
     { name: 'AMC Movie Ticket',     img: 'images/amc_theater.png',      price: 100, roi: 2.5, duration: '24 Hours' },
     { name: 'Avengers Movie Plan',   img: 'images/avengers_theme.png',   price: 150, roi: 2.5, duration: '24 Hours' },
     { name: 'Netflix Gift Card',    img: 'images/netflix_card.png',     price: 100, roi: 2.5, duration: '24 Hours' },
@@ -1232,18 +1232,17 @@ let dbCurrentPage = 1;
 let dbCurrentFilter = 'all';
 let dbFilteredPlans = [...ALL_INVESTMENT_PLANS];
 
-function filterDashboardPlans(filter) {
+async function filterDashboardPlans(filter) {
     dbCurrentFilter = filter;
     dbCurrentPage = 1;
 
-    const customPlans = JSON.parse(localStorage.getItem('nova_custom_plans') || '[]');
-    const allPlans = [...ALL_INVESTMENT_PLANS, ...customPlans.map(p => ({
-        name: p.name, img: p.img || 'images/amc_theater.png',
-        price: parseFloat(p.price) || 100, roi: parseFloat(p.roi) || 2.5,
-        duration: '24 Hours'
-    }))];
-
-    dbFilteredPlans = allPlans;
+    try {
+        const serverPlans = await apiRequest('/investments/plans');
+        ALL_INVESTMENT_PLANS = serverPlans.map(p => ({ name:p.name, img:p.img || 'images/amc_theater.png', price:Number(p.price), roi:Number(p.roi), duration:`${Number(p.duration_days)} day(s)` }));
+    } catch (error) {
+        showToast(error.message || 'Unable to load investment plans');
+    }
+    dbFilteredPlans = [...ALL_INVESTMENT_PLANS];
 
     renderDashboardPlansPage();
 }
@@ -1519,22 +1518,25 @@ function renderDummyMyInvestments() {
     }
 })();
 
-async function changeUserPassword() {
+async function changeUserPassword(event) {
+    if (event) event.preventDefault();
     const pwdInput = document.getElementById('profile-new-password');
-    if (!pwdInput) return;
+    const currentInput = document.getElementById('profile-current-password');
+    if (!pwdInput || !currentInput) return;
     const newPassword = pwdInput.value.trim();
-    if (newPassword.length < 6) {
-        alert("Password must be at least 6 characters long.");
+    if (newPassword.length < 8) {
+        alert("Password must be at least 8 characters long.");
         return;
     }
     
     try {
         await apiRequest('/user/password', {
             method: 'POST',
-            body: JSON.stringify({ newPassword })
+            body: JSON.stringify({ currentPassword: currentInput.value, newPassword })
         });
         showToast("Password updated successfully!");
         pwdInput.value = '';
+        currentInput.value = '';
     } catch (e) {
         alert("Error: " + e.message);
     }
