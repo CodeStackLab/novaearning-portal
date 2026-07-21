@@ -1302,6 +1302,9 @@ function openTronAddressModal() {
     modal.style.display = 'flex';
     modal.style.alignItems = 'center';
     modal.style.justifyContent = 'center';
+    modal.style.opacity = '1';
+    modal.style.visibility = 'visible';
+    modal.style.zIndex = '999999';
     document.body.style.overflow = 'hidden'; // Prevent background scroll
 }
 
