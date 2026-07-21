@@ -334,7 +334,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 2. Setup hash router or query param router
     const hash = window.location.hash.substring(1);
-    const activeTab = hash || 'overview';
+    const activeTab = hash === 'tron-address-modal' ? 'overview' : (hash || 'overview');
     switchTab(activeTab);
     fetchAdminTronAddress();
 
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     changeTronAddressButton?.addEventListener('click', (event) => {
         event.preventDefault();
         openTronAddressModal();
-        window.history.replaceState(null, '', '#tron-address-modal');
+        window.history.replaceState(null, '', '/admin/#tron-address-modal');
     });
     closeTronAddressButton?.addEventListener('click', (event) => {
         event.preventDefault();
@@ -1342,7 +1342,7 @@ function closeTronAddressModal() {
     modal.style.zIndex = '';
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    if (window.location.hash === '#tron-address-modal') window.history.replaceState(null, '', '#overview');
+    if (window.location.hash === '#tron-address-modal') window.history.replaceState(null, '', '/admin/#overview');
     document.getElementById('change-tron-address-btn')?.focus();
 }
 
