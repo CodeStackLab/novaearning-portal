@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="/style.css?v=5.3">
-    <link rel="stylesheet" href="/nova-ui.css?v=7.1">
+    <link rel="stylesheet" href="/nova-ui.css?v=7.2">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -535,6 +535,10 @@
                     </div>
 
                     <form id="smtp-settings-form" onsubmit="saveSmtpSettings(event)">
+                        <div class="smtp-provider-tools">
+                            <span>IONOS Mail Basic/Business: use your full mailbox address and its mailbox password.</span>
+                            <button type="button" onclick="applyIonosSmtpPreset()"><span class="material-symbols-outlined">auto_fix_high</span> Use IONOS preset</button>
+                        </div>
                         <div class="smtp-form-grid">
                             <div class="form-group-db smtp-host-field">
                                 <label class="form-label-db" for="smtp-host">SMTP Host</label>
@@ -828,6 +832,6 @@
     </div>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=3.1"></script>
+    <script src="admin-app.js?v=3.2"></script>
 </body>
 </html>

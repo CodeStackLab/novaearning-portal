@@ -108,7 +108,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'settings' && $subaction === 'smtp') {
-            $host = trim($body['host'] ?? '');
+            $host = strtolower(trim($body['host'] ?? ''));
             $port = (int)($body['port'] ?? 0);
             $encryption = strtolower(trim($body['encryption'] ?? 'tls'));
             $username = trim($body['username'] ?? '');
@@ -124,6 +124,9 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             }
             if ($username !== '' && !filter_var($username, FILTER_VALIDATE_EMAIL) && strlen($username) < 3) {
                 sendJson(['message' => 'SMTP username is invalid'], 400);
+            }
+            if ($host === 'smtp.ionos.com' && !filter_var($username, FILTER_VALIDATE_EMAIL)) {
+                sendJson(['message' => 'IONOS requires the full mailbox email address as SMTP username.'], 400);
             }
 
             $values = [

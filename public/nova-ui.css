@@ -639,3 +639,24 @@ html, body,
     .pop-cat-card { text-align: left !important; }
     .pop-cat-desc { font-size: .7rem !important; line-height: 1.4; }
 }
+
+/* Exact viewport-centred mobile brand, independent of side controls */
+@media (max-width: 900px) {
+    .dashboard-header .mobile-header-logo {
+        position: absolute !important;
+        inset-inline-start: 50% !important;
+        inset-inline-end: auto !important;
+        top: 50% !important;
+        margin: 0 !important;
+        transform: translate(-50%,-50%) !important;
+        z-index: 2 !important;
+        pointer-events: auto;
+    }
+    .dashboard-header .mobile-header-logo img { width: 86px !important; max-width: 22vw; }
+}
+
+.smtp-provider-tools { margin: 0 0 1rem; padding: .8rem; display: flex; align-items: center; justify-content: space-between; gap: .8rem; color: #aab4c1; background: rgba(214,168,95,.065); border: 1px solid rgba(214,168,95,.16); border-radius: 12px; }
+.smtp-provider-tools span { font-size: .75rem; line-height: 1.4; }
+.smtp-provider-tools button { flex: 0 0 auto; min-height: 40px; padding: .55rem .75rem; display: inline-flex; align-items: center; gap: .35rem; color: #f4e8d5; background: rgba(214,168,95,.14); border: 1px solid rgba(214,168,95,.25); border-radius: 9px; font-weight: 700; cursor: pointer; }
+.smtp-provider-tools button .material-symbols-outlined { font-size: 1rem; }
+@media (max-width: 520px) { .smtp-provider-tools { align-items: stretch; flex-direction: column; } .smtp-provider-tools button { justify-content: center; width: 100%; } }

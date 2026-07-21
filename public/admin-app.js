@@ -214,6 +214,7 @@ async function saveSmtpSettings(event) {
         });
         showToast(result.message || 'SMTP configuration saved!');
         await loadSmtpSettings();
+        await testSmtpSettings();
     } catch (error) {
         showToast(error.message || 'Unable to save SMTP configuration');
     } finally {
@@ -221,6 +222,19 @@ async function saveSmtpSettings(event) {
             button.disabled = false;
             button.classList.remove('is-loading');
         }
+    }
+}
+
+function applyIonosSmtpPreset() {
+    const username = document.getElementById('smtp-username');
+    document.getElementById('smtp-host').value = 'smtp.ionos.com';
+    document.getElementById('smtp-port').value = '587';
+    document.getElementById('smtp-encryption').value = 'tls';
+    if (username && !username.value.trim()) username.value = document.getElementById('smtp-from-email').value.trim();
+    const resultBox = document.getElementById('smtp-test-result');
+    if (resultBox) {
+        resultBox.className = 'smtp-test-result testing';
+        resultBox.textContent = 'IONOS preset applied. Enter the mailbox password, then save; authentication will be tested automatically.';
     }
 }
 
