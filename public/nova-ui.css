@@ -529,6 +529,7 @@ html, body,
     box-shadow: 0 8px 22px rgba(30,75,145,.18);
 }
 .modal-overlay { background: rgba(8,13,20,.64) !important; backdrop-filter: blur(8px); }
+.modal-overlay:target { display: flex !important; align-items: center; justify-content: center; opacity: 1 !important; visibility: visible !important; z-index: 999999 !important; }
 .modal-content-box, .modal-content { background: linear-gradient(145deg,#263445,#1c2837) !important; border-color: var(--nova-border-highlight) !important; box-shadow: 0 28px 70px rgba(3,8,14,.48) !important; }
 .dashboard-footer { color: #7f8d9f !important; background: rgba(24,34,47,.58) !important; border-color: var(--nova-border) !important; }
 

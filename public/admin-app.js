@@ -342,14 +342,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const closeTronAddressButton = document.getElementById('close-tron-address-modal-btn');
     const saveTronAddressButton = document.getElementById('save-tron-address-btn');
     const tronAddressModal = document.getElementById('tron-address-modal');
-    changeTronAddressButton?.addEventListener('click', openTronAddressModal);
-    closeTronAddressButton?.addEventListener('click', closeTronAddressModal);
+    changeTronAddressButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        openTronAddressModal();
+        window.history.replaceState(null, '', '#tron-address-modal');
+    });
+    closeTronAddressButton?.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeTronAddressModal();
+    });
     saveTronAddressButton?.addEventListener('click', saveTronAddress);
     tronAddressModal?.addEventListener('click', (event) => {
         if (event.target === tronAddressModal) closeTronAddressModal();
     });
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !tronAddressModal?.hidden) closeTronAddressModal();
+        if (event.key === 'Escape' && tronAddressModal?.classList.contains('active')) closeTronAddressModal();
     });
 
     // 3. Attach sidebar click events
@@ -1311,7 +1318,6 @@ function openTronAddressModal() {
     if (displayEl) displayEl.value = globalTronAddress;
     if (inputEl) inputEl.value = '';
 
-    modal.hidden = false;
     modal.setAttribute('aria-hidden', 'false');
     modal.classList.add('active');
     modal.style.display = 'flex';
@@ -1334,9 +1340,9 @@ function closeTronAddressModal() {
     modal.style.opacity = '';
     modal.style.visibility = '';
     modal.style.zIndex = '';
-    modal.hidden = true;
     modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    if (window.location.hash === '#tron-address-modal') window.history.replaceState(null, '', '#overview');
     document.getElementById('change-tron-address-btn')?.focus();
 }
 
