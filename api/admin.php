@@ -75,14 +75,22 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stored = [];
             foreach ($stmt->fetchAll() as $row) $stored[$row['key']] = $row['value'];
 
+            $smtpUsername = $stored['smtp_username'] ?? 'admin@novaearning.com';
+            $smtpFromEmail = $stored['smtp_from_email'] ?? 'admin@novaearning.com';
+            $legacyMailbox = strcasecmp($smtpUsername, 'contact@novaearning.com') === 0;
+            if ($legacyMailbox) {
+                $smtpUsername = 'admin@novaearning.com';
+                $smtpFromEmail = 'admin@novaearning.com';
+            }
+
             sendJson([
                 'host' => $stored['smtp_host'] ?? '',
                 'port' => (int)($stored['smtp_port'] ?? 587),
                 'encryption' => $stored['smtp_encryption'] ?? 'tls',
-                'username' => $stored['smtp_username'] ?? '',
-                'fromEmail' => $stored['smtp_from_email'] ?? '',
+                'username' => $smtpUsername,
+                'fromEmail' => $smtpFromEmail,
                 'fromName' => $stored['smtp_from_name'] ?? 'NOVA',
-                'passwordConfigured' => !empty($stored['smtp_password'])
+                'passwordConfigured' => !$legacyMailbox && !empty($stored['smtp_password'])
             ]);
         }
 
@@ -180,6 +188,18 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             }
             if ($host === 'smtp.ionos.com' && !filter_var($username, FILTER_VALIDATE_EMAIL)) {
                 sendJson(['message' => 'IONOS requires the full mailbox email address as SMTP username.'], 400);
+            }
+
+            $currentUsernameStmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'smtp_username' LIMIT 1");
+            $currentUsernameStmt->execute();
+            $currentUsername = (string)$currentUsernameStmt->fetchColumn();
+            if ($password === '' && $currentUsername !== '' && strcasecmp($currentUsername, $username) !== 0) {
+                sendJson(['message' => 'Enter the mailbox password when changing the SMTP username.'], 400);
+            }
+            $savedPasswordStmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'smtp_password' LIMIT 1");
+            $savedPasswordStmt->execute();
+            if ($password === '' && !(string)$savedPasswordStmt->fetchColumn()) {
+                sendJson(['message' => 'Enter the admin mailbox password to complete SMTP setup.'], 400);
             }
 
             $values = [

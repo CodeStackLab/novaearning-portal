@@ -14,6 +14,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/upload-security.php';
 
+// Upgrade installations that still reference the deleted legacy mailbox.
+// Its saved password belongs to that mailbox, so it must never be reused for
+// the primary admin mailbox.
+try {
+    $legacyMailbox = 'contact@novaearning.com';
+    $adminMailbox = 'admin@novaearning.com';
+    $legacyStmt = $pdo->prepare("SELECT value FROM settings WHERE `key` = 'smtp_username' LIMIT 1");
+    $legacyStmt->execute();
+    if (strcasecmp((string)$legacyStmt->fetchColumn(), $legacyMailbox) === 0) {
+        $pdo->beginTransaction();
+        $updateMailbox = $pdo->prepare("UPDATE settings SET value = ? WHERE `key` IN ('smtp_username', 'smtp_from_email') AND LOWER(value) = ?");
+        $updateMailbox->execute([$adminMailbox, $legacyMailbox]);
+        $pdo->exec("DELETE FROM settings WHERE `key` = 'smtp_password'");
+        $pdo->commit();
+    }
+} catch (Throwable $smtpMigrationError) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+}
+
 $request = isset($_GET['request']) ? explode('/', trim($_GET['request'], '/')) : [];
 if (empty($request) || empty($request[0])) {
     $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);

@@ -15,18 +15,18 @@
 
 ---
 
-## 2. Server & SFTP Credentials
+## 2. Server & SFTP Configuration
 
 - **Server / Host**: `access-5020930432.webspace-host.com`
 - **Port**: `22`
 - **Protocol**: SFTP + SSH
-- **User Name**: `su547455`
-- **Password**: `Easy@9129881899`
+- **User Name**: Stored in the hosting account and GitHub Actions secrets
+- **Password**: Never store in source control; rotate it in IONOS if exposed
 - **GitHub Secrets configured**:
-  - `IONOS_SFTP_HOST`: `access-5020930432.webspace-host.com`
+  - `IONOS_SFTP_HOST`: configured
   - `IONOS_SFTP_PORT`: `22`
-  - `IONOS_SFTP_USER`: `su547455`
-  - `IONOS_SFTP_PASSWORD`: `Easy@9129881899`
+  - `IONOS_SFTP_USER`: configured
+  - `IONOS_SFTP_PASSWORD`: configured as an encrypted repository secret
 
 ---
 
@@ -34,44 +34,41 @@
 
 - **Host name**: `db5020969176.hosting-data.io`
 - **Port**: `3306`
-- **Database Name**: `dbs15918036`
-- **User name**: `dbu2389530`
-- **Password**: `DB@9129881899`
+- **Database Name**: Stored in the protected server configuration
+- **User name**: Stored in the protected server configuration
+- **Password**: Never store in documentation or source control
 - **Type & Version**: MySQL 8.0
 
 ### Automatic Migration Script
 - **Endpoint**: `https://novaearning.com/migrate.php`
 - **File**: `migrate.php`
-- **Function**: Executes `database.sql` to automatically create/update all tables (`users`, `deposits`, `investments`, `transactions`, `tickets`, `settings`) and ensures `admin@novaearning.com` with password `admin123` is set up.
+- **Function**: Executes `database.sql` to create/update the required tables and seed a missing administrator. It never resets an existing production password.
 
 ---
 
 ## 4. Admin & Demo User Credentials
 
 - **Main Admin Email**: `admin@novaearning.com`
-- **Main Admin Password**: `admin123`
+- **Main Admin Password**: Managed privately by the administrator; never document it
 - **Admin Panel Direct URL**: [https://novaearning.com/admin.html](https://novaearning.com/admin.html)
 
-- **Demo Admin Email**: `admin@mail.com`
-- **Demo Admin Password**: `admin123`
-
-- **Demo User Email**: `user@mail.com`
-- **Demo User Password**: `user123`
+- Demo credentials are not maintained in production documentation.
 
 ---
 
 ## 5. SMTP Email System & Configuration
 
-- **Contact Email**: `contact@novaearning.com`
+- **Primary Admin & Sender Email**: `admin@novaearning.com`
 - **SMTP Host**: `smtp.ionos.com`
 - **SMTP Port**: `587`
 - **Encryption**: `TLS`
-- **SMTP Username**: `contact@novaearning.com`
+- **SMTP Username**: `admin@novaearning.com`
 - **From Name**: `Nova Support`
+- **SMTP Password**: Enter the `admin@novaearning.com` IONOS mailbox password in Admin Panel → SMTP Settings. It is encrypted in the database and must not be stored in this document or source control.
 
 ### Email Features Integrated:
 1. **Support Tickets & Live Chat**:
-   - User posts message ➔ Email notification sent to `contact@novaearning.com`.
+   - User posts message ➔ Email notification sent to `admin@novaearning.com`.
    - Admin replies in Admin Panel ➔ Email notification sent to User's registered email.
 2. **Forgot Password OTP**:
    - User/Admin requests password reset ➔ Real 6-Digit OTP code sent via SMTP (`api/auth.php`).

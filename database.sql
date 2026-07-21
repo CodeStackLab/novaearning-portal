@@ -155,8 +155,8 @@ INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQ
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.com');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_port', '587');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_encryption', 'tls');
-INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_username', 'contact@novaearning.com');
-INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_email', 'contact@novaearning.com');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_username', 'admin@novaearning.com');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_email', 'admin@novaearning.com');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_from_name', 'Nova Support');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('user_email_notifications', '1');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('admin_email_notifications', '1');
