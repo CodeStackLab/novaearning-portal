@@ -2,6 +2,11 @@
 // migrate.php
 require_once 'config.php';
 
+if (PHP_SAPI !== 'cli') {
+    $migrationUserId = authenticateToken();
+    requireAdmin($pdo, $migrationUserId);
+}
+
 header('Content-Type: text/html; charset=utf-8');
 echo "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;'>";
 echo "<h2 style='color: #333;'>Nova Portal - Automatic Database Setup</h2>";
