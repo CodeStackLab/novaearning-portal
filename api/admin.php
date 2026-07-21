@@ -438,8 +438,10 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'settings' && $subaction === 'tron-address') {
-            $address = $body['address'] ?? '';
-            if (!$address) sendJson(['message' => 'Address is required'], 400);
+            $address = trim($body['address'] ?? '');
+            if (!preg_match('/^T[1-9A-HJ-NP-Za-km-z]{33}$/', $address)) {
+                sendJson(['message' => 'A valid TRON TRC20 address is required.'], 400);
+            }
 
             $stmt = $pdo->prepare("INSERT INTO settings (`key`, value) VALUES ('tron_deposit_address', ?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
             $stmt->execute([$address]);

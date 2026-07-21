@@ -338,6 +338,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     switchTab(activeTab);
     fetchAdminTronAddress();
 
+    const changeTronAddressButton = document.getElementById('change-tron-address-btn');
+    const closeTronAddressButton = document.getElementById('close-tron-address-modal-btn');
+    const saveTronAddressButton = document.getElementById('save-tron-address-btn');
+    const tronAddressModal = document.getElementById('tron-address-modal');
+    changeTronAddressButton?.addEventListener('click', openTronAddressModal);
+    closeTronAddressButton?.addEventListener('click', closeTronAddressModal);
+    saveTronAddressButton?.addEventListener('click', saveTronAddress);
+    tronAddressModal?.addEventListener('click', (event) => {
+        if (event.target === tronAddressModal) closeTronAddressModal();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !tronAddressModal?.hidden) closeTronAddressModal();
+    });
+
     // 3. Attach sidebar click events
     const sidebarLinks = document.querySelectorAll('.sidebar-item-link[data-tab]');
     sidebarLinks.forEach(link => {
@@ -1297,7 +1311,8 @@ function openTronAddressModal() {
     if (displayEl) displayEl.value = globalTronAddress;
     if (inputEl) inputEl.value = '';
 
-    // Use both class and direct style for maximum compatibility
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
     modal.classList.add('active');
     modal.style.display = 'flex';
     modal.style.alignItems = 'center';
@@ -1306,26 +1321,36 @@ function openTronAddressModal() {
     modal.style.visibility = 'visible';
     modal.style.zIndex = '999999';
     document.body.style.overflow = 'hidden'; // Prevent background scroll
+    window.setTimeout(() => inputEl?.focus(), 0);
 }
 
 function closeTronAddressModal() {
     const modal = document.getElementById('tron-address-modal');
     if (!modal) return;
     modal.classList.remove('active');
-    modal.style.display = '';
+    modal.style.display = 'none';
     modal.style.alignItems = '';
     modal.style.justifyContent = '';
+    modal.style.opacity = '';
+    modal.style.visibility = '';
+    modal.style.zIndex = '';
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+    document.getElementById('change-tron-address-btn')?.focus();
 }
 
 async function saveTronAddress() {
     const inputEl = document.getElementById('tron-address-new-input');
     if (!inputEl) return;
     const newAddress = inputEl.value.trim();
-    if (!newAddress) {
-        alert('Please enter a valid TRON address.');
+    if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(newAddress)) {
+        showToast('Enter a valid TRON TRC20 address.');
         return;
     }
+
+    const saveButton = document.getElementById('save-tron-address-btn');
+    if (saveButton) saveButton.disabled = true;
 
     const token = localStorage.getItem('nova_token');
     try {
@@ -1346,6 +1371,8 @@ async function saveTronAddress() {
         await fetchAdminTronAddress();
     } catch (err) {
         showToast(err.message);
+    } finally {
+        if (saveButton) saveButton.disabled = false;
     }
 }
 

@@ -208,7 +208,7 @@
                         <button onclick="copyTronAddress()" style="background-color: #1e2538; border: 1px solid #2e384e; color: #94a3b8; padding: 0.5rem 0.85rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem;">
                             <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span> Copy
                         </button>
-                        <button onclick="openTronAddressModal()" style="background: linear-gradient(135deg, #e05252, #b91c1c); border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                        <button type="button" id="change-tron-address-btn" aria-controls="tron-address-modal" style="background: linear-gradient(135deg, #e05252, #b91c1c); border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
                             <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Change Address
                         </button>
                     </div>
@@ -802,11 +802,11 @@
     </div>
 
     <!-- MODAL: TRON DEPOSIT ADDRESS SETTINGS -->
-    <div id="tron-address-modal" class="modal-overlay">
-        <div class="modal-content-box" style="max-width: 520px;">
+    <div id="tron-address-modal" class="modal-overlay" hidden aria-hidden="true">
+        <div class="modal-content-box" role="dialog" aria-modal="true" aria-labelledby="tron-address-modal-title" style="max-width: 520px;">
             <div class="modal-header">
-                <h3 class="modal-title font-display">TRON Deposit Address (TRC20)</h3>
-                <button class="modal-close-btn" onclick="closeTronAddressModal()">
+                <h3 id="tron-address-modal-title" class="modal-title font-display">TRON Deposit Address (TRC20)</h3>
+                <button type="button" class="modal-close-btn" id="close-tron-address-modal-btn" aria-label="Close address dialog">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
@@ -824,7 +824,7 @@
                 <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">New TRON Wallet Address</label>
                 <input type="text" id="tron-address-new-input" placeholder="Enter new TRC20 wallet address..." class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; font-family: monospace; font-size: 0.85rem; box-sizing: border-box;">
             </div>
-            <button onclick="saveTronAddress()" class="modal-submit-btn" style="background: linear-gradient(135deg, #e05252 0%, #b91c1c 100%); color: white; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <button type="button" id="save-tron-address-btn" class="modal-submit-btn" style="background: linear-gradient(135deg, #e05252 0%, #b91c1c 100%); color: white; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">save</span>
                 Save New Deposit Address
             </button>
@@ -856,6 +856,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=4.2"></script>
+    <script src="admin-app.js?v=4.3"></script>
 </body>
 </html>
