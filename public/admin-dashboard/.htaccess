@@ -1,2 +1,3 @@
+DirectorySlash Off
 RewriteEngine On
 RewriteRule ^.*$ /admin.html [L,QSA]
