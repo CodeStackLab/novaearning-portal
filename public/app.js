@@ -1559,6 +1559,104 @@ async function changeUserPassword(event) {
 }
 
 // ------------------------------------------------------------
+// REFERRAL LINK — COPY TO CLIPBOARD
+// ------------------------------------------------------------
+function copyReferralLink() {
+    const input = document.getElementById('referral-link-input');
+    const btn = document.getElementById('copy-ref-btn');
+    const link = input ? input.value.trim() : '';
+    if (!link) { showToast('Referral link is loading, please wait.'); return; }
+    navigator.clipboard.writeText(link)
+        .then(() => {
+            showToast('Referral link copied to clipboard!');
+            if (btn) {
+                const orig = btn.innerHTML;
+                btn.style.background = '#10b981';
+                btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">check</span> Copied!';
+                setTimeout(() => { btn.style.background = ''; btn.innerHTML = orig; }, 2200);
+            }
+        })
+        .catch(() => showToast('Could not copy. Please copy manually.'));
+}
+
+// ------------------------------------------------------------
+// CHANGE EMAIL MODAL (OTP-BASED)
+// ------------------------------------------------------------
+function openChangeEmailModal() {
+    const modal = document.getElementById('change-email-modal');
+    if (!modal) return;
+    // Reset to step 1
+    const s1 = document.getElementById('change-email-step-1');
+    const s2 = document.getElementById('change-email-step-2');
+    if (s1) s1.style.display = '';
+    if (s2) s2.style.display = 'none';
+    const cpwd = document.getElementById('ce-current-password');
+    const nemail = document.getElementById('ce-new-email');
+    const otp = document.getElementById('ce-otp-code');
+    if (cpwd) cpwd.value = '';
+    if (nemail) nemail.value = '';
+    if (otp) otp.value = '';
+    modal.removeAttribute('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    modal.style.display = 'flex';
+}
+
+function closeChangeEmailModal() {
+    const modal = document.getElementById('change-email-modal');
+    if (!modal) return;
+    modal.setAttribute('hidden', '');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.style.display = '';
+}
+
+async function sendChangeEmailOTP() {
+    const currentPassword = document.getElementById('ce-current-password')?.value?.trim();
+    const newEmail = document.getElementById('ce-new-email')?.value?.trim();
+    if (!currentPassword || !newEmail) {
+        showToast('Please fill in both fields.');
+        return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+        showToast('Please enter a valid email address.');
+        return;
+    }
+    try {
+        await apiRequest('/user/change-email/request', {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword, newEmail })
+        });
+        // Move to step 2
+        const s1 = document.getElementById('change-email-step-1');
+        const s2 = document.getElementById('change-email-step-2');
+        if (s1) s1.style.display = 'none';
+        if (s2) s2.style.display = '';
+        showToast('OTP sent to your new email address!');
+    } catch (e) {
+        showToast('Error: ' + (e.message || 'Could not send OTP.'));
+    }
+}
+
+async function verifyChangeEmailOTP() {
+    const otp = document.getElementById('ce-otp-code')?.value?.trim();
+    const newEmail = document.getElementById('ce-new-email')?.value?.trim();
+    if (!otp || otp.length < 4) {
+        showToast('Please enter the OTP code from your email.');
+        return;
+    }
+    try {
+        await apiRequest('/user/change-email/verify', {
+            method: 'POST',
+            body: JSON.stringify({ otp, newEmail })
+        });
+        showToast('Email address updated successfully!');
+        closeChangeEmailModal();
+    } catch (e) {
+        showToast('Error: ' + (e.message || 'OTP verification failed.'));
+    }
+}
+
+// ------------------------------------------------------------
 // DYNAMIC SVG EARNINGS CHART PLOTTER
 // ------------------------------------------------------------
 function renderSVGChart(currentBalance) {

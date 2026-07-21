@@ -662,33 +662,46 @@ html, body,
 @media (max-width: 520px) { .smtp-provider-tools { align-items: stretch; flex-direction: column; } .smtp-provider-tools button { justify-content: center; width: 100%; } }
 
 /* ==========================================================================
-   Nova 8.0 — Mobile-First Ergonomic Navigation & UI/UX Micro-Interactions
+   Nova 8.0 — Premium Mobile-First Navigation, Modals & UI/UX
    ========================================================================== */
 
-/* Ergonomic Mobile Bottom Navigation Bar */
+/* ── Mobile Bottom Navigation ──────────────────────────────── */
 .mobile-bottom-nav {
     display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    /* Show bottom nav on tablet and mobile */
     .mobile-bottom-nav {
         display: flex !important;
         position: fixed !important;
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        height: 64px !important;
-        background: rgba(23, 33, 46, 0.96) !important;
-        backdrop-filter: blur(20px) saturate(140%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
-        border-top: 1px solid rgba(188, 204, 224, 0.18) !important;
+        height: 62px !important;
+        background: rgba(17, 24, 36, 0.97) !important;
+        backdrop-filter: blur(22px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+        border-top: 1px solid rgba(173, 190, 211, 0.15) !important;
         z-index: 9990 !important;
-        align-items: center !important;
+        align-items: stretch !important;
         justify-content: space-around !important;
         padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.38) !important;
+        box-shadow: 0 -6px 28px rgba(0, 0, 0, 0.45), 0 -1px 0 rgba(255,255,255,0.04) inset !important;
     }
 
+    /* Extra padding so content clears bottom nav */
+    .dashboard-main-content {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    .dashboard-footer {
+        margin-bottom: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    /* Nav items */
     .mobile-nav-item {
         display: flex !important;
         flex-direction: column !important;
@@ -696,49 +709,72 @@ html, body,
         justify-content: center !important;
         flex: 1 !important;
         height: 100% !important;
-        color: #8fa0b8 !important;
+        color: #7a8fa8 !important;
         text-decoration: none !important;
         background: none !important;
         border: none !important;
-        padding: 5px 0 !important;
-        gap: 3px !important;
+        padding: 6px 2px 4px !important;
+        gap: 2px !important;
         font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-        font-size: 0.68rem !important;
+        font-size: 0.62rem !important;
         font-weight: 600 !important;
+        letter-spacing: 0.02em !important;
         cursor: pointer !important;
-        transition: color 0.18s ease, transform 0.15s ease !important;
+        transition: color 0.2s ease, transform 0.15s ease !important;
         -webkit-tap-highlight-color: transparent !important;
+        position: relative !important;
+        outline: none !important;
     }
 
     .mobile-nav-item .material-symbols-outlined {
-        font-size: 1.35rem !important;
-        transition: transform 0.18s ease, color 0.18s ease !important;
+        font-size: 1.4rem !important;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease !important;
+        line-height: 1 !important;
     }
 
     .mobile-nav-item:active {
-        transform: scale(0.92) !important;
+        transform: scale(0.88) !important;
     }
 
+    /* Active state — gold accent */
     .mobile-nav-item.active {
         color: #d6a85f !important;
     }
-
     .mobile-nav-item.active .material-symbols-outlined {
         color: #d6a85f !important;
-        transform: translateY(-2px) !important;
+        transform: translateY(-3px) scale(1.08) !important;
     }
 
-    /* Padding adjustments for mobile main content & footer so bottom nav doesn't cover content */
-    .dashboard-main-content {
-        padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    /* Active dot indicator below icon */
+    .mobile-nav-item.active::after {
+        content: '' !important;
+        position: absolute !important;
+        bottom: 5px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 4px !important;
+        height: 4px !important;
+        border-radius: 50% !important;
+        background: #d6a85f !important;
+        box-shadow: 0 0 6px rgba(214, 168, 95, 0.7) !important;
     }
 
-    .dashboard-footer {
-        margin-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    /* Active background glow pill */
+    .mobile-nav-item.active::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 6px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 44px !important;
+        height: 32px !important;
+        border-radius: 10px !important;
+        background: rgba(214, 168, 95, 0.1) !important;
+        z-index: -1 !important;
     }
 }
 
-/* Touch Target Optimization & Input Focus Auto-Zoom Prevention */
+/* ── Touch Targets & iOS Auto-Zoom Fix ─────────────────────── */
 @media (max-width: 768px) {
     input[type="text"],
     input[type="number"],
@@ -749,49 +785,154 @@ html, body,
     select,
     textarea {
         font-size: 16px !important;
-        min-height: 44px !important;
+        min-height: 48px !important;
     }
 
-    button, .form-btn-db, .statement-download-btn, .dashboard-refresh-btn, .referral-share-btn {
+    button,
+    .form-btn-db,
+    .statement-download-btn,
+    .dashboard-refresh-btn,
+    .referral-share-btn {
         min-height: 44px !important;
         touch-action: manipulation !important;
     }
 
-    /* Mobile Bottom-Sheet Modal Enhancement */
-    .modal-overlay {
-        display: flex !important;
+    /* Referral link copy button full-width on tiny screens */
+    #panel-referrals .deposit-step-box [style*="display: flex"] {
+        flex-direction: column !important;
+    }
+    #panel-referrals #copy-ref-btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Withdraw row stack on mobile */
+    .withdraw-action-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .withdraw-action-row .form-btn-db {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+/* ── Mobile Bottom-Sheet Modals ────────────────────────────── */
+/* The modal-overlay divs use inline style="display:none" so we
+   must respect that with the fallback and only apply sheet layout
+   when they are actually open (display:flex or display:block) */
+@media (max-width: 768px) {
+    .modal-overlay:not([hidden]):not([style*="display: none"]) {
         align-items: flex-end !important;
         justify-content: center !important;
         padding: 0 !important;
     }
 
-    .modal-overlay[style*="display: none"],
     .modal-overlay[hidden] {
         display: none !important;
     }
 
-    .modal-content-box, .modal-content {
+    /* Bottom-sheet style for modal content when overlay is open */
+    .modal-overlay:not([hidden]):not([style*="display: none"]) .modal-content-box,
+    .modal-overlay:not([hidden]):not([style*="display: none"]) .modal-content {
         width: 100% !important;
         max-width: 100vw !important;
-        max-height: 88dvh !important;
-        border-radius: 22px 22px 0 0 !important;
+        max-height: 90dvh !important;
+        border-radius: 24px 24px 0 0 !important;
         margin: 0 !important;
-        padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
-        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.6) !important;
-        animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        padding: 1.5rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        box-shadow: 0 -14px 50px rgba(0, 0, 0, 0.65) !important;
+        animation: novaModalUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+        overflow-y: auto !important;
     }
 
-    @keyframes modalSlideUp {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
+    @keyframes novaModalUp {
+        from { transform: translateY(100%); opacity: 0.6; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* Drag handle visual hint on bottom sheets */
+    .modal-overlay:not([hidden]):not([style*="display: none"]) .modal-content-box::before,
+    .modal-overlay:not([hidden]):not([style*="display: none"]) .modal-content::before {
+        content: '' !important;
+        display: block !important;
+        width: 36px !important;
+        height: 4px !important;
+        border-radius: 99px !important;
+        background: rgba(173, 190, 211, 0.3) !important;
+        margin: 0 auto 1rem !important;
+    }
+
+    /* Modal footer buttons full-width on mobile */
+    .modal-footer {
+        flex-direction: column-reverse !important;
+        gap: 0.6rem !important;
+    }
+    .modal-footer button,
+    .modal-footer .modal-cancel-btn,
+    .modal-footer .modal-submit-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        min-height: 48px !important;
     }
 }
 
-/* Tablet & Desktop Grid Harmony */
-@media (min-width: 769px) and (max-width: 1100px) {
-    .dashboard-metrics-row,
-    .balance-stats-grid {
+/* ── Tablet & Desktop Grid Harmony ─────────────────────────── */
+@media (min-width: 901px) and (max-width: 1100px) {
+    .dashboard-metrics-row {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
+/* ── Panel Transitions ─────────────────────────────────────── */
+@media (max-width: 900px) {
+    .dashboard-panel-view.active {
+        animation: novaPanelFadeIn 0.22s ease both;
+    }
+    @keyframes novaPanelFadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: none; }
+    }
+}
+
+/* ── Referral Copy Box Mobile ──────────────────────────────── */
+@media (max-width: 500px) {
+    #referral-link-input {
+        font-size: 0.75rem !important;
+    }
+}
+
+/* ── Active Investments Card Mobile Table ──────────────────── */
+@media (max-width: 700px) {
+    .active-investments-table-wrap { overflow: visible !important; border: 0 !important; background: transparent !important; }
+    .active-investments-table-wrap .deposits-table-list { display: block; width: 100%; min-width: 0 !important; }
+    .active-investments-table-wrap thead { display: none; }
+    .active-investments-table-wrap tbody { display: grid; gap: 0.7rem; width: 100%; }
+    .active-investments-table-wrap tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem 0.9rem;
+        width: 100%;
+        padding: 0.9rem;
+        background: rgba(13, 22, 38, 0.72);
+        border: 1px solid rgba(173, 190, 211, 0.15) !important;
+        border-radius: 13px;
+    }
+    .active-investments-table-wrap td {
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        border: 0 !important;
+        font-size: 0.82rem !important;
+        gap: 0.18rem;
+    }
+    .active-investments-table-wrap td::before {
+        content: attr(data-label);
+        color: #6f7e94;
+        font: 650 0.6rem/1.2 'Inter', sans-serif;
+        letter-spacing: 0.045em;
+        text-transform: uppercase;
+    }
+    .active-investments-table-wrap td:last-child { grid-column: 1 / -1; }
+}
+/* end Nova 8.0 */
