@@ -793,25 +793,35 @@ function renderDepositsTable(deposits) {
 
 function renderAllTransactionsTable(transactions) {
     const tbody = document.getElementById('all-transactions-table-body');
+    const tableWrap = document.querySelector('.transactions-table-wrap');
+    const emptyState = document.getElementById('transactions-empty-state');
     if (!tbody) return;
 
-    const filtered = transactions.filter(tx => ['Deposit', 'Withdrawal', 'Investment'].includes(tx.type));
+    const filtered = Array.isArray(transactions) ? transactions : [];
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr class="transactions-empty-row"><td colspan="5"><span class="material-symbols-outlined">receipt_long</span><strong>No transactions yet</strong><small>Your deposits, investments and withdrawals will appear here.</small></td></tr>`;
+        tbody.innerHTML = '';
+        if (tableWrap) tableWrap.hidden = true;
+        if (emptyState) emptyState.hidden = false;
         return;
     }
+
+    if (tableWrap) tableWrap.hidden = false;
+    if (emptyState) emptyState.hidden = true;
 
     tbody.innerHTML = filtered.map(tx => {
         let typeColor = "#3b82f6";
         if (tx.type === "Investment") typeColor = "#a855f7";
         if (tx.type === "Withdrawal") typeColor = "#ef4444";
+        if (/commission|referral|profit|earning/i.test(tx.type || '')) typeColor = "#22c55e";
 
         const numericAmount = Math.abs(Number(tx.amount) || 0);
         const isDebit = tx.type === 'Withdrawal' || tx.type === 'Investment';
         const amountText = `${isDebit ? '-' : ''}$${numericAmount.toFixed(2)}`;
         const amountColor = isDebit ? '#f47d8b' : '#f8fafc';
         const reference = String(tx.ref || 'Pending');
+        const status = String(tx.status || 'Pending');
+        const statusClass = status.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
 
         return `
             <tr>
@@ -825,7 +835,7 @@ function renderAllTransactionsTable(transactions) {
                     </button>
                 </td>
                 <td data-label="Status">
-                    <span class="status-badge-lbl ${tx.status.toLowerCase()}">${tx.status}</span>
+                    <span class="status-badge-lbl ${statusClass}">${status}</span>
                 </td>
             </tr>
         `;

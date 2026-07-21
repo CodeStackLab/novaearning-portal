@@ -248,17 +248,23 @@ html, body {
     .profile-dropdown-menu { max-width: calc(100vw - 1.5rem); }
 }
 
-/* Transactions: native mobile cards instead of a clipped horizontal table */
-.transactions-empty-row td { padding: 2.5rem 1rem !important; text-align: center !important; color: #76859a !important; }
-.transactions-empty-row td > span, .transactions-empty-row td > strong, .transactions-empty-row td > small { display: block; margin-inline: auto; }
-.transactions-empty-row td > span { margin-bottom: .6rem; color: #5279bd; font-size: 2rem; }
-.transactions-empty-row td > strong { color: #dce6f5; font-size: .95rem; }
-.transactions-empty-row td > small { max-width: 320px; margin-top: .35rem; font-size: .74rem; line-height: 1.45; }
+/* Transactions: independent empty state and native mobile cards */
+.transactions-table-wrap[hidden], .transactions-empty-state[hidden] { display: none !important; }
+.transactions-empty-state { min-height: 170px; padding: 1.5rem; display: grid; place-content: center; justify-items: center; text-align: center; color: #76859a; border: 1px dashed rgba(126,156,205,.18); border-radius: 14px; background: rgba(5,12,24,.42); }
+.transactions-empty-state > span { margin-bottom: .65rem; color: #5279bd; font-size: 2.1rem; }
+.transactions-empty-state > strong { color: #dce6f5; font-size: 1rem; }
+.transactions-empty-state > small { max-width: 340px; margin-top: .4rem; font-size: .76rem; line-height: 1.5; }
+.table-scroll-hint { display: none !important; }
 
 @media (max-width: 700px) {
     .mobile-header-logo { display: block !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%,-50%) !important; z-index: 2; }
     .mobile-header-logo img { display: block; width: 78px !important; height: auto; }
     .dashboard-header > .header-left-toggle, .dashboard-header > .header-right-user { position: relative; z-index: 3; }
+    .reference-panel-heading { align-items: flex-start !important; gap: .8rem !important; }
+    .reference-panel-heading > div { min-width: 0; }
+    .reference-panel-heading .panel-title { font-size: clamp(2rem, 10vw, 2.65rem) !important; line-height: 1.05; }
+    .reference-panel-heading .panel-desc { max-width: 100%; font-size: .84rem !important; line-height: 1.55; }
+    .statement-download-btn { align-self: flex-end; min-height: 44px; padding: .65rem .9rem !important; white-space: nowrap; }
     .transactions-card { padding: .8rem !important; border-radius: 16px !important; }
     .transactions-table-wrap { overflow: visible !important; border: 0 !important; background: transparent !important; }
     .transactions-table-wrap .deposits-table-list { display: block; width: 100%; min-width: 0 !important; }
@@ -274,10 +280,7 @@ html, body {
     .transactions-table-wrap td:nth-child(2) { padding-right: 5rem !important; }
     .transactions-table-wrap .deposit-tx-hash { white-space: normal !important; width: 100%; }
     .transactions-table-wrap .deposit-tx-hash > span { max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .transactions-table-wrap .transactions-empty-row { display: block; padding: 0; }
-    .transactions-table-wrap .transactions-empty-row td { display: block; width: 100%; }
-    .transactions-table-wrap .transactions-empty-row td::before { content: none; }
-    .table-scroll-hint { display: none !important; }
+    .transactions-empty-state { min-height: 150px; padding: 1.25rem .9rem; }
 }
 
 @media (max-width: 380px) {
