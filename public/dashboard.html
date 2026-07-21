@@ -748,6 +748,30 @@
         </div>
     </aside>
 
+    <!-- Ergonomic Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav" id="user-mobile-bottom-nav" aria-label="Mobile Navigation">
+        <a href="#dashboard" class="mobile-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+            <span class="material-symbols-outlined">person</span>
+            <span>Profile</span>
+        </a>
+        <a href="#invest" class="mobile-nav-item" data-tab="invest" onclick="switchTab('invest')">
+            <span class="material-symbols-outlined">show_chart</span>
+            <span>Invest</span>
+        </a>
+        <a href="#deposit" class="mobile-nav-item" data-tab="deposit" onclick="switchTab('deposit')">
+            <span class="material-symbols-outlined">download</span>
+            <span>Deposit</span>
+        </a>
+        <a href="#transactions" class="mobile-nav-item" data-tab="transactions" onclick="switchTab('transactions')">
+            <span class="material-symbols-outlined">sync_alt</span>
+            <span>History</span>
+        </a>
+        <button type="button" class="mobile-nav-item mobile-nav-menu-btn" id="mobile-drawer-trigger" aria-label="Toggle Navigation Drawer">
+            <span class="material-symbols-outlined">menu</span>
+            <span>Menu</span>
+        </button>
+    </nav>
+
     <!-- Scripts -->
     <script src="app.js?v=3.2"></script>
 </body>

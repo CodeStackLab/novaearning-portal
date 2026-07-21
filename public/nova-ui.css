@@ -660,3 +660,138 @@ html, body,
 .smtp-provider-tools button { flex: 0 0 auto; min-height: 40px; padding: .55rem .75rem; display: inline-flex; align-items: center; gap: .35rem; color: #f4e8d5; background: rgba(214,168,95,.14); border: 1px solid rgba(214,168,95,.25); border-radius: 9px; font-weight: 700; cursor: pointer; }
 .smtp-provider-tools button .material-symbols-outlined { font-size: 1rem; }
 @media (max-width: 520px) { .smtp-provider-tools { align-items: stretch; flex-direction: column; } .smtp-provider-tools button { justify-content: center; width: 100%; } }
+
+/* ==========================================================================
+   Nova 8.0 — Mobile-First Ergonomic Navigation & UI/UX Micro-Interactions
+   ========================================================================== */
+
+/* Ergonomic Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 64px !important;
+        background: rgba(23, 33, 46, 0.96) !important;
+        backdrop-filter: blur(20px) saturate(140%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+        border-top: 1px solid rgba(188, 204, 224, 0.18) !important;
+        z-index: 9990 !important;
+        align-items: center !important;
+        justify-content: space-around !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.38) !important;
+    }
+
+    .mobile-nav-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 1 !important;
+        height: 100% !important;
+        color: #8fa0b8 !important;
+        text-decoration: none !important;
+        background: none !important;
+        border: none !important;
+        padding: 5px 0 !important;
+        gap: 3px !important;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: color 0.18s ease, transform 0.15s ease !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    .mobile-nav-item .material-symbols-outlined {
+        font-size: 1.35rem !important;
+        transition: transform 0.18s ease, color 0.18s ease !important;
+    }
+
+    .mobile-nav-item:active {
+        transform: scale(0.92) !important;
+    }
+
+    .mobile-nav-item.active {
+        color: #d6a85f !important;
+    }
+
+    .mobile-nav-item.active .material-symbols-outlined {
+        color: #d6a85f !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Padding adjustments for mobile main content & footer so bottom nav doesn't cover content */
+    .dashboard-main-content {
+        padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .dashboard-footer {
+        margin-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+}
+
+/* Touch Target Optimization & Input Focus Auto-Zoom Prevention */
+@media (max-width: 768px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        min-height: 44px !important;
+    }
+
+    button, .form-btn-db, .statement-download-btn, .dashboard-refresh-btn, .referral-share-btn {
+        min-height: 44px !important;
+        touch-action: manipulation !important;
+    }
+
+    /* Mobile Bottom-Sheet Modal Enhancement */
+    .modal-overlay {
+        display: flex !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+
+    .modal-overlay[style*="display: none"],
+    .modal-overlay[hidden] {
+        display: none !important;
+    }
+
+    .modal-content-box, .modal-content {
+        width: 100% !important;
+        max-width: 100vw !important;
+        max-height: 88dvh !important;
+        border-radius: 22px 22px 0 0 !important;
+        margin: 0 !important;
+        padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.6) !important;
+        animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    @keyframes modalSlideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+}
+
+/* Tablet & Desktop Grid Harmony */
+@media (min-width: 769px) and (max-width: 1100px) {
+    .dashboard-metrics-row,
+    .balance-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+

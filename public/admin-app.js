@@ -69,8 +69,19 @@ function switchTab(tabId) {
             }
         });
 
+        // Update mobile bottom navigation links
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item[data-tab]');
+        mobileNavItems.forEach(item => {
+            if (item.getAttribute('data-tab') === tabId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
         // Set hash link URL quietly
         window.history.pushState(null, null, `#${tabId}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         fetchActiveTabDetails(tabId);
     }
 }
@@ -378,6 +389,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
 
         menuToggleBtn.addEventListener('click', toggleSidebar);
+        const adminMobileDrawerTrigger = document.getElementById('admin-mobile-drawer-trigger');
+        if (adminMobileDrawerTrigger) {
+            adminMobileDrawerTrigger.addEventListener('click', toggleSidebar);
+        }
         overlay.addEventListener('click', closeSidebar);
 
         // Close sidebar when a navigation item is clicked

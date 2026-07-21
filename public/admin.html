@@ -831,6 +831,30 @@
         </div>
     </div>
 
+    <!-- Ergonomic Mobile Bottom Navigation for Admin -->
+    <nav class="mobile-bottom-nav" id="admin-mobile-bottom-nav" aria-label="Admin Mobile Navigation">
+        <a href="#overview" class="mobile-nav-item active" data-tab="overview" onclick="switchTab('overview')">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>Overview</span>
+        </a>
+        <a href="#users" class="mobile-nav-item" data-tab="users" onclick="switchTab('users')">
+            <span class="material-symbols-outlined">group</span>
+            <span>Users</span>
+        </a>
+        <a href="#deposits" class="mobile-nav-item" data-tab="deposits" onclick="switchTab('deposits')">
+            <span class="material-symbols-outlined">download</span>
+            <span>Deposits</span>
+        </a>
+        <a href="#withdrawals" class="mobile-nav-item" data-tab="withdrawals" onclick="switchTab('withdrawals')">
+            <span class="material-symbols-outlined">upload</span>
+            <span>Withdraw</span>
+        </a>
+        <button type="button" class="mobile-nav-item mobile-nav-menu-btn" id="admin-mobile-drawer-trigger" aria-label="Toggle Admin Navigation Drawer">
+            <span class="material-symbols-outlined">menu</span>
+            <span>Menu</span>
+        </button>
+    </nav>
+
     <!-- Admin Panel Javascript -->
     <script src="admin-app.js?v=3.3"></script>
 </body>

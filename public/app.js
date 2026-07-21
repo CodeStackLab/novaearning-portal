@@ -130,11 +130,23 @@ function switchTab(tabId) {
                 link.classList.remove('active');
             }
         });
+
+        // Update mobile bottom navigation links
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item[data-tab]');
+        mobileNavItems.forEach(item => {
+            if (item.getAttribute('data-tab') === tabId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
         if (tabId === 'notifications') { loadUserNotificationSettings(); loadNotificationCenter(); }
         if (tabId === 'security') loadLoginActivity();
 
         // Set hash link URL quietly
         window.history.pushState(null, null, `#${tabId}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // Initialize dynamic panels on first switch
         if (tabId === 'invest' && typeof filterDashboardPlans === 'function') {
@@ -461,6 +473,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
 
         menuToggleBtn.addEventListener('click', toggleSidebar);
+        const mobileDrawerTrigger = document.getElementById('mobile-drawer-trigger');
+        if (mobileDrawerTrigger) {
+            mobileDrawerTrigger.addEventListener('click', toggleSidebar);
+        }
         overlay.addEventListener('click', closeSidebar);
 
         // Close sidebar when a navigation item is clicked
