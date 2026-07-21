@@ -256,6 +256,23 @@ html, body {
 .transactions-empty-state > small { max-width: 340px; margin-top: .4rem; font-size: .76rem; line-height: 1.5; }
 .table-scroll-hint { display: none !important; }
 
+/* User-dashboard-only PWA install prompt */
+.dashboard-pwa-banner { display: none; }
+@media (max-width: 768px) {
+    .dashboard-pwa-banner.show { position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom)); z-index: 2500; width: calc(100% - 1.5rem); max-width: 390px; padding: .85rem; display: grid; grid-template-columns: 44px minmax(0,1fr); gap: .7rem; color: #eaf1fb; background: linear-gradient(145deg,rgba(14,25,44,.98),rgba(8,15,29,.99)); border: 1px solid rgba(83,132,224,.38); border-radius: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.56); transform: translateX(-50%); animation: dashboardPwaIn .35s ease both; }
+    .dashboard-pwa-icon { width: 44px; height: 44px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg,#3b82f6,#7c3aed); border-radius: 12px; }
+    .dashboard-pwa-icon .material-symbols-outlined { font-size: 1.35rem; }
+    .dashboard-pwa-copy { min-width: 0; align-self: center; }
+    .dashboard-pwa-copy strong, .dashboard-pwa-copy small { display: block; }
+    .dashboard-pwa-copy strong { font-size: .86rem; }
+    .dashboard-pwa-copy small { margin-top: .15rem; color: #8fa0b8; font-size: .68rem; line-height: 1.35; }
+    .dashboard-pwa-actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .dashboard-pwa-actions button { min-height: 42px; border-radius: 9px; font: 700 .78rem/1 'Inter',sans-serif; cursor: pointer; }
+    #dashboard-pwa-install { color: #fff; background: linear-gradient(135deg,#3b82f6,#7c3aed); border: 0; }
+    #dashboard-pwa-later { color: #9fadc0; background: rgba(255,255,255,.055); border: 1px solid rgba(126,156,205,.15); }
+    @keyframes dashboardPwaIn { from { opacity: 0; transform: translate(-50%,24px); } to { opacity: 1; transform: translate(-50%,0); } }
+}
+
 @media (max-width: 700px) {
     .mobile-header-logo { display: block !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%,-50%) !important; z-index: 2; }
     .mobile-header-logo img { display: block; width: 78px !important; height: auto; }

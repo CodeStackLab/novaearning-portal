@@ -1636,3 +1636,78 @@ function renderSVGChart(currentBalance) {
 function startLiveTransactionsFeed() {
     // Removed simulated toast logic
 }
+
+// Mobile-only PWA prompt. It intentionally lives on the authenticated user dashboard.
+(function initDashboardPwaPrompt() {
+    const banner = document.getElementById('dashboard-pwa-banner');
+    const installButton = document.getElementById('dashboard-pwa-install');
+    const laterButton = document.getElementById('dashboard-pwa-later');
+    const help = document.getElementById('dashboard-pwa-help');
+    if (!banner || !installButton || !laterButton) return;
+
+    const snoozeKey = 'nova_pwa_dismissed';
+    const installedKey = 'nova_pwa_installed';
+    const snoozeMs = 24 * 60 * 60 * 1000;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches && /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    let deferredPrompt = null;
+    let showTimer = null;
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+    }
+
+    function hideBanner() {
+        banner.classList.remove('show');
+        banner.hidden = true;
+    }
+
+    function rememberInstalled() {
+        localStorage.setItem(installedKey, '1');
+        if (showTimer) clearTimeout(showTimer);
+        hideBanner();
+    }
+
+    function showBanner() {
+        if (!isMobile || isStandalone() || localStorage.getItem(installedKey) === '1') return;
+        const dismissedAt = Number(localStorage.getItem(snoozeKey) || 0);
+        if (dismissedAt && Date.now() - dismissedAt < snoozeMs) return;
+        if (!deferredPrompt && !isIos) return;
+        if (isIos && help) help.textContent = 'Tap Install, then use Share → Add to Home Screen.';
+        banner.hidden = false;
+        banner.classList.add('show');
+    }
+
+    if (!isMobile) return;
+    if (isStandalone()) {
+        rememberInstalled();
+        return;
+    }
+
+    window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        deferredPrompt = event;
+    });
+    window.addEventListener('appinstalled', rememberInstalled);
+
+    installButton.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (choice.outcome === 'accepted') rememberInstalled();
+            else localStorage.setItem(snoozeKey, String(Date.now()));
+            hideBanner();
+            return;
+        }
+        if (isIos && help) help.textContent = 'In Safari tap Share, then “Add to Home Screen”.';
+    });
+
+    laterButton.addEventListener('click', () => {
+        localStorage.setItem(snoozeKey, String(Date.now()));
+        hideBanner();
+    });
+
+    showTimer = window.setTimeout(showBanner, 30000 + Math.random() * 10000);
+})();

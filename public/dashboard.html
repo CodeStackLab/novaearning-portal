@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard - Nova Portal</title>
     <meta name="description" content="Manage your balance, investments, daily compounding returns, deposits, and withdrawal requests on Nova Portal user dashboard.">
+    <meta name="theme-color" content="#07101f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
     <link rel="canonical" href="https://novaearning.vjgp.online/dashboard">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +19,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="/style.css?v=5.3">
-    <link rel="stylesheet" href="/nova-ui.css?v=6.2">
+    <link rel="stylesheet" href="/nova-ui.css?v=6.3">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -724,7 +728,19 @@
         </div>
     </div>
 
+    <aside id="dashboard-pwa-banner" class="dashboard-pwa-banner" aria-live="polite" aria-label="Install Nova app" hidden>
+        <div class="dashboard-pwa-icon"><span class="material-symbols-outlined" aria-hidden="true">install_mobile</span></div>
+        <div class="dashboard-pwa-copy">
+            <strong>Add Nova to Home Screen</strong>
+            <small id="dashboard-pwa-help">Access your portfolio instantly — like an app.</small>
+        </div>
+        <div class="dashboard-pwa-actions">
+            <button type="button" id="dashboard-pwa-install">Install</button>
+            <button type="button" id="dashboard-pwa-later">Later</button>
+        </div>
+    </aside>
+
     <!-- Scripts -->
-    <script src="app.js?v=3.0"></script>
+    <script src="app.js?v=3.1"></script>
 </body>
 </html>
