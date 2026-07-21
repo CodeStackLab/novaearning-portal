@@ -1345,3 +1345,63 @@ async function saveTronAddress() {
         showToast(err.message);
     }
 }
+
+// ==========================================
+// ADMIN CHANGE EMAIL LOGIC
+// ==========================================
+
+function closeAdminChangeEmailModal() {
+    const modal = document.getElementById('admin-change-email-modal');
+    if (!modal) return;
+    modal.setAttribute('hidden', '');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.style.display = '';
+}
+
+async function adminSendChangeEmailOtp() {
+    const currentPassword = document.getElementById('admin-ce-current-password')?.value?.trim();
+    const newEmail = document.getElementById('admin-ce-new-email')?.value?.trim();
+    if (!currentPassword || !newEmail) {
+        showToast('Please fill in both fields.');
+        return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+        showToast('Please enter a valid email address.');
+        return;
+    }
+    try {
+        await apiRequest('/admin/settings/change-email-request', {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword, newEmail })
+        });
+        // Move to step 2
+        const s1 = document.getElementById('admin-email-step-1');
+        const s2 = document.getElementById('admin-email-step-2');
+        if (s1) s1.style.display = 'none';
+        if (s2) s2.style.display = 'block';
+        showToast('OTP sent to your new email address!');
+    } catch (e) {
+        showToast('Error: ' + (e.message || 'Could not send OTP.'));
+    }
+}
+
+async function adminVerifyChangeEmailOtp() {
+    const otp = document.getElementById('admin-ce-otp-code')?.value?.trim();
+    const newEmail = document.getElementById('admin-ce-new-email')?.value?.trim();
+    if (!otp || otp.length < 4) {
+        showToast('Please enter the OTP code from your email.');
+        return;
+    }
+    try {
+        await apiRequest('/admin/settings/change-email-verify', {
+            method: 'POST',
+            body: JSON.stringify({ otp, newEmail })
+        });
+        showToast('Email successfully changed! Reloading...');
+        closeAdminChangeEmailModal();
+        setTimeout(() => window.location.reload(), 1500);
+    } catch (e) {
+        showToast('Error: ' + (e.message || 'Invalid OTP.'));
+    }
+}
