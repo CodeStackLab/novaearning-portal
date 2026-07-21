@@ -403,3 +403,159 @@ img, svg, video, canvas { max-width:100%; }
     .panel-title { overflow-wrap:anywhere; }
     .statement-download-btn { max-width:110px; }
 }
+
+/* Nova 7.0 — calm, layered workspace inspired by modern editorial SaaS UI */
+:root {
+    --nova-canvas: #121923;
+    --nova-canvas-soft: #17212e;
+    --nova-surface: #1c2735;
+    --nova-surface-raised: #222f3f;
+    --nova-surface-soft: #263547;
+    --nova-border: rgba(173, 190, 211, .14);
+    --nova-border-highlight: rgba(188, 204, 224, .24);
+    --nova-copy: #f3f0e9;
+    --nova-muted: #a7b0bd;
+    --nova-gold: #d6a85f;
+    --nova-blue: #6d9ce8;
+    --nova-green: #51bd91;
+}
+
+html, body,
+.dashboard-body, .admin-dashboard-body {
+    color: var(--nova-copy) !important;
+    background:
+        radial-gradient(circle at 82% 4%, rgba(80,116,160,.18), transparent 30rem),
+        radial-gradient(circle at 18% 90%, rgba(174,126,76,.09), transparent 32rem),
+        linear-gradient(145deg, #151e29 0%, #111923 52%, #17212d 100%) fixed !important;
+}
+
+.dashboard-wrapper {
+    background: transparent !important;
+}
+
+.dashboard-sidebar {
+    background: linear-gradient(180deg, rgba(29,40,54,.98), rgba(22,31,43,.99)) !important;
+    border-right: 1px solid var(--nova-border) !important;
+    box-shadow: 12px 0 40px rgba(4,10,18,.18) !important;
+}
+
+.sidebar-product-label { color: #d8cfbf !important; letter-spacing: .075em !important; }
+.sidebar-item-link { color: #aab5c4 !important; border: 1px solid transparent; transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease; }
+.sidebar-item-link:hover { color: #eef1f5 !important; background: rgba(255,255,255,.055) !important; border-color: rgba(255,255,255,.055); transform: translateX(2px); }
+.sidebar-item-link.active { color: #f5ead8 !important; background: linear-gradient(90deg, rgba(196,145,75,.2), rgba(109,156,232,.11)) !important; border-color: rgba(212,169,101,.18); border-left: 3px solid #d6a85f !important; box-shadow: inset 0 1px rgba(255,255,255,.035); }
+.sidebar-item-link.active .sidebar-icon { color: #e0b56d !important; }
+.sidebar-system-card { background: rgba(10,17,26,.28) !important; border-color: var(--nova-border) !important; }
+
+.dashboard-header {
+    background: rgba(28,39,53,.82) !important;
+    border-color: var(--nova-border) !important;
+    box-shadow: 0 8px 28px rgba(4,10,18,.12) !important;
+    backdrop-filter: blur(20px) saturate(120%) !important;
+}
+.dashboard-header-context strong { color: #f2eee7 !important; }
+.header-notification-btn, .user-card-info {
+    background: rgba(255,255,255,.035) !important;
+    border-color: var(--nova-border-highlight) !important;
+}
+.user-avatar-circle { background: linear-gradient(145deg,#779fdf,#4f78bb) !important; box-shadow: 0 5px 16px rgba(49,93,164,.25); }
+.profile-dropdown-menu { background: #263445 !important; border-color: var(--nova-border-highlight) !important; border-radius: 13px !important; box-shadow: 0 20px 45px rgba(3,8,14,.38) !important; }
+
+.dashboard-main-content { width: 100%; }
+.panel-title, .profile-welcome-title { color: #f4f1eb !important; letter-spacing: -.035em !important; }
+.panel-desc, .profile-account-line { color: #aab4c1 !important; }
+
+.metric-card-box,
+.deposit-step-box,
+.recent-deposits-section,
+.smtp-settings-card,
+.notification-inbox-card,
+.referral-share-card,
+.security-summary-card,
+.admin-support-layout,
+.chat-container {
+    background: linear-gradient(145deg, rgba(35,48,64,.94), rgba(27,38,52,.96)) !important;
+    border: 1px solid var(--nova-border) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 16px 38px rgba(4,10,18,.15), inset 0 1px rgba(255,255,255,.035) !important;
+}
+
+.metric-card-box { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.metric-card-box:hover { transform: translateY(-2px); border-color: var(--nova-border-highlight) !important; box-shadow: 0 20px 44px rgba(4,10,18,.22) !important; }
+.metric-card-label { color: #9faaba !important; }
+.metric-card-value-txt { color: #f5f1e9 !important; }
+.metric-card-icon-box { border: 1px solid rgba(255,255,255,.06); border-radius: 12px !important; }
+
+.profile-balance-card {
+    background:
+        radial-gradient(circle at 92% 5%, rgba(109,156,232,.18), transparent 14rem),
+        linear-gradient(145deg, #29394b, #1d2a39) !important;
+    border: 1px solid rgba(180,198,220,.2) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 22px 54px rgba(4,10,18,.24), inset 0 1px rgba(255,255,255,.05) !important;
+}
+.balance-eyebrow, .stat-label, .balance-secondary-grid span, .referral-card-label { color: #acb6c4 !important; }
+.balance-value { color: #faf6ee !important; text-shadow: 0 2px 16px rgba(255,255,255,.06); }
+.balance-wallet-icon { background: rgba(109,156,232,.15) !important; border-color: rgba(127,169,234,.24) !important; }
+.balance-stats-grid, .balance-secondary-grid { border-color: var(--nova-border) !important; }
+.dashboard-refresh-btn, .referral-share-btn, .statement-download-btn, .section-link-btn {
+    color: #edf3fc !important;
+    background: rgba(96,137,201,.18) !important;
+    border-color: rgba(119,159,220,.3) !important;
+    border-radius: 11px !important;
+}
+.dashboard-refresh-btn:hover, .referral-share-btn:hover, .statement-download-btn:hover { background: rgba(104,149,218,.28) !important; }
+
+.table-responsive-box { background: rgba(12,20,30,.22) !important; border-color: var(--nova-border) !important; border-radius: 14px !important; }
+.deposits-table-list th { color: #aeb7c3 !important; background: rgba(255,255,255,.035) !important; border-color: var(--nova-border) !important; }
+.deposits-table-list td { color: #e6e9ed !important; border-color: rgba(173,190,211,.1) !important; }
+.deposits-table-list tbody tr:hover { background: rgba(255,255,255,.025) !important; }
+
+.form-input-db, .modal-text-input, .chat-input,
+.admin-dashboard-body input, .admin-dashboard-body select, .admin-dashboard-body textarea,
+.user-dashboard-body input, .user-dashboard-body select, .user-dashboard-body textarea {
+    color: #eef1f5 !important;
+    background: rgba(11,18,27,.34) !important;
+    border-color: rgba(173,190,211,.2) !important;
+    border-radius: 11px !important;
+}
+.form-input-db:focus, .modal-text-input:focus, .chat-input:focus,
+.admin-dashboard-body input:focus, .admin-dashboard-body select:focus, .admin-dashboard-body textarea:focus,
+.user-dashboard-body input:focus, .user-dashboard-body select:focus, .user-dashboard-body textarea:focus {
+    border-color: rgba(109,156,232,.62) !important;
+    box-shadow: 0 0 0 3px rgba(109,156,232,.13) !important;
+}
+.form-btn-db, .smtp-test-btn, .chat-send-btn {
+    border-radius: 11px !important;
+    box-shadow: 0 8px 22px rgba(30,75,145,.18);
+}
+.modal-overlay { background: rgba(8,13,20,.64) !important; backdrop-filter: blur(8px); }
+.modal-content-box, .modal-content { background: linear-gradient(145deg,#263445,#1c2837) !important; border-color: var(--nova-border-highlight) !important; box-shadow: 0 28px 70px rgba(3,8,14,.48) !important; }
+.dashboard-footer { color: #7f8d9f !important; background: rgba(24,34,47,.58) !important; border-color: var(--nova-border) !important; }
+
+@media (min-width: 901px) {
+    .dashboard-main-content { padding-top: 2rem !important; }
+    .dashboard-panel-view { animation: novaPanelIn .3s ease both; }
+    @keyframes novaPanelIn { from { opacity: .25; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+}
+
+@media (max-width: 900px) {
+    .dashboard-sidebar { box-shadow: 18px 0 55px rgba(2,7,12,.42) !important; }
+    .sidebar-overlay { background: rgba(8,13,20,.6) !important; backdrop-filter: blur(7px) !important; }
+}
+
+@media (max-width: 600px) {
+    html, body, .dashboard-body, .admin-dashboard-body {
+        background: linear-gradient(155deg,#17212d 0%,#111923 52%,#182330 100%) fixed !important;
+    }
+    .dashboard-header { background: rgba(27,38,52,.91) !important; }
+    .dashboard-main-content { padding: 1.1rem .8rem 2.25rem !important; }
+    .profile-welcome-title { font-size: clamp(1.42rem,7vw,1.75rem) !important; line-height: 1.15; }
+    .profile-balance-card { padding: 1.15rem !important; border-radius: 18px !important; }
+    .balance-value { font-size: clamp(2.25rem,13vw,3.15rem) !important; }
+    .balance-stats-grid { gap: .5rem !important; }
+    .balance-stat { min-width: 0; }
+    .stat-label { font-size: .67rem !important; }
+    .stat-value { font-size: .86rem !important; overflow-wrap: anywhere; }
+    .metric-card-box, .deposit-step-box, .recent-deposits-section, .smtp-settings-card, .notification-inbox-card, .referral-share-card { border-radius: 15px !important; box-shadow: 0 12px 28px rgba(4,10,18,.14) !important; }
+    .transactions-table-wrap tr, .recent-deposits-table-wrap tr { background: rgba(13,22,33,.34) !important; border-color: var(--nova-border) !important; }
+}
