@@ -53,56 +53,13 @@ function handleAuth($action, $subaction, $pdo, $body) {
 
     if ($action === 'register') {
         if ($subaction === 'send-otp') {
-            $email = strtolower(trim($body['email'] ?? ''));
-            $name = trim($body['name'] ?? 'User');
-
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                sendJson(['message' => 'A valid email is required'], 400);
-            }
-
-            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
-                sendJson(['message' => 'Email address is already registered. Please sign in.'], 400);
-            }
-
-            ensurePlatformFeatureTables($pdo);
-            $pdo->exec("DELETE FROM registration_otps WHERE expires_at < NOW()");
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM registration_otps WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)');
-            $stmt->execute([$email]);
-            if ((int)$stmt->fetchColumn() >= 5) {
-                sendJson(['message' => 'Too many OTP requests. Please wait 15 minutes.'], 429);
-            }
-
-            $otp = (string)random_int(100000, 999999);
-            $otpHash = password_hash($otp, PASSWORD_DEFAULT);
-
-            $stmt = $pdo->prepare('INSERT INTO registration_otps (email, otp_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))');
-            $stmt->execute([$email, $otpHash]);
-
-            $subject = "Your Registration Verification Code - Nova Portal";
-            $bodyHtml = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>" .
-                        "<h2 style='color: #0070f3;'>Nova Portal Registration Verification</h2>" .
-                        "<p>Hi <strong>" . htmlspecialchars($name) . "</strong>,</p>" .
-                        "<p>Thank you for signing up with Nova Portal! Use the 6-digit code below to complete your registration:</p>" .
-                        "<div style='background: #f0f7ff; padding: 15px; text-align: center; border-radius: 6px; margin: 20px 0;'>" .
-                        "<span style='color: #0070f3; letter-spacing: 6px; font-size: 32px; font-weight: bold;'>" . $otp . "</span>" .
-                        "</div>" .
-                        "<p>This code expires in 10 minutes. If you did not initiate this registration, please ignore this email.</p>" .
-                        "</div>";
-
-            if (!sendSmtpEmail($email, $name, $subject, $bodyHtml, $pdo)) {
-                sendJson(['message' => 'Unable to send verification OTP. Please check your email and try again.'], 503);
-            }
-
-            sendJson(['message' => 'Verification OTP sent to your email. It expires in 10 minutes.']);
+            sendJson(['message' => 'Registration email verification is no longer required. Create the account directly.'], 410);
         }
 
         $name = trim($body['name'] ?? '');
         $email = strtolower(trim($body['email'] ?? ''));
         $password = $body['password'] ?? '';
         $referralCode = trim($body['referralCode'] ?? '');
-        $otp = trim($body['otp'] ?? '');
 
         if (!$name || !$email || !$password) {
             sendJson(['message' => 'Name, email, and password are required'], 400);
@@ -112,31 +69,11 @@ function handleAuth($action, $subaction, $pdo, $body) {
             sendJson(['message' => 'Valid email address is required'], 400);
         }
 
-        if (!preg_match('/^\d{6}$/', $otp)) {
-            sendJson(['message' => '6-digit email verification OTP is required'], 400);
-        }
-
         $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
         $stmt->execute([$email]);
         if ($stmt->fetch()) {
             sendJson(['message' => 'Email address is already registered'], 400);
         }
-
-        ensurePlatformFeatureTables($pdo);
-        $stmt = $pdo->prepare('SELECT id, otp_hash, attempts FROM registration_otps WHERE email = ? AND expires_at >= NOW() ORDER BY id DESC LIMIT 1');
-        $stmt->execute([$email]);
-        $otpRecord = $stmt->fetch();
-
-        if (!$otpRecord || (int)$otpRecord['attempts'] >= 5 || !password_verify($otp, $otpRecord['otp_hash'])) {
-            if ($otpRecord) {
-                $stmt = $pdo->prepare('UPDATE registration_otps SET attempts = attempts + 1 WHERE id = ?');
-                $stmt->execute([$otpRecord['id']]);
-            }
-            sendJson(['message' => 'Invalid or expired 6-digit verification code.'], 400);
-        }
-
-        $stmt = $pdo->prepare('DELETE FROM registration_otps WHERE email = ?');
-        $stmt->execute([$email]);
 
         $referrerId = null;
         $startBalance = 0.00;
@@ -170,8 +107,8 @@ function handleAuth($action, $subaction, $pdo, $body) {
 
         notifyAdmins(
             $pdo,
-            'New verified user registered',
-            '<p>A new user completed email verification and registered successfully.</p><p><strong>Name:</strong> ' . htmlspecialchars($name) . '<br><strong>Email:</strong> ' . htmlspecialchars($email) . '<br><strong>User ID:</strong> #' . (int)$newUserId . '</p>',
+            'New user registered',
+            '<p>A new user registered successfully.</p><p><strong>Name:</strong> ' . htmlspecialchars($name) . '<br><strong>Email:</strong> ' . htmlspecialchars($email) . '<br><strong>User ID:</strong> #' . (int)$newUserId . '</p>',
             'account'
         );
 
@@ -180,7 +117,7 @@ function handleAuth($action, $subaction, $pdo, $body) {
         $welcomeSubject = "Welcome to Nova Portal!";
         $welcomeBody = "<h2>Welcome to Nova Portal!</h2>" .
                        "<p>Hi <strong>" . htmlspecialchars($name) . "</strong>,</p>" .
-                       "<p>Your email has been verified and your account is now active!</p>" .
+                       "<p>Your account is now active.</p>" .
                        "<p>Your Referral Code: <strong>" . htmlspecialchars($myReferralCode) . "</strong></p>" .
                        "<p>Log in to your dashboard to manage investments and track daily earnings.</p>";
         sendSmtpEmail($email, $name, $welcomeSubject, $welcomeBody, $pdo);

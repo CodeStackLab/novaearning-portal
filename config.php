@@ -14,9 +14,9 @@ define('JWT_SECRET', 'nova-super-secret-key-2026');
 // SMTP Configuration (IONOS Email)
 define('SMTP_HOST', 'smtp.ionos.com');
 define('SMTP_PORT', 587);
-define('SMTP_USER', 'contact@novaearning.com');
+define('SMTP_USER', 'admin@novaearning.com');
 define('SMTP_PASS', '');
-define('SITE_EMAIL', 'contact@novaearning.com');
+define('SITE_EMAIL', 'admin@novaearning.com');
 
 // Connect to Database using PDO
 try {
@@ -52,9 +52,9 @@ function decryptSmtpPassword($value) {
 function loadSmtpConfiguration($pdo = null) {
     $host = defined('SMTP_HOST') ? SMTP_HOST : 'smtp.ionos.com';
     $port = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
-    $username = defined('SMTP_USER') ? SMTP_USER : 'contact@novaearning.com';
+    $username = defined('SMTP_USER') ? SMTP_USER : 'admin@novaearning.com';
     $password = defined('SMTP_PASS') ? SMTP_PASS : '';
-    $fromEmail = defined('SITE_EMAIL') ? SITE_EMAIL : 'contact@novaearning.com';
+    $fromEmail = defined('SITE_EMAIL') ? SITE_EMAIL : 'admin@novaearning.com';
     $fromName = 'Nova Support';
     $encryption = 'tls';
 
@@ -196,7 +196,15 @@ function sendSmtpEmail($toEmail, $toName, $subject, $bodyHtml, $pdo = null) {
         }
     }
 
-    return @mail($toEmail, $subject, $bodyHtml, $headers);
+    // Do not report success from PHP mail() when authenticated SMTP is missing
+    // or rejected. Shared-host mail can return true before Gmail accepts the
+    // message, which previously made the UI claim that an OTP was sent.
+    if (empty($username) || empty($password)) {
+        error_log('Nova SMTP email skipped: mailbox username or password is not configured.');
+    } else {
+        error_log('Nova SMTP email failed: ' . ($error ?? 'connection or delivery was rejected.'));
+    }
+    return false;
 }
 
 function novaEmailBody($heading, $contentHtml) {
@@ -369,7 +377,7 @@ function notifyAdmins($pdo, $subject, $contentHtml, $event = 'general') {
     try {
         $stmt = $pdo->query("SELECT name, email FROM users WHERE role = 'admin'");
         $admins = $stmt->fetchAll();
-        if (!$admins) $admins = [['name' => 'Nova Admin', 'email' => defined('SITE_EMAIL') ? SITE_EMAIL : 'contact@novaearning.com']];
+        if (!$admins) $admins = [['name' => 'Nova Admin', 'email' => defined('SITE_EMAIL') ? SITE_EMAIL : 'admin@novaearning.com']];
         foreach ($admins as $admin) {
             if (!filter_var($admin['email'], FILTER_VALIDATE_EMAIL)) continue;
             $sent = sendSmtpEmail($admin['email'], $admin['name'] ?: 'Nova Admin', $subject, novaEmailBody($subject, $contentHtml), $pdo) || $sent;
