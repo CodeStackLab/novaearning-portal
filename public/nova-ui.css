@@ -274,36 +274,82 @@ html, body {
     @keyframes dashboardPwaIn { from { opacity: 0; transform: translate(-50%,24px); } to { opacity: 1; transform: translate(-50%,0); } }
 }
 
+@media (max-width: 900px) {
+    .mobile-header-logo { 
+        display: flex !important; 
+        align-items: center !important; 
+        justify-content: center !important; 
+        position: absolute !important; 
+        left: 50% !important; 
+        top: 50% !important; 
+        transform: translate(-50%,-50%) !important; 
+        z-index: 5 !important; 
+        pointer-events: auto;
+    }
+    .mobile-header-logo img { 
+        display: block !important; 
+        width: 112px !important; 
+        max-width: 38vw !important; 
+        height: auto !important; 
+        max-height: 38px !important;
+        object-fit: contain !important;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)) !important;
+    }
+    .dashboard-header > .header-left-toggle, .dashboard-header > .header-right-user { position: relative; z-index: 10; }
+}
+
 @media (max-width: 700px) {
-    .mobile-header-logo { display: block !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%,-50%) !important; z-index: 2; }
-    .mobile-header-logo img { display: block; width: 78px !important; height: auto; }
-    .dashboard-header > .header-left-toggle, .dashboard-header > .header-right-user { position: relative; z-index: 3; }
-    .reference-panel-heading { align-items: flex-start !important; gap: .8rem !important; }
-    .reference-panel-heading > div { min-width: 0; }
-    .reference-panel-heading .panel-title { font-size: clamp(2rem, 10vw, 2.65rem) !important; line-height: 1.05; }
-    .reference-panel-heading .panel-desc { max-width: 100%; font-size: .84rem !important; line-height: 1.55; }
-    .statement-download-btn { align-self: flex-end; min-height: 44px; padding: .65rem .9rem !important; white-space: nowrap; }
-    .transactions-card { padding: .8rem !important; border-radius: 16px !important; }
+    .reference-panel-heading { 
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: .9rem !important; 
+        min-height: auto !important;
+        padding-bottom: .25rem !important;
+    }
+    .reference-panel-heading > div { min-width: 0; width: 100%; }
+    .reference-panel-heading .panel-title { font-size: clamp(1.8rem, 8vw, 2.4rem) !important; line-height: 1.1; }
+    .reference-panel-heading .panel-desc { max-width: 100%; font-size: .84rem !important; line-height: 1.5; }
+    .statement-download-btn { align-self: stretch !important; justify-content: center !important; width: 100% !important; min-height: 44px; padding: .65rem 1rem !important; white-space: nowrap; }
+    
+    .transactions-card { 
+        min-height: 220px !important; 
+        padding: 1rem !important; 
+        border-radius: 18px !important; 
+        background: rgba(14, 22, 37, 0.75) !important;
+        border: 1px solid rgba(126, 156, 205, 0.16) !important;
+        backdrop-filter: blur(12px) !important;
+    }
     .transactions-table-wrap { overflow: visible !important; border: 0 !important; background: transparent !important; }
     .transactions-table-wrap .deposits-table-list { display: block; width: 100%; min-width: 0 !important; }
     .transactions-table-wrap thead { display: none; }
-    .transactions-table-wrap tbody { display: grid; gap: .75rem; width: 100%; }
-    .transactions-table-wrap tr { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem 1rem; width: 100%; padding: .9rem; background: rgba(5,12,24,.72); border: 1px solid rgba(126,156,205,.16); border-radius: 13px; }
-    .transactions-table-wrap td { display: flex; min-width: 0; padding: 0 !important; border: 0 !important; flex-direction: column; align-items: flex-start; gap: .22rem; overflow-wrap: anywhere; }
-    .transactions-table-wrap td::before { content: attr(data-label); color: #6f7e94; font: 650 .62rem/1.2 'Inter',sans-serif; letter-spacing: .045em; text-transform: uppercase; }
-    .transactions-table-wrap td:nth-child(4) { grid-column: 1 / -1; padding-top: .65rem !important; border-top: 1px solid rgba(126,156,205,.11) !important; }
-    .transactions-table-wrap td:nth-child(5) { position: absolute; top: .8rem; right: .8rem; align-self: start; justify-self: end; }
+    .transactions-table-wrap tbody { display: grid; gap: .85rem; width: 100%; }
+    .transactions-table-wrap tr { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: .75rem 1rem; 
+        width: 100%; 
+        padding: 1rem; 
+        background: linear-gradient(135deg, rgba(16,26,46,0.92), rgba(10,16,30,0.96)); 
+        border: 1px solid rgba(126,156,205,0.18); 
+        border-radius: 14px; 
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        position: relative;
+    }
+    .transactions-table-wrap td { display: flex; min-width: 0; padding: 0 !important; border: 0 !important; flex-direction: column; align-items: flex-start; gap: .25rem; overflow-wrap: anywhere; }
+    .transactions-table-wrap td::before { content: attr(data-label); color: #64748b; font: 700 .62rem/1.2 'Inter',sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+    .transactions-table-wrap td:nth-child(4) { grid-column: 1 / -1; padding-top: .75rem !important; border-top: 1px solid rgba(126,156,205,0.12) !important; }
+    .transactions-table-wrap td:nth-child(5) { position: absolute; top: 1rem; right: 1rem; align-self: start; justify-self: end; }
     .transactions-table-wrap td:nth-child(5)::before { content: none; }
-    .transactions-table-wrap tr { position: relative; }
     .transactions-table-wrap td:nth-child(2) { padding-right: 5rem !important; }
     .transactions-table-wrap .deposit-tx-hash { white-space: normal !important; width: 100%; }
     .transactions-table-wrap .deposit-tx-hash > span { max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .transactions-empty-state { min-height: 150px; padding: 1.25rem .9rem; }
+    .transactions-empty-state { min-height: 180px; padding: 1.75rem 1rem; }
 }
 
-@media (max-width: 380px) {
-    .mobile-header-logo img { width: 66px !important; }
-    .transactions-table-wrap tr { padding: .8rem; gap: .65rem .75rem; }
+@media (max-width: 387px) {
+    .mobile-header-logo img { width: 105px !important; max-width: 40vw !important; }
+    .transactions-table-wrap tr { padding: .85rem; gap: .7rem .75rem; }
 }
 
 /* In-app notification center and investment-cycle visibility */

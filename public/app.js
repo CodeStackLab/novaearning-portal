@@ -817,13 +817,25 @@ function renderAllTransactionsTable(transactions) {
 
     if (filtered.length === 0) {
         tbody.innerHTML = '';
-        if (tableWrap) tableWrap.hidden = true;
-        if (emptyState) emptyState.hidden = false;
+        if (tableWrap) {
+            tableWrap.hidden = true;
+            tableWrap.style.display = 'none';
+        }
+        if (emptyState) {
+            emptyState.hidden = false;
+            emptyState.style.display = 'grid';
+        }
         return;
     }
 
-    if (tableWrap) tableWrap.hidden = false;
-    if (emptyState) emptyState.hidden = true;
+    if (tableWrap) {
+        tableWrap.hidden = false;
+        tableWrap.style.display = 'block';
+    }
+    if (emptyState) {
+        emptyState.hidden = true;
+        emptyState.style.display = 'none';
+    }
 
     tbody.innerHTML = filtered.map(tx => {
         let typeColor = "#3b82f6";
