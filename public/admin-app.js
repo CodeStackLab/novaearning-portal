@@ -551,8 +551,8 @@ function renderUsersTable(serverUsers) {
         const safeStatus = status.replace(/'/g, "\\'");
 
         return `
-        <tr>
-            <td style="cursor: pointer;" title="Click to view referral members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')">
+        <tr class="admin-user-row">
+            <td class="admin-user-identity" data-label="User" style="cursor: pointer;" title="Click to view referral members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: white;">
                         ${user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
@@ -566,21 +566,21 @@ function renderUsersTable(serverUsers) {
                     </div>
                 </div>
             </td>
-            <td style="font-weight:700; color:#10b981;">${formatUSD(user.balance)}</td>
-            <td>
+            <td class="admin-user-balance" data-label="Balance" style="font-weight:700; color:#10b981;">${formatUSD(user.balance)}</td>
+            <td class="admin-user-referrals" data-label="Referrals">
                 <span onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="cursor: pointer; background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;">
                     <span class="material-symbols-outlined" style="font-size: 0.85rem;">group</span>
                     <span>${user.referral_count} referred</span>
                 </span>
             </td>
-            <td><span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${status}</span></td>
-            <td>
-                <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-                    <button title="View Referred Members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
-                    <button title="Edit Profile/Status" onclick="openEditUserModal(${user.id}, '${safeName}', '${safeEmail}', '${user.role || 'user'}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
-                    <button title="Edit Balance" onclick="openEditBalanceModal(${user.id}, '${safeName}', ${user.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
-                    <button title="Send Alert/Ticket" onclick="openSendAlertModal(${user.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
-                    <button title="Delete User" onclick="adminDeleteUser(${user.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
+            <td class="admin-user-status" data-label="Account Status"><span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${status}</span></td>
+            <td class="admin-user-actions-cell" data-label="Actions">
+                <div class="admin-user-actions" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                    <button class="admin-user-action" data-action-label="Referrals" aria-label="View referred members" title="View Referred Members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
+                    <button class="admin-user-action" data-action-label="Edit User" aria-label="Edit profile and status" title="Edit Profile/Status" onclick="openEditUserModal(${user.id}, '${safeName}', '${safeEmail}', '${user.role || 'user'}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
+                    <button class="admin-user-action" data-action-label="Balance" aria-label="Edit user balance" title="Edit Balance" onclick="openEditBalanceModal(${user.id}, '${safeName}', ${user.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
+                    <button class="admin-user-action" data-action-label="Send Alert" aria-label="Send alert or ticket" title="Send Alert/Ticket" onclick="openSendAlertModal(${user.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
+                    <button class="admin-user-action" data-action-label="Delete" aria-label="Delete user" title="Delete User" onclick="adminDeleteUser(${user.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
                 </div>
             </td>
         </tr>

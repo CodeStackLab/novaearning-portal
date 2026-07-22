@@ -500,6 +500,56 @@ html, body {
     .dashboard-footer { padding-left: max(.75rem, env(safe-area-inset-left)) !important; padding-right: max(.75rem, env(safe-area-inset-right)) !important; }
 }
 
+/* Admin user management: readable card list and complete actions on phones */
+@media (max-width: 700px) {
+    #panel-users .panel-title { font-size: 1.45rem !important; line-height: 1.15; }
+    #panel-users .panel-desc { max-width: 32rem; line-height: 1.5; }
+    .admin-users-add-row,
+    .admin-users-add-btn { width: 100%; }
+    .admin-users-add-btn { min-height: 48px; justify-content: center; }
+    #panel-users .db-search-filters-bar { display: grid !important; grid-template-columns: minmax(0,1fr); gap: .75rem !important; padding: .8rem !important; }
+    .admin-users-search { width: 100%; min-width: 0 !important; min-height: 48px; box-sizing: border-box; }
+    .admin-users-search input { min-width: 0; font-size: 16px !important; text-overflow: ellipsis; }
+    .admin-users-filter-controls { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); width: 100%; gap: .55rem !important; }
+    .admin-users-filter-controls > div { min-width: 0; }
+    .admin-users-filter-controls select { width: 100%; min-width: 0; min-height: 44px; padding-inline: .55rem !important; }
+    .admin-users-card { padding: .8rem !important; border-radius: 16px !important; overflow: hidden; }
+    .admin-users-card .recent-deposits-title { padding-inline: .15rem; font-size: 1.05rem !important; }
+    .admin-users-table-wrap { overflow: visible !important; border: 0 !important; background: transparent !important; }
+    .admin-users-table { display: block; width: 100%; min-width: 0 !important; }
+    .admin-users-table thead { display: none; }
+    .admin-users-table tbody { display: grid; width: 100%; gap: .8rem; }
+    .admin-users-table .admin-user-row {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: .85rem 1rem;
+        width: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+        background: linear-gradient(145deg,rgba(12,18,31,.96),rgba(15,25,41,.94));
+        border: 1px solid rgba(126,156,205,.18) !important;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .admin-users-table .admin-user-row > td { display: flex; min-width: 0; padding: 0 !important; border: 0 !important; flex-direction: column; align-items: flex-start; gap: .35rem; }
+    .admin-users-table .admin-user-row > td::before { content: attr(data-label); color: #7f8da3; font: 700 .64rem/1.2 'Inter',sans-serif; letter-spacing: .055em; text-transform: uppercase; }
+    .admin-users-table .admin-user-identity { grid-column: 1 / -1; padding-bottom: .85rem !important; border-bottom: 1px solid rgba(126,156,205,.14) !important; }
+    .admin-users-table .admin-user-identity::before { display: none; }
+    .admin-users-table .admin-user-identity > div { width: 100%; min-width: 0; }
+    .admin-users-table .admin-user-identity > div > div:last-child { min-width: 0; overflow: hidden; }
+    .admin-users-table .admin-user-identity > div > div:last-child > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .admin-users-table .admin-user-actions-cell { grid-column: 1 / -1; padding-top: .85rem !important; border-top: 1px solid rgba(126,156,205,.14) !important; }
+    .admin-users-table .admin-user-actions { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)); width: 100%; gap: .5rem !important; }
+    .admin-users-table .admin-user-action { width: 100%; min-width: 0; min-height: 44px; gap: .4rem; padding: .55rem .45rem !important; font-weight: 700; }
+    .admin-users-table .admin-user-action::after { content: attr(data-action-label); font-size: .68rem; white-space: nowrap; }
+    .admin-users-table .admin-user-action:last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 370px) {
+    .admin-users-filter-controls { grid-template-columns: minmax(0,1fr); }
+    .admin-users-table .admin-user-row { padding: .8rem; gap: .75rem; }
+}
+
 /* Final small-screen hardening across the full user/admin application */
 img, svg, video, canvas { max-width:100%; }
 .dashboard-panel-view, .recent-deposits-section, .deposit-step-box, .metric-card-box { min-width:0; }
