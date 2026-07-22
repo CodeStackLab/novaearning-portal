@@ -7,6 +7,7 @@ let globalUsersList = [];
 let globalDepositsList = [];
 let globalPayoutsList = [];
 let globalAuditLog = [];
+let globalPlansList = [];
 
 function escapeAdminUi(value) { const node = document.createElement('div'); node.textContent = String(value ?? ''); return node.innerHTML; }
 function escapeUi(value) { return escapeAdminUi(value); }
@@ -810,12 +811,33 @@ function copyDepositReference(depositId) {
     if (deposit?.txn_id) copyToClipboard(String(deposit.txn_id));
 }
 
-function openManualDepositModal() {
+async function openManualDepositModal() {
     const userSelect = document.getElementById('manual-dep-user-select');
     const planSelect = document.getElementById('manual-dep-plan-select');
     const amtInput = document.getElementById('manual-dep-amount');
 
     if (amtInput) amtInput.value = '';
+
+    const modal = document.getElementById('manual-deposit-modal');
+    if (modal) modal.classList.add('active');
+    if (userSelect) userSelect.innerHTML = '<option value="">Loading users…</option>';
+    if (planSelect) planSelect.innerHTML = '<option value="">Loading plans…</option>';
+
+    try {
+        if (!globalUsersList.length) {
+            const users = await adminRequest('/admin/users');
+            globalUsersList = Array.isArray(users) ? users : [];
+        }
+        if (!globalPlansList.length) {
+            const plans = await adminRequest('/admin/plans');
+            globalPlansList = (Array.isArray(plans) ? plans : []).filter(plan => Number(plan.is_active) === 1);
+        }
+    } catch (error) {
+        if (userSelect) userSelect.innerHTML = '<option value="">Unable to load users</option>';
+        if (planSelect) planSelect.innerHTML = '<option value="">Unable to load plans</option>';
+        alert(error.message || 'Unable to load users and plans.');
+        return;
+    }
 
     if (userSelect && Array.isArray(globalUsersList)) {
         userSelect.innerHTML = globalUsersList.map(u => 
@@ -823,13 +845,10 @@ function openManualDepositModal() {
         ).join('');
     }
 
-    if (planSelect && Array.isArray(allPlans)) {
+    if (planSelect && Array.isArray(globalPlansList)) {
         planSelect.innerHTML = `<option value="">-- None (Add to Wallet Balance Only) --</option>` + 
-            allPlans.map(p => `<option value="${escapeUi(p.name)}">${escapeUi(p.name)} ($${Number(p.price).toFixed(2)})</option>`).join('');
+            globalPlansList.map(p => `<option value="${escapeUi(p.name)}">${escapeUi(p.name)} ($${Number(p.price).toFixed(2)})</option>`).join('');
     }
-
-    const modal = document.getElementById('manual-deposit-modal');
-    if (modal) modal.classList.add('active');
 }
 
 function closeManualDepositModal() {
