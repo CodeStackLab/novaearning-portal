@@ -972,3 +972,44 @@ html, body,
     .active-investments-table-wrap td:last-child { grid-column: 1 / -1; }
 }
 /* end Nova 8.0 */
+
+/* ── Dashboard investment catalogue ─────────────────────── */
+.db-investments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+    gap: 1.15rem;
+    margin-top: 1.65rem;
+    min-height: 200px;
+    align-items: stretch;
+}
+.db-investment-card { min-width: 0; border-radius: 16px !important; overflow: hidden; }
+.db-investment-card .investment-img-container { height: 148px; }
+.db-investment-heading { min-height: 2.8rem; display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .55rem; }
+.db-investment-heading .investment-title { line-height: 1.3; }
+.db-investment-card .daily-profit-badge { display: inline-flex; align-items: center; gap: .3rem; margin-bottom: 1rem; padding: .38rem .58rem; font-size: .72rem; }
+.db-investment-card .daily-profit-badge .material-symbols-outlined { font-size: .9rem; }
+.db-investment-meta { margin-top: 0 !important; margin-bottom: 1rem !important; padding: .75rem 0; border-top: 1px solid rgba(148,163,184,.13); border-bottom: 1px solid rgba(148,163,184,.13); }
+.db-investment-card .meta-item-value { color: #e7edf7; }
+.db-investment-card .meta-item-value.highlight { color: #72a5ff; font-size: 1.08rem; }
+.db-investment-action { margin-top: auto; }
+.db-buy-btn { width: 100%; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border: 0; border-radius: 10px; color: #fff; background: linear-gradient(135deg,#4b8cf8,#7258e9); font: 750 .82rem/1 Inter,sans-serif; cursor: pointer; box-shadow: 0 8px 20px rgba(65,103,213,.2); transition: transform .18s ease, filter .18s ease; }
+.db-buy-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.db-buy-btn .material-symbols-outlined { font-size: 1.05rem; }
+@media (max-width: 700px) {
+    .db-investments-grid { grid-template-columns: 1fr; gap: .85rem; margin-top: 1.15rem; }
+    .db-investment-card { display: grid; grid-template-columns: 112px minmax(0,1fr); min-height: 170px; }
+    .db-investment-card .investment-img-container { height: 100%; min-height: 170px; }
+    .db-investment-card .investment-content { padding: .85rem .9rem; }
+    .db-investment-heading { min-height: 0; margin-bottom: .35rem; }
+    .db-investment-heading .investment-title { font-size: .9rem !important; }
+    .db-investment-card .daily-profit-badge { margin-bottom: .55rem; font-size: .65rem; }
+    .db-investment-meta { padding: .55rem 0; margin-bottom: .65rem !important; }
+    .db-investment-card .meta-item-label { font-size: .63rem; }
+    .db-investment-card .meta-item-value, .db-investment-card .meta-item-value.highlight { font-size: .88rem; }
+    .db-buy-btn { min-height: 38px; font-size: .75rem; }
+}
+@media (max-width: 380px) {
+    .db-investment-card { grid-template-columns: 92px minmax(0,1fr); }
+    .db-investment-card .investment-img-container { min-height: 160px; }
+    .db-investment-card .investment-content { padding: .7rem; }
+}

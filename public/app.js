@@ -1284,16 +1284,16 @@ function renderDashboardPlansPage() {
         grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b;">No plans found.</div>`;
     } else {
         grid.innerHTML = pagePlans.map((plan, i) => `
-            <div class="investment-card">
+            <article class="investment-card db-investment-card">
                 <div class="investment-img-container">
                     <img src="${plan.img}" alt="${plan.name}" class="investment-img" onerror="this.src='images/amc_theater.png'">
                 </div>
                 <div class="investment-content">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+                    <div class="db-investment-heading">
                         <h3 class="investment-title font-display" style="font-size:1rem; margin:0;">${plan.name}</h3>
                     </div>
-                    <div class="daily-profit-badge">Daily Profit ${plan.roi}%</div>
-                    <div class="investment-meta-grid" style="margin-top:1rem;">
+                    <div class="daily-profit-badge"><span class="material-symbols-outlined">trending_up</span> Daily Profit ${plan.roi}%</div>
+                    <div class="investment-meta-grid db-investment-meta">
                         <div>
                             <div class="meta-item-label">Price</div>
                             <div class="meta-item-value highlight">$${plan.price.toFixed(2)}</div>
@@ -1303,11 +1303,11 @@ function renderDashboardPlansPage() {
                             <div class="meta-item-value">${plan.duration}</div>
                         </div>
                     </div>
-                    <div style="display:flex; gap:0.5rem; margin-top:1rem; align-items:center;">
-                        <button onclick="openBuyPlanModal('${plan.name.replace(/'/g,"\\'")}', ${plan.price})" style="background:#3b82f6; color:white; padding:0.6rem 1rem; border-radius:6px; font-size:0.85rem; font-weight:700; flex-grow:1; border:none; cursor:pointer; text-align:center;">Buy Now</button>
+                    <div class="db-investment-action">
+                        <button class="db-buy-btn" onclick="openBuyPlanModal('${plan.name.replace(/'/g,"\\'")}', ${plan.price})"><span>Buy Now</span><span class="material-symbols-outlined">arrow_forward</span></button>
                     </div>
                 </div>
-            </div>
+            </article>
         `).join('');
     }
 
