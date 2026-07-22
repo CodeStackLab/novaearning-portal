@@ -1796,23 +1796,81 @@ function renderFinancialOverview(period = 'monthly') {
     if (netLabel) netLabel.textContent = net < 0 ? 'Net loss' : 'Net profit / cash flow';
     const activityCount = document.getElementById('fin-activity-count');
     if (activityCount) activityCount.textContent = `${rows.length} record${rows.length === 1 ? '' : 's'}`;
+    const periodNames = { daily: 'Today', weekly: 'Last 7 days', monthly: 'Current month', yearly: 'Current year' };
+    const periodText = period === 'custom'
+        ? `${new Date(start).toLocaleDateString()} – ${new Date(end).toLocaleDateString()}`
+        : periodNames[period] || 'Current month';
     const periodLabel = document.getElementById('financial-period-label');
     if (periodLabel) {
-        const labels = { daily: 'Today', weekly: 'Last 7 days', monthly: 'Current month', yearly: 'Current year' };
-        periodLabel.textContent = period === 'custom'
-            ? `${new Date(start).toLocaleDateString()} – ${new Date(end).toLocaleDateString()}`
-            : labels[period] || 'Current month';
+        periodLabel.textContent = periodText;
     }
+    const chartPeriod = document.getElementById('financial-chart-period');
+    if (chartPeriod) chartPeriod.textContent = periodText;
 
     const bars = document.getElementById('financial-breakdown-bars');
     const labels = [['Deposits','deposits'],['Invested','invested'],['Daily commissions','commissions'],['Referral earnings','referrals'],['Withdrawals','withdrawals']];
     const max = Math.max(1, ...Object.values(totals));
     bars.innerHTML = labels.map(([label,key]) => `<div class="financial-bar-row"><div><span>${label}</span><strong>${formatUSD(totals[key])}</strong></div><i><em class="${key}" style="width:${Math.round(totals[key] / max * 100)}%"></em></i></div>`).join('');
+    renderFinancialAnalyticsChart(rows, period, start, end);
 
     activity.innerHTML = rows.length ? rows.slice(0, 8).map(tx => {
         const debit = tx.type === 'Investment' || tx.type === 'Withdrawal';
         return `<article class="financial-activity-row"><span class="material-symbols-outlined">${tx.type === 'Deposit' ? 'download' : tx.type === 'Withdrawal' ? 'upload' : /referral/i.test(tx.type) ? 'group' : 'paid'}</span><div><strong>${escapeUi(tx.type)}</strong><small>${escapeUi(tx.date)} · ${escapeUi(tx.ref || '—')}</small></div><b class="${debit ? 'debit' : 'credit'}">${debit ? '-' : '+'}${formatUSD(tx.amount)}</b></article>`;
     }).join('') : '<div class="financial-empty"><strong>No activity in this period</strong><small>Try another date range or make your first transaction.</small></div>';
+}
+
+function renderFinancialAnalyticsChart(rows, period, start, end) {
+    const container = document.getElementById('financial-analytics-chart');
+    if (!container) return;
+    if (!rows.length) {
+        container.innerHTML = '<div class="financial-empty"><span class="material-symbols-outlined">monitoring</span><strong>No chart data yet</strong><small>Financial activity for the selected period will be visualized here.</small></div>';
+        return;
+    }
+
+    const groupByMonth = period === 'yearly' || (period === 'custom' && (end - start) > 62 * 86400000);
+    const buckets = new Map();
+    rows.forEach(tx => {
+        const date = new Date(String(tx.date || '').replace(' at ', ' '));
+        if (!Number.isFinite(date.getTime())) return;
+        const key = period === 'daily'
+            ? `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`
+            : groupByMonth
+                ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+                : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        if (!buckets.has(key)) buckets.set(key, { date, incoming: 0, outgoing: 0, earnings: 0 });
+        const bucket = buckets.get(key);
+        const amount = Math.abs(Number(tx.amount) || 0);
+        const type = String(tx.type || '');
+        const isEarning = /daily commission|profit|earning|referral/i.test(type);
+        if (type === 'Investment' || type === 'Withdrawal') bucket.outgoing += amount;
+        else bucket.incoming += amount;
+        if (isEarning) bucket.earnings += amount;
+    });
+    const data = [...buckets.values()].sort((a, b) => a.date - b.date).slice(-12);
+    const width = 760, height = 270, left = 52, right = 18, top = 18, bottom = 42;
+    const chartWidth = width - left - right, chartHeight = height - top - bottom;
+    const maximum = Math.max(1, ...data.flatMap(item => [item.incoming, item.outgoing, item.earnings]));
+    const step = chartWidth / Math.max(1, data.length);
+    const barWidth = Math.min(22, Math.max(7, step * .22));
+    const y = value => top + chartHeight - (value / maximum * chartHeight);
+    const compactMoney = value => value >= 1000 ? `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k` : `$${Math.round(value)}`;
+    const labelFor = item => period === 'daily'
+        ? item.date.toLocaleTimeString([], { hour: 'numeric' })
+        : groupByMonth
+            ? item.date.toLocaleDateString([], { month: 'short' })
+            : item.date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const grid = [0, .25, .5, .75, 1].map(ratio => {
+        const gridY = top + chartHeight - chartHeight * ratio;
+        return `<line x1="${left}" y1="${gridY}" x2="${width-right}" y2="${gridY}" class="chart-grid"/><text x="${left-8}" y="${gridY+4}" class="chart-axis" text-anchor="end">${compactMoney(maximum * ratio)}</text>`;
+    }).join('');
+    const points = data.map((item, index) => `${left + step * index + step / 2},${y(item.earnings)}`).join(' ');
+    const columns = data.map((item, index) => {
+        const center = left + step * index + step / 2;
+        const incomingHeight = chartHeight - (y(item.incoming) - top);
+        const outgoingHeight = chartHeight - (y(item.outgoing) - top);
+        return `<g><title>${labelFor(item)} — Money in ${formatUSD(item.incoming)}, Money out ${formatUSD(item.outgoing)}, Earnings ${formatUSD(item.earnings)}</title><rect x="${center-barWidth-2}" y="${y(item.incoming)}" width="${barWidth}" height="${incomingHeight}" rx="3" class="chart-money-in"/><rect x="${center+2}" y="${y(item.outgoing)}" width="${barWidth}" height="${outgoingHeight}" rx="3" class="chart-money-out"/><text x="${center}" y="${height-17}" class="chart-axis" text-anchor="middle">${escapeUi(labelFor(item))}</text><circle cx="${center}" cy="${y(item.earnings)}" r="4" class="chart-earning-point"/></g>`;
+    }).join('');
+    container.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Money in, money out and earnings chart" preserveAspectRatio="xMidYMid meet">${grid}<polyline points="${points}" class="chart-earnings-line"/>${columns}</svg>`;
 }
 
 // ============================================================

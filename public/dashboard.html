@@ -339,6 +339,11 @@
                     <article><span>Earnings / invested</span><strong id="fin-roi">0.00%</strong><i class="material-symbols-outlined">percent</i></article>
                     <article class="financial-net-card"><span id="fin-net-label">Net profit / loss</span><strong id="fin-net">$0.00</strong><i class="material-symbols-outlined">account_balance_wallet</i></article>
                 </div>
+                <section class="financial-analytics-card">
+                    <div class="financial-analytics-heading"><div><h2 class="font-display">Cash-flow analytics</h2><p>Income, outflow and earning trend for the selected period.</p></div><span id="financial-chart-period">Current month</span></div>
+                    <div class="financial-chart-legend"><span class="money-in"><i></i>Money in</span><span class="money-out"><i></i>Money out</span><span class="earnings"><i></i>Earnings trend</span></div>
+                    <div id="financial-analytics-chart" class="financial-analytics-chart" aria-label="Financial activity chart"><div class="financial-empty">Loading analytics…</div></div>
+                </section>
                 <div class="financial-overview-grid">
                     <section class="financial-breakdown-card"><h2 class="font-display">Activity breakdown</h2><div id="financial-breakdown-bars"></div></section>
                     <section class="financial-activity-card"><div class="section-title-row"><h2 class="font-display">Period activity</h2><button type="button" class="section-link-btn" onclick="switchTab('transactions')">All records</button></div><div id="financial-activity-list"></div></section>
