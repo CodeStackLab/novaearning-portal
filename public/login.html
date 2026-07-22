@@ -15,6 +15,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#17212e">
     <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -398,6 +399,8 @@
                 <div class="step-dot" id="step-ind-2">2</div>
                 <div class="step-line"></div>
                 <div class="step-dot" id="step-ind-3">3</div>
+                <div class="step-line"></div>
+                <div class="step-dot" id="step-ind-4">4</div>
             </div>
             <form onsubmit="submitSignUp(event)">
                 <!-- Step 1 -->
@@ -426,7 +429,21 @@
                     <div class="field"><label>Referral Code</label><input type="text" id="signup-ref" placeholder="e.g. JOHN1234"></div>
                     <div class="btn-row">
                         <button type="button" class="btn-secondary" onclick="prevStep(2)">← Back</button>
-                        <button type="submit" class="btn-primary" style="margin-top:0;flex:2;">Create Account</button>
+                        <button type="button" class="btn-primary" id="signup-otp-send-btn" style="margin-top:0;flex:2;" onclick="sendRegisterOTP(event)">Send Verification OTP →</button>
+                    </div>
+                </div>
+                <!-- Step 4: OTP Verification -->
+                <div class="step-pane" id="step-pane-4">
+                    <div class="msg-success" id="signup-otp-msg">OTP sent to your email.</div>
+                    <div class="pane-title">Email OTP Verification</div>
+                    <div class="pane-sub">Enter the 6-digit verification code sent to your email.</div>
+                    <div class="field">
+                        <label>6-Digit Code</label>
+                        <input type="text" id="signup-otp" placeholder="123456" maxlength="6" pattern="\d{6}">
+                    </div>
+                    <div class="btn-row">
+                        <button type="button" class="btn-secondary" onclick="prevStep(3)">← Back</button>
+                        <button type="submit" class="btn-primary" id="signup-submit-btn" style="margin-top:0;flex:2;">Verify OTP & Create Account</button>
                     </div>
                 </div>
             </form>
@@ -444,7 +461,7 @@
                 </div>
             </div>
             <div class="forgot-step" id="forgot-s2">
-                <div class="msg-success"><span class="material-symbols-outlined">mark_email_read</span> OTP sent to your email.</div>
+                <div class="msg-success">OTP sent to your email.</div>
                 <div class="field"><label>6-Digit OTP</label><input type="text" id="forgot-otp" placeholder="123456" maxlength="6"></div>
                 <button type="button" class="btn-primary" onclick="verifyForgotOTP()">Verify OTP</button>
             </div>
@@ -553,9 +570,53 @@
         }
     }
 
-    // --- Sign Up ---
+    // --- Sign Up & OTP Verification ---
+    async function sendRegisterOTP(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const name = document.getElementById('signup-name').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value;
+        const confirmPw = document.getElementById('signup-confirm').value;
+
+        if (!name || !email) { alert('Please enter your Name and Email address in Step 1.'); showStep(1); return; }
+        if (!email.includes('@')) { alert('Please enter a valid Email address.'); showStep(1); return; }
+        if (!password || password.length < 6) { alert('Password must be at least 6 characters.'); showStep(2); return; }
+        if (password !== confirmPw) { alert('Passwords do not match.'); showStep(2); return; }
+
+        const btn = document.getElementById('signup-otp-send-btn');
+        const origText = btn ? btn.textContent : '';
+        if (btn) { btn.textContent = 'Sending OTP...'; btn.disabled = true; }
+
+        try {
+            const res = await fetch('/api/auth/register/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to send OTP verification code.');
+
+            showStep(4);
+            const msgEl = document.getElementById('signup-otp-msg');
+            if (msgEl) msgEl.textContent = 'OTP sent to ' + email;
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            if (btn) { btn.textContent = origText; btn.disabled = false; }
+        }
+    }
+
     async function submitSignUp(e) {
         e.preventDefault();
+        const otp = document.getElementById('signup-otp').value.trim();
+        if (!otp || !/^\d{6}$/.test(otp)) {
+            alert('Please enter the 6-digit verification code sent to your email.');
+            return;
+        }
+
+        const btn = document.getElementById('signup-submit-btn');
+        if (btn) { btn.textContent = 'Verifying & Registering...'; btn.disabled = true; }
+
         try {
             const res = await fetch('/api/auth/register', {
                 method: 'POST',
@@ -564,7 +625,8 @@
                     name: document.getElementById('signup-name').value,
                     email: document.getElementById('signup-email').value,
                     password: document.getElementById('signup-password').value,
-                    referralCode: document.getElementById('signup-ref').value
+                    referralCode: document.getElementById('signup-ref').value,
+                    otp: otp
                 })
             });
             const data = await res.json();
@@ -574,6 +636,7 @@
             window.location.href = redirectTarget || '/dashboard';
         } catch (err) {
             alert(err.message);
+            if (btn) { btn.textContent = 'Verify OTP & Create Account'; btn.disabled = false; }
         }
     }
 

@@ -236,6 +236,12 @@ function ensurePlatformFeatureTables($pdo) {
         id BIGINT AUTO_INCREMENT PRIMARY KEY, identifier_hash CHAR(64) NOT NULL, ip_address VARCHAR(64) NOT NULL,
         attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_auth_attempt (identifier_hash, ip_address, attempted_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS registration_otps (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(191) NOT NULL,
+        otp_hash VARCHAR(255) NOT NULL, attempts INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP NOT NULL,
+        INDEX idx_reg_otp_email (email, expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
 
 function recordLoginActivity($pdo, $userId) {
