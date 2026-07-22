@@ -572,7 +572,7 @@ function renderUsersTable(serverUsers) {
             <td>
                 <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                     <button title="View Referred Members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
-                    <button title="Edit Profile/Status" onclick="openEditUserModal(${user.id}, '${safeName}', '${safeEmail}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
+                    <button title="Edit Profile/Status" onclick="openEditUserModal(${user.id}, '${safeName}', '${safeEmail}', '${user.role || 'user'}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
                     <button title="Edit Balance" onclick="openEditBalanceModal(${user.id}, '${safeName}', ${user.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
                     <button title="Send Alert/Ticket" onclick="openSendAlertModal(${user.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
                     <button title="Delete User" onclick="adminDeleteUser(${user.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
@@ -1210,7 +1210,7 @@ async function saveUserMgmt() {
     } else {
         const userId = parseInt(id);
         try {
-            const result = await adminRequest('/admin/users/profile', { method:'POST', body:JSON.stringify({ userId, name, email, password:document.getElementById('user-mgmt-password').value }) });
+            const result = await adminRequest('/admin/users/profile', { method:'POST', body:JSON.stringify({ userId, name, email, status, password:document.getElementById('user-mgmt-password').value }) });
             showToast(result.message || 'User details updated!');
         } catch (error) { showToast(error.message || 'Unable to update user details.'); return; }
     }
@@ -1222,15 +1222,13 @@ async function saveUserMgmt() {
 
 async function adminDeleteUser(id, name) {
     if (!confirm(`Are you absolutely sure you want to completely delete user "${name}"? This action cannot be undone.`)) return;
-    
-    let deletedIds = JSON.parse(localStorage.getItem('nova_deleted_user_ids') || '[]');
-    if (!deletedIds.includes(id)) {
-        deletedIds.push(id);
-        localStorage.setItem('nova_deleted_user_ids', JSON.stringify(deletedIds));
+    try {
+        const result = await adminRequest('/admin/users/delete', { method:'POST', body:JSON.stringify({ userId:id }) });
+        showToast(result.message || `User ${name} has been deleted.`);
+        await fetchActiveTabDetails('users');
+    } catch (error) {
+        alert(error.message || 'Unable to delete this user.');
     }
-    
-    showToast(`User ${name} has been deleted.`);
-    await fetchActiveTabDetails('users');
 }
 
 function openSendAlertModal(id, name) {
@@ -1245,7 +1243,7 @@ function closeSendAlertModal() {
     document.getElementById('send-alert-modal').classList.remove('active');
 }
 
-function sendUserAlert() {
+async function sendUserAlert() {
     const id = document.getElementById('alert-user-id').value;
     const subject = document.getElementById('alert-subject').value.trim();
     const msg = document.getElementById('alert-message').value.trim();
@@ -1255,19 +1253,13 @@ function sendUserAlert() {
         return;
     }
 
-    // In a real app, this would send an email or internal message.
-    // For now, we simulate success and save it to a mock log in localStorage
-    let alerts = JSON.parse(localStorage.getItem('nova_sent_alerts') || '[]');
-    alerts.push({
-        userId: id,
-        subject: subject,
-        message: msg,
-        date: new Date().toISOString()
-    });
-    localStorage.setItem('nova_sent_alerts', JSON.stringify(alerts));
-
-    closeSendAlertModal();
-    showToast('Alert / Ticket successfully sent to user!');
+    try {
+        const result = await adminRequest('/admin/users/alert', { method:'POST', body:JSON.stringify({ userId:Number(id), subject, message:msg }) });
+        closeSendAlertModal();
+        showToast(result.message || 'Alert delivered to user.');
+    } catch (error) {
+        alert(error.message || 'Unable to send the alert.');
+    }
 }
 
 function viewReferredMembers(userId, name, refCode) {

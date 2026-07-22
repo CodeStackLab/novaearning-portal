@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     earnings DECIMAL(15, 2) DEFAULT 0.0,
     active_investments DECIMAL(15, 2) DEFAULT 0.0,
     role VARCHAR(50) DEFAULT 'user',
+    account_status VARCHAR(30) NOT NULL DEFAULT 'Active',
     referred_by INT DEFAULT NULL,
     referral_code VARCHAR(255) UNIQUE,
     username VARCHAR(255) UNIQUE,

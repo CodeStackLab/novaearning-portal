@@ -37,7 +37,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'users') {
-            $stmt = $pdo->query("SELECT id, name, email, balance, earnings, role, referral_code, referred_by FROM users WHERE role = 'user' ORDER BY id DESC");
+            $stmt = $pdo->query("SELECT id, name, email, balance, earnings, role, account_status AS status, referral_code, referred_by FROM users WHERE role = 'user' ORDER BY id DESC");
             sendJson($stmt->fetchAll());
         }
 
@@ -284,9 +284,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $name = trim($body['name'] ?? '');
             $email = strtolower(trim($body['email'] ?? ''));
             $newPassword = (string)($body['password'] ?? '');
+            $status = trim((string)($body['status'] ?? 'Active'));
 
             if ($targetUserId < 1 || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 sendJson(['message' => 'Valid user, name, and email are required.'], 400);
+            }
+            if (!in_array($status, ['Active', 'Suspended', 'Hold', 'Under Review'], true)) {
+                sendJson(['message' => 'Select a valid account status.'], 400);
             }
             $stmt = $pdo->prepare('SELECT id, role FROM users WHERE id = ?');
             $stmt->execute([$targetUserId]);
@@ -301,13 +305,47 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             if ($newPassword !== '') {
                 if (strlen($newPassword) < 6) sendJson(['message' => 'Password must be at least 6 characters.'], 400);
-                $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ?, password = ? WHERE id = ? AND role = ?');
-                $stmt->execute([$name, $email, $email, password_hash($newPassword, PASSWORD_BCRYPT), $targetUserId, 'user']);
+                $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ?, password = ?, account_status = ? WHERE id = ? AND role = ?');
+                $stmt->execute([$name, $email, $email, password_hash($newPassword, PASSWORD_BCRYPT), $status, $targetUserId, 'user']);
             } else {
-                $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ? WHERE id = ? AND role = ?');
-                $stmt->execute([$name, $email, $email, $targetUserId, 'user']);
+                $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ?, account_status = ? WHERE id = ? AND role = ?');
+                $stmt->execute([$name, $email, $email, $status, $targetUserId, 'user']);
             }
+            auditAdminAction($pdo, $userId, 'user.profile.updated', 'user', $targetUserId, ['email' => $email, 'status' => $status]);
             sendJson(['message' => 'User profile and login email updated successfully.']);
+        }
+
+        if ($action === 'users' && $subaction === 'alert') {
+            $targetUserId = (int)($body['userId'] ?? 0);
+            $subject = trim((string)($body['subject'] ?? ''));
+            $message = trim((string)($body['message'] ?? ''));
+            if ($targetUserId < 1 || $subject === '' || $message === '' || strlen($subject) > 180 || strlen($message) > 5000) {
+                sendJson(['message' => 'Valid user, subject, and message are required.'], 400);
+            }
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND role = 'user'");
+            $stmt->execute([$targetUserId]);
+            if (!$stmt->fetch()) sendJson(['message' => 'User not found.'], 404);
+            $emailSent = notifyUserById($pdo, $targetUserId, $subject, '<p>' . nl2br(htmlspecialchars($message)) . '</p>', 'support');
+            auditAdminAction($pdo, $userId, 'user.alert.sent', 'user', $targetUserId, ['subject' => $subject, 'emailSent' => $emailSent]);
+            sendJson(['message' => $emailSent ? 'Alert delivered in-app and by email.' : 'Alert delivered in-app. Email delivery was unavailable.']);
+        }
+
+        if ($action === 'users' && $subaction === 'delete') {
+            $targetUserId = (int)($body['userId'] ?? 0);
+            if ($targetUserId < 1) sendJson(['message' => 'Valid user ID required.'], 400);
+            $stmt = $pdo->prepare("SELECT id, email FROM users WHERE id = ? AND role = 'user'");
+            $stmt->execute([$targetUserId]);
+            $target = $stmt->fetch();
+            if (!$target) sendJson(['message' => 'User not found or protected.'], 404);
+            try {
+                $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'user'");
+                $stmt->execute([$targetUserId]);
+                if (!$stmt->rowCount()) sendJson(['message' => 'User could not be deleted.'], 409);
+                auditAdminAction($pdo, $userId, 'user.deleted', 'user', $targetUserId, ['email' => $target['email']]);
+                sendJson(['message' => 'User account and associated records deleted.']);
+            } catch (PDOException $e) {
+                sendJson(['message' => 'User has protected linked records and cannot be deleted. Suspend the account instead.'], 409);
+            }
         }
 
         if ($action === 'deposits' && $subaction === 'verify') {

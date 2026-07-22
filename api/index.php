@@ -33,6 +33,14 @@ try {
     if ($pdo->inTransaction()) $pdo->rollBack();
 }
 
+// Keep older installations compatible with account controls in Manage Users.
+try {
+    $statusColumn = $pdo->query("SHOW COLUMNS FROM users LIKE 'account_status'")->fetch();
+    if (!$statusColumn) $pdo->exec("ALTER TABLE users ADD account_status VARCHAR(30) NOT NULL DEFAULT 'Active' AFTER role");
+} catch (Throwable $accountStatusMigrationError) {
+    error_log('Account status migration failed: ' . $accountStatusMigrationError->getMessage());
+}
+
 $request = isset($_GET['request']) ? explode('/', trim($_GET['request'], '/')) : [];
 if (empty($request) || empty($request[0])) {
     $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);

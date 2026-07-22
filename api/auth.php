@@ -29,6 +29,14 @@ function handleAuth($action, $subaction, $pdo, $body) {
             sendJson(['message' => 'Invalid credentials'], 401);
         }
 
+        $accountStatus = $user['account_status'] ?? 'Active';
+        if ($user['role'] !== 'admin' && $accountStatus !== 'Active') {
+            $message = $accountStatus === 'Suspended'
+                ? 'Your account is suspended. Please contact support.'
+                : 'Your account is currently ' . strtolower($accountStatus) . '. Please contact support.';
+            sendJson(['message' => $message], 403);
+        }
+
         clearFailedLogins($pdo, $email);
         recordLoginActivity($pdo, $user['id']);
         $token = generateJWT(['userId' => $user['id']]);
