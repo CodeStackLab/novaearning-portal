@@ -206,6 +206,10 @@ const userNotificationEvents = ['deposit', 'withdrawal', 'investment', 'commissi
 let dashboardInvestments = [];
 let dashboardTransactions = [];
 let financialPeriod = 'monthly';
+let financialCustomStart = null;
+let financialCustomEnd = null;
+let myInvestmentsPage = 1;
+const MY_INVESTMENTS_PER_PAGE = 5;
 
 function escapeUi(value) {
     const node = document.createElement('div');
@@ -744,6 +748,7 @@ async function purchasePlan(name, inputId) {
         });
 
         showToast(response.message || `Successfully purchased plan: ${name}!`);
+        myInvestmentsPage = 1;
         await fetchAllDashboardData();
         switchTab('myinvestments');
     } catch (e) {
@@ -1648,6 +1653,7 @@ async function confirmBuyPlan() {
 
         showToast(response.message || `Successfully purchased plan: ${currentBuyPlanName}!`);
         closeBuyPlanModal();
+        myInvestmentsPage = 1;
         await fetchAllDashboardData();
         switchTab('myinvestments');
     } catch (e) {
@@ -1668,12 +1674,17 @@ function renderMyInvestments(investments) {
     document.getElementById('myinv-total-plans').textContent = String(rows.length);
 
     if (!rows.length) {
+        const pagination = document.getElementById('my-investments-pagination');
+        if (pagination) pagination.hidden = true;
         container.innerHTML = '<div class="financial-empty"><span class="material-symbols-outlined">account_balance</span><strong>No investments yet</strong><small>Choose an investment plan to start your first 24-hour earning cycle.</small><button type="button" onclick="switchTab(\'invest\')">Browse investment plans</button></div>';
         return;
     }
 
     const dayMs = 86400000;
-    container.innerHTML = rows.map(inv => {
+    const totalPages = Math.max(1, Math.ceil(rows.length / MY_INVESTMENTS_PER_PAGE));
+    myInvestmentsPage = Math.min(Math.max(1, myInvestmentsPage), totalPages);
+    const visibleRows = rows.slice((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE, myInvestmentsPage * MY_INVESTMENTS_PER_PAGE);
+    container.innerHTML = visibleRows.map((inv, index) => {
         const amount = Number(inv.amount) || 0;
         const roi = Number(inv.daily_profit_pct) || 0;
         const duration = Math.max(1, Number(inv.duration_days) || 1);
@@ -1686,13 +1697,28 @@ function renderMyInvestments(investments) {
         const remaining = completed ? 0 : Math.max(0, dayMs - (elapsed % dayMs));
         const hours = Math.floor(remaining / 3600000);
         const minutes = Math.floor((remaining % 3600000) / 60000);
-        return `<article class="my-investment-card">
+        return `<article class="my-investment-card tone-${((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE + index) % 4}">
             <div class="my-investment-title"><span class="material-symbols-outlined">show_chart</span><div><small>Investment Plan · #${Number(inv.id) || '—'}</small><h2>${escapeUi(inv.name || 'Investment')}</h2></div><b class="status-badge-lbl ${completed ? 'confirmed' : 'active'}">${escapeUi(inv.status || 'Active')}</b></div>
             <div class="my-investment-values"><div><span>Principal</span><strong>${formatUSD(amount)}</strong></div><div><span>Daily ROI</span><strong>+${roi.toFixed(2)}%</strong></div><div><span>Daily commission</span><strong>${formatUSD(amount * roi / 100)}</strong></div><div><span>Cycles</span><strong>${completedCycles} / ${duration}</strong></div></div>
             <div class="my-investment-progress"><div><span>${completed ? 'Plan completed' : `${hours}h ${minutes}m until next commission`}</span><strong>${cycleProgress}%</strong></div><i><em style="width:${cycleProgress}%"></em></i></div>
             <footer><span>Started: ${escapeUi(inv.start_date || '—')}</span><span>Type: Fixed daily-return plan</span></footer>
         </article>`;
     }).join('');
+    const pagination = document.getElementById('my-investments-pagination');
+    if (pagination) pagination.hidden = rows.length <= MY_INVESTMENTS_PER_PAGE;
+    const pageInfo = document.getElementById('myinv-page-info');
+    if (pageInfo) pageInfo.textContent = `Page ${myInvestmentsPage} of ${totalPages}`;
+    const previous = document.getElementById('myinv-prev');
+    const next = document.getElementById('myinv-next');
+    if (previous) previous.disabled = myInvestmentsPage <= 1;
+    if (next) next.disabled = myInvestmentsPage >= totalPages;
+}
+
+function changeMyInvestmentsPage(direction) {
+    const totalPages = Math.max(1, Math.ceil(dashboardInvestments.length / MY_INVESTMENTS_PER_PAGE));
+    myInvestmentsPage = Math.min(totalPages, Math.max(1, myInvestmentsPage + Number(direction || 0)));
+    renderMyInvestments(dashboardInvestments);
+    document.getElementById('panel-myinvestments')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function financialStartDate(period) {
@@ -1706,17 +1732,46 @@ function financialStartDate(period) {
 function setFinancialPeriod(period) {
     if (!['daily', 'weekly', 'monthly', 'yearly'].includes(period)) return;
     financialPeriod = period;
+    financialCustomStart = null;
+    financialCustomEnd = null;
+    const from = document.getElementById('financial-date-from');
+    const to = document.getElementById('financial-date-to');
+    if (from) from.value = '';
+    if (to) to.value = '';
     renderFinancialOverview(period);
+}
+
+function applyFinancialCustomRange(event) {
+    event?.preventDefault();
+    const from = document.getElementById('financial-date-from')?.value;
+    const to = document.getElementById('financial-date-to')?.value;
+    if (!from || !to) { showToast('Please select both From and To dates.'); return; }
+    const start = new Date(`${from}T00:00:00`).getTime();
+    const end = new Date(`${to}T23:59:59.999`).getTime();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) { showToast('From date must be before To date.'); return; }
+    financialCustomStart = start;
+    financialCustomEnd = end;
+    financialPeriod = 'custom';
+    renderFinancialOverview('custom');
+}
+
+function clearFinancialCustomRange() {
+    const from = document.getElementById('financial-date-from');
+    const to = document.getElementById('financial-date-to');
+    if (from) from.value = '';
+    if (to) to.value = '';
+    setFinancialPeriod('monthly');
 }
 
 function renderFinancialOverview(period = 'monthly') {
     const activity = document.getElementById('financial-activity-list');
     if (!activity) return;
     document.querySelectorAll('.financial-period-filter button').forEach(button => button.classList.toggle('active', button.dataset.period === period));
-    const start = financialStartDate(period);
+    const start = period === 'custom' && financialCustomStart !== null ? financialCustomStart : financialStartDate(period);
+    const end = period === 'custom' && financialCustomEnd !== null ? financialCustomEnd : Date.now();
     const rows = dashboardTransactions.filter(tx => {
         const timestamp = Date.parse(String(tx.date || '').replace(' at ', ' '));
-        return Number.isFinite(timestamp) && timestamp >= start && String(tx.status || '') === 'Confirmed';
+        return Number.isFinite(timestamp) && timestamp >= start && timestamp <= end && String(tx.status || '') === 'Confirmed';
     });
     const sumType = matcher => rows.filter(tx => matcher(String(tx.type || ''))).reduce((sum, tx) => sum + Math.abs(Number(tx.amount) || 0), 0);
     const totals = {
@@ -1726,19 +1781,38 @@ function renderFinancialOverview(period = 'monthly') {
         referrals: sumType(type => /referral/i.test(type)),
         withdrawals: sumType(type => type === 'Withdrawal')
     };
+    const totalEarnings = totals.commissions + totals.referrals;
     const net = totals.deposits + totals.commissions + totals.referrals - totals.invested - totals.withdrawals;
     ['deposits', 'invested', 'commissions', 'referrals', 'withdrawals'].forEach(key => {
         const node = document.getElementById(`fin-${key}`); if (node) node.textContent = formatUSD(totals[key]);
     });
+    const earningsNode = document.getElementById('fin-earnings');
+    if (earningsNode) earningsNode.textContent = formatUSD(totalEarnings);
+    const roiNode = document.getElementById('fin-roi');
+    if (roiNode) roiNode.textContent = `${(totals.invested > 0 ? totalEarnings / totals.invested * 100 : 0).toFixed(2)}%`;
     const netNode = document.getElementById('fin-net');
     if (netNode) { netNode.textContent = `${net < 0 ? '-' : ''}${formatUSD(Math.abs(net))}`; netNode.classList.toggle('negative', net < 0); }
+    const netLabel = document.getElementById('fin-net-label');
+    if (netLabel) netLabel.textContent = net < 0 ? 'Net loss' : 'Net profit / cash flow';
+    const activityCount = document.getElementById('fin-activity-count');
+    if (activityCount) activityCount.textContent = `${rows.length} record${rows.length === 1 ? '' : 's'}`;
+    const periodLabel = document.getElementById('financial-period-label');
+    if (periodLabel) {
+        const labels = { daily: 'Today', weekly: 'Last 7 days', monthly: 'Current month', yearly: 'Current year' };
+        periodLabel.textContent = period === 'custom'
+            ? `${new Date(start).toLocaleDateString()} – ${new Date(end).toLocaleDateString()}`
+            : labels[period] || 'Current month';
+    }
 
     const bars = document.getElementById('financial-breakdown-bars');
     const labels = [['Deposits','deposits'],['Invested','invested'],['Daily commissions','commissions'],['Referral earnings','referrals'],['Withdrawals','withdrawals']];
     const max = Math.max(1, ...Object.values(totals));
     bars.innerHTML = labels.map(([label,key]) => `<div class="financial-bar-row"><div><span>${label}</span><strong>${formatUSD(totals[key])}</strong></div><i><em class="${key}" style="width:${Math.round(totals[key] / max * 100)}%"></em></i></div>`).join('');
 
-    activity.innerHTML = rows.length ? rows.slice(0, 8).map(tx => `<article class="financial-activity-row"><span class="material-symbols-outlined">${tx.type === 'Deposit' ? 'download' : tx.type === 'Withdrawal' ? 'upload' : /referral/i.test(tx.type) ? 'group' : 'paid'}</span><div><strong>${escapeUi(tx.type)}</strong><small>${escapeUi(tx.date)} · ${escapeUi(tx.ref || '—')}</small></div><b>${formatUSD(tx.amount)}</b></article>`).join('') : '<div class="financial-empty"><strong>No activity in this period</strong><small>Try another date range or make your first transaction.</small></div>';
+    activity.innerHTML = rows.length ? rows.slice(0, 8).map(tx => {
+        const debit = tx.type === 'Investment' || tx.type === 'Withdrawal';
+        return `<article class="financial-activity-row"><span class="material-symbols-outlined">${tx.type === 'Deposit' ? 'download' : tx.type === 'Withdrawal' ? 'upload' : /referral/i.test(tx.type) ? 'group' : 'paid'}</span><div><strong>${escapeUi(tx.type)}</strong><small>${escapeUi(tx.date)} · ${escapeUi(tx.ref || '—')}</small></div><b class="${debit ? 'debit' : 'credit'}">${debit ? '-' : '+'}${formatUSD(tx.amount)}</b></article>`;
+    }).join('') : '<div class="financial-empty"><strong>No activity in this period</strong><small>Try another date range or make your first transaction.</small></div>';
 }
 
 // ============================================================

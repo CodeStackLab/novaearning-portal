@@ -302,6 +302,11 @@
                     <article><span>Total plans</span><strong id="myinv-total-plans">0</strong></article>
                 </div>
                 <div id="my-investments-list" class="my-investments-list"><div class="financial-empty">Loading investments…</div></div>
+                <div class="my-investments-pagination" id="my-investments-pagination" hidden>
+                    <button type="button" id="myinv-prev" onclick="changeMyInvestmentsPage(-1)"><span class="material-symbols-outlined">chevron_left</span> Previous</button>
+                    <span id="myinv-page-info">Page 1 of 1</span>
+                    <button type="button" id="myinv-next" onclick="changeMyInvestmentsPage(1)">Next <span class="material-symbols-outlined">chevron_right</span></button>
+                </div>
             </section>
 
             <!-- PANEL: FINANCIAL OVERVIEW -->
@@ -316,13 +321,23 @@
                     <button type="button" data-period="monthly" class="active" onclick="setFinancialPeriod('monthly')">Monthly</button>
                     <button type="button" data-period="yearly" onclick="setFinancialPeriod('yearly')">Yearly</button>
                 </div>
+                <form class="financial-custom-range" onsubmit="applyFinancialCustomRange(event)">
+                    <div><label for="financial-date-from">From date</label><input type="date" id="financial-date-from" required></div>
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                    <div><label for="financial-date-to">To date</label><input type="date" id="financial-date-to" required></div>
+                    <button type="submit"><span class="material-symbols-outlined">date_range</span> Apply range</button>
+                    <button type="button" class="range-reset" onclick="clearFinancialCustomRange()">Reset</button>
+                </form>
+                <div class="financial-period-summary"><span class="material-symbols-outlined">event</span><span>Showing:</span><strong id="financial-period-label">Current month</strong><b id="fin-activity-count">0 records</b></div>
                 <div class="financial-metrics-grid">
                     <article><span>Deposits</span><strong id="fin-deposits">$0.00</strong><i class="material-symbols-outlined">download</i></article>
                     <article><span>Invested</span><strong id="fin-invested">$0.00</strong><i class="material-symbols-outlined">show_chart</i></article>
                     <article><span>Daily commissions</span><strong id="fin-commissions">$0.00</strong><i class="material-symbols-outlined">paid</i></article>
                     <article><span>Referral earnings</span><strong id="fin-referrals">$0.00</strong><i class="material-symbols-outlined">group</i></article>
                     <article><span>Withdrawals</span><strong id="fin-withdrawals">$0.00</strong><i class="material-symbols-outlined">upload</i></article>
-                    <article class="financial-net-card"><span>Net cash flow</span><strong id="fin-net">$0.00</strong><i class="material-symbols-outlined">account_balance_wallet</i></article>
+                    <article><span>Total earnings</span><strong id="fin-earnings">$0.00</strong><i class="material-symbols-outlined">trending_up</i></article>
+                    <article><span>Earnings / invested</span><strong id="fin-roi">0.00%</strong><i class="material-symbols-outlined">percent</i></article>
+                    <article class="financial-net-card"><span id="fin-net-label">Net profit / loss</span><strong id="fin-net">$0.00</strong><i class="material-symbols-outlined">account_balance_wallet</i></article>
                 </div>
                 <div class="financial-overview-grid">
                     <section class="financial-breakdown-card"><h2 class="font-display">Activity breakdown</h2><div id="financial-breakdown-bars"></div></section>
