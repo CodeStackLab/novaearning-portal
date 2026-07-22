@@ -266,13 +266,37 @@ html, body {
 #panel-notifications, #panel-email-preferences, #panel-smtp { width: 100%; max-width: 900px; margin-inline: auto; }
 
 /* Dedicated investment portfolio and financial overview */
-.investment-summary-grid, .financial-metrics-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.85rem; margin:1rem 0; }
+.investment-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.85rem; margin:1rem 0; }
+.financial-metrics-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.85rem; margin:1rem 0; }
 .investment-summary-grid article, .financial-metrics-grid article { position:relative; min-width:0; padding:1rem; overflow:hidden; background:linear-gradient(145deg,rgba(17,29,48,.96),rgba(8,17,31,.98)); border:1px solid rgba(126,156,205,.18); border-radius:14px; }
 .investment-summary-grid span, .financial-metrics-grid span { display:block; color:#8997aa; font-size:.68rem; font-weight:650; }
 .investment-summary-grid strong, .financial-metrics-grid strong { display:block; margin-top:.35rem; color:#f4f7fb; font:750 1.2rem/1.2 'Inter',sans-serif; }
 .financial-metrics-grid article > i { position:absolute; right:.8rem; bottom:.65rem; color:rgba(96,165,250,.22); font-size:2.1rem; }
 .financial-metrics-grid .financial-net-card { border-color:rgba(16,185,129,.3); }
 .financial-net-card strong { color:#34d399; }.financial-net-card strong.negative { color:#fb7185; }
+
+.btn-browse-plans {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    padding: 0.6rem 1.15rem !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    border: 1px solid rgba(96, 165, 250, 0.4) !important;
+    border-radius: 10px !important;
+    font-size: 0.82rem !important;
+    font-weight: 750 !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+}
+
+.btn-browse-plans:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5) !important;
+    transform: translateY(-1px);
+}
 .my-investments-list { display:grid; gap:.85rem; }
 .my-investment-card { padding:1rem; background:linear-gradient(145deg,rgba(16,27,45,.97),rgba(7,15,28,.99)); border:1px solid rgba(126,156,205,.18); border-radius:16px; }
 .my-investment-card.tone-0 { border-left:3px solid #3b82f6; }.my-investment-card.tone-1 { border-left:3px solid #a855f7; }.my-investment-card.tone-2 { border-left:3px solid #10b981; }.my-investment-card.tone-3 { border-left:3px solid #f59e0b; }

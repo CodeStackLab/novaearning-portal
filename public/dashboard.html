@@ -18,8 +18,8 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=77.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=77.0">
+    <link rel="stylesheet" href="/style.css?v=78.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=78.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -297,7 +297,10 @@
                         <h1 class="panel-title font-display">My Investments</h1>
                         <p class="panel-desc">Manage active plans, track daily commission cycles, and monitor upcoming payouts.</p>
                     </div>
-                    <button type="button" class="section-link-btn" onclick="switchTab('invest')">Browse plans <span class="material-symbols-outlined">arrow_forward</span></button>
+                    <button type="button" class="btn-browse-plans" onclick="switchTab('invest')">
+                        <span>Browse plans</span>
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
                 </div>
 
                 <div class="investment-summary-grid">
@@ -324,10 +327,14 @@
                         </button>
                     </div>
 
-                    <div class="my-investments-actions">
+                    <div class="my-investments-actions" style="display:flex; gap:0.5rem; align-items:center;">
                         <button type="button" class="upcoming-payout-toggle" id="toggle-upcoming-payout" onclick="toggleUpcomingPayoutFilter()">
                             <span class="material-symbols-outlined">bolt</span>
                             <span id="upcoming-filter-text">&lt; 24h Payout Left</span>
+                        </button>
+                        <button type="button" class="btn-browse-plans" onclick="switchTab('invest')" style="padding:0.55rem 0.9rem !important; font-size:0.75rem !important;">
+                            <span class="material-symbols-outlined" style="font-size:1.1rem;">add_circle</span>
+                            <span>Browse Plans</span>
                         </button>
                     </div>
                 </div>
@@ -957,6 +964,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=77.0"></script>
+    <script src="/app.js?v=78.0"></script>
 </body>
 </html>
