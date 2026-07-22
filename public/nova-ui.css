@@ -467,8 +467,19 @@ html, body {
 }
 
 /* ── Compact dashboard navigation and iPhone-safe spacing ── */
-.sidebar-logout-item { margin-top: auto; padding-top: .45rem; }
-.sidebar-logout-item .sidebar-item-link.logout { margin-top: 0 !important; border-top: 1px solid rgba(148,163,184,.12); }
+.sidebar-logout-item { margin-top: .35rem !important; padding-top: .35rem; border-top: 1px solid rgba(148,163,184,.12); }
+.sidebar-logout-item .sidebar-item-link.logout {
+    margin-top: 0 !important;
+    color: #fca5a5 !important;
+    background: rgba(239,68,68,.06);
+    border: 1px solid rgba(248,113,113,.16);
+}
+.sidebar-logout-item .sidebar-item-link.logout:hover,
+.sidebar-logout-item .sidebar-item-link.logout:focus-visible {
+    color: #fff !important;
+    background: rgba(220,38,38,.22);
+    border-color: rgba(248,113,113,.42);
+}
 .dashboard-body { width: 100%; max-width: 100%; overflow-x: clip !important; }
 .dashboard-wrapper, .dashboard-main-content, .dashboard-panel-view { min-width: 0; box-sizing: border-box; }
 
