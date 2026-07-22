@@ -187,7 +187,12 @@ async function loadSmtpSettings() {
         document.getElementById('smtp-port').value = smtp.port || 587;
         document.getElementById('smtp-encryption').value = smtp.encryption || 'tls';
         document.getElementById('smtp-username').value = smtp.username || '';
-        document.getElementById('smtp-password').value = '';
+        const passwordInput = document.getElementById('smtp-password');
+        passwordInput.value = smtp.passwordConfigured ? '••••••••••••' : '';
+        passwordInput.dataset.savedPassword = smtp.passwordConfigured ? 'true' : 'false';
+        passwordInput.type = 'password';
+        const passwordIcon = document.getElementById('smtp-password-icon');
+        if (passwordIcon) passwordIcon.textContent = 'visibility';
         document.getElementById('smtp-from-email').value = smtp.fromEmail || '';
         document.getElementById('smtp-from-name').value = smtp.fromName || 'NOVA';
         const configured = Boolean(smtp.host && smtp.fromEmail && smtp.passwordConfigured);
@@ -197,7 +202,7 @@ async function loadSmtpSettings() {
         }
         const help = document.getElementById('smtp-password-help');
         if (help) help.textContent = smtp.passwordConfigured
-            ? 'A password is already saved. Leave blank to keep it.'
+            ? 'Password saved securely. Type a new password only when you want to replace it.'
             : 'Enter the SMTP or app password supplied by your provider.';
     } catch (error) {
         if (status) status.textContent = 'Unable to load';
@@ -213,7 +218,7 @@ async function saveSmtpSettings(event) {
         port: Number(document.getElementById('smtp-port').value),
         encryption: document.getElementById('smtp-encryption').value,
         username: document.getElementById('smtp-username').value.trim(),
-        password: document.getElementById('smtp-password').value,
+        password: getSmtpPasswordForRequest(),
         fromEmail: document.getElementById('smtp-from-email').value.trim(),
         fromName: document.getElementById('smtp-from-name').value.trim()
     };
@@ -259,10 +264,24 @@ function getSmtpFormPayload() {
         port: Number(document.getElementById('smtp-port').value),
         encryption: document.getElementById('smtp-encryption').value,
         username: document.getElementById('smtp-username').value.trim(),
-        password: document.getElementById('smtp-password').value,
+        password: getSmtpPasswordForRequest(),
         fromEmail: document.getElementById('smtp-from-email').value.trim(),
         fromName: document.getElementById('smtp-from-name').value.trim()
     };
+}
+
+function getSmtpPasswordForRequest() {
+    const input = document.getElementById('smtp-password');
+    if (!input || input.dataset.savedPassword === 'true') return '';
+    return input.value;
+}
+
+function prepareSmtpPasswordReplacement() {
+    const input = document.getElementById('smtp-password');
+    if (input && input.dataset.savedPassword === 'true') {
+        input.value = '';
+        input.dataset.savedPassword = 'false';
+    }
 }
 
 async function testSmtpSettings() {
@@ -296,6 +315,10 @@ function toggleSmtpPassword() {
     const input = document.getElementById('smtp-password');
     const icon = document.getElementById('smtp-password-icon');
     if (!input) return;
+    if (input.dataset.savedPassword === 'true') {
+        showToast('Saved SMTP password is encrypted and cannot be displayed. Type a new password to replace it.');
+        return;
+    }
     const reveal = input.type === 'password';
     input.type = reveal ? 'text' : 'password';
     if (icon) icon.textContent = reveal ? 'visibility_off' : 'visibility';

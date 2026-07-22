@@ -566,7 +566,7 @@
                             <div class="form-group-db">
                                 <label class="form-label-db" for="smtp-password">SMTP Password</label>
                                 <div class="smtp-password-wrap">
-                                    <input class="form-input-db" id="smtp-password" type="password" placeholder="Enter password" autocomplete="new-password">
+                                    <input class="form-input-db" id="smtp-password" type="password" placeholder="Enter password" autocomplete="new-password" onbeforeinput="prepareSmtpPasswordReplacement()">
                                     <button type="button" onclick="toggleSmtpPassword()" aria-label="Show or hide SMTP password"><span class="material-symbols-outlined" id="smtp-password-icon">visibility</span></button>
                                 </div>
                                 <small id="smtp-password-help">Leave blank to keep the saved password.</small>
@@ -861,6 +861,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=4.9"></script>
+    <script src="admin-app.js?v=5.0"></script>
 </body>
 </html>
