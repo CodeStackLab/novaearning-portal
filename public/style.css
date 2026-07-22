@@ -304,7 +304,7 @@ body.dark-theme {
     .balance-eyebrow { font-size: .85rem; }
     .balance-wallet-icon { width: 46px; height: 46px; border-radius: 13px; }
     .balance-wallet-icon .material-symbols-outlined { font-size: 25px; }
-    .balance-value { font-size: clamp(2.25rem, 12vw, 2.75rem); margin-top: .2rem; }
+    .balance-value { font-size: clamp(1.65rem, 6.5vw, 2.15rem); margin-top: .15rem; font-weight: 800; }
     .dashboard-refresh-btn { margin-top: 1rem; padding: .64rem .85rem; border-radius: 10px; font-size: .78rem; }
     .balance-stats-grid { gap: .35rem; margin: 1rem -1rem 0; padding: 1rem 1rem 0; }
     .balance-stat { padding-right: .25rem; }
