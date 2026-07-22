@@ -79,6 +79,7 @@ jobs:
           put dist/admin.html admin.html
           put dist/nova-ui.css nova-ui.css
           put dist/cron-auth.php cron-auth.php
+          put dist/.htaccess .htaccess
           quit
           EOF
 
