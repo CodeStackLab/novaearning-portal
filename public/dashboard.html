@@ -256,18 +256,6 @@
                     </div>
                 </div>
 
-                <!-- Interactive Toolbar: Search & Category Chips -->
-                <div class="invest-toolbar">
-                    <div class="invest-search-box">
-                        <span class="material-symbols-outlined search-icon">search</span>
-                        <input type="text" id="invest-search-input" placeholder="Search plans (e.g. AMC, Netflix, Gift Card)..." oninput="filterInvestmentsBySearch(this.value)">
-                    </div>
-                    <div class="invest-filter-chips">
-                        <button class="invest-chip active" data-filter="all" onclick="filterDashboardPlansCategory('all', this)">All Plans</button>
-                        <button class="invest-chip" data-filter="movies" onclick="filterDashboardPlansCategory('movies', this)">🎬 Cinema & Movies</button>
-                        <button class="invest-chip" data-filter="cards" onclick="filterDashboardPlansCategory('cards', this)">💳 Gift Cards</button>
-                    </div>
-                </div>
 
                 <!-- Dynamic Grid -->
                 <div id="db-investments-grid" class="db-investments-grid">
