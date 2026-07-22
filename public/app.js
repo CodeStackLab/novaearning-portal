@@ -178,9 +178,8 @@ function switchTab(tabId) {
         if (tabId === 'invest' && typeof filterDashboardPlans === 'function') {
             filterDashboardPlans(typeof dbCurrentFilter !== 'undefined' ? dbCurrentFilter : 'all');
         }
-        if (tabId === 'myinvestments' && typeof renderDummyMyInvestments === 'function') {
-            renderDummyMyInvestments();
-        }
+        if (tabId === 'myinvestments') renderMyInvestments(dashboardInvestments);
+        if (tabId === 'financial') renderFinancialOverview(financialPeriod);
     }
 }
 
@@ -204,6 +203,9 @@ async function loadReferralProgramSettings() {
 }
 
 const userNotificationEvents = ['deposit', 'withdrawal', 'investment', 'commission', 'referral', 'reminder', 'support'];
+let dashboardInvestments = [];
+let dashboardTransactions = [];
+let financialPeriod = 'monthly';
 
 function escapeUi(value) {
     const node = document.createElement('div');
@@ -367,11 +369,15 @@ async function fetchAllDashboardData() {
             apiRequest('/investments'),
             apiRequest('/transactions')
         ]);
+        dashboardInvestments = Array.isArray(investments) ? investments : [];
+        dashboardTransactions = Array.isArray(transactions) ? transactions : [];
 
         renderDepositsTable(deposits);
         renderAllTransactionsTable(transactions);
         renderWithdrawalStatus(transactions);
         renderInvestmentsTable(investments);
+        renderMyInvestments(dashboardInvestments);
+        renderFinancialOverview(financialPeriod);
         if (typeof renderActiveInvestmentsTracking === 'function') {
             renderActiveInvestmentsTracking(investments);
         }
@@ -739,6 +745,7 @@ async function purchasePlan(name, inputId) {
 
         showToast(response.message || `Successfully purchased plan: ${name}!`);
         await fetchAllDashboardData();
+        switchTab('myinvestments');
     } catch (e) {
         alert(e.message || 'Failed to purchase plan.');
     }
@@ -1024,11 +1031,11 @@ function renderActiveInvestmentsTracking(investments) {
         const minutes = Math.floor((remaining % 3600000) / 60000);
         return `
         <tr style="border-bottom: 1px solid #1e2538;">
-            <td style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${escapeUi(inv.name || 'Investment')}</td>
-            <td style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">${formatUSD(investmentAmount)}</td>
-            <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${dailyProfitPct.toFixed(2)}% / day</td>
-            <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:700;">+$${estReturns.toFixed(2)}</td>
-            <td style="padding: 1rem 1.25rem;"><div class="investment-cycle"><span><b>${hours}h ${minutes}m</b> to next credit</span><i><em style="width:${Math.round(cycleProgress * 100)}%"></em></i></div></td>
+            <td data-label="Investment plan" style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${escapeUi(inv.name || 'Investment')}</td>
+            <td data-label="Amount" style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">${formatUSD(investmentAmount)}</td>
+            <td data-label="Daily ROI" style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${dailyProfitPct.toFixed(2)}% / day</td>
+            <td data-label="Est. return" style="padding: 1rem 1.25rem; color:#10b981; font-weight:700;">+$${estReturns.toFixed(2)}</td>
+            <td data-label="Status" style="padding: 1rem 1.25rem;"><div class="investment-cycle"><span><b>${hours}h ${minutes}m</b> to next credit</span><i><em style="width:${Math.round(cycleProgress * 100)}%"></em></i></div></td>
         </tr>
         `;
     }).join('');
@@ -1642,69 +1649,96 @@ async function confirmBuyPlan() {
         showToast(response.message || `Successfully purchased plan: ${currentBuyPlanName}!`);
         closeBuyPlanModal();
         await fetchAllDashboardData();
+        switchTab('myinvestments');
     } catch (e) {
         alert(e.message || 'Failed to purchase plan.');
     }
 }
 
 
-// ============================================================
-// DUMMY INVESTMENTS FOR MY INVESTMENTS PAGE
-// ============================================================
+function renderMyInvestments(investments) {
+    const container = document.getElementById('my-investments-list');
+    if (!container) return;
+    const rows = Array.isArray(investments) ? investments : [];
+    const active = rows.filter(inv => inv.status === 'Active');
+    const activePrincipal = active.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+    const dailyReturn = active.reduce((sum, inv) => sum + ((Number(inv.amount) || 0) * (Number(inv.daily_profit_pct) || 0) / 100), 0);
+    document.getElementById('myinv-active-principal').textContent = formatUSD(activePrincipal);
+    document.getElementById('myinv-daily-return').textContent = formatUSD(dailyReturn);
+    document.getElementById('myinv-total-plans').textContent = String(rows.length);
 
-function renderDummyMyInvestments() {
-    const tbody = document.getElementById('myinvestments-table-body');
-    if (!tbody) return;
-
-    const realPurchases = JSON.parse(localStorage.getItem('nova_user_investments') || '[]');
-    const dummyData = [
-        { name: 'AMC Movie Ticket',    amount: 100, roi: 2.5, status: 'Active',    hoursLeft: 18, progress: 0.25 },
-        { name: 'Avengers: Endgame',   amount: 150, roi: 2.5, status: 'Active',    hoursLeft: 7,  progress: 0.71 },
-        { name: 'Movie Combo',         amount: 80,  roi: 2.5, status: 'Completed', hoursLeft: 0,  progress: 1.0  },
-        { name: 'Netflix Gift Card',   amount: 120, roi: 2.5, status: 'Completed', hoursLeft: 0,  progress: 1.0  },
-    ];
-
-    const investments = realPurchases.length > 0 ? realPurchases : dummyData;
-    let totalPrincipal = 0, totalProfit = 0, completed = 0;
-
-    tbody.innerHTML = investments.map(inv => {
-        totalPrincipal += inv.amount;
-        const daily = inv.amount * inv.roi / 100;
-        totalProfit += daily;
-        const isCompleted = inv.status === 'Completed' || inv.progress >= 1;
-        if (isCompleted) completed++;
-        const pct = Math.round((inv.progress || 0) * 100);
-        const color = isCompleted ? '#10b981' : '#3b82f6';
-
-        return `
-            <tr style="border-bottom:1px solid #1e2538;">
-                <td style="padding:1rem 1.25rem; color:#f8fafc; font-weight:700; font-size:0.88rem;">${inv.name}</td>
-                <td style="padding:1rem 1.25rem; color:#f8fafc; font-weight:700;">$${inv.amount.toFixed(2)}</td>
-                <td style="padding:1rem 1.25rem; color:#10b981; font-weight:700;">+${inv.roi}% ($${daily.toFixed(2)})</td>
-                <td style="padding:1rem 1.25rem; color:#f8fafc; font-weight:700;">$${(inv.amount + daily).toFixed(2)}</td>
-                <td style="padding:1rem 1.25rem;">
-                    <div style="display:flex; flex-direction:column; gap:0.35rem; width:140px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:#94a3b8;">
-                            <span style="color:${color}; font-weight:600;">${isCompleted ? 'Completed' : 'Active'}</span>
-                            <span>${isCompleted ? 'Done ✓' : (inv.hoursLeft || '?') + 'h left'}</span>
-                        </div>
-                        <div style="width:100%; height:6px; background:#1e2538; border-radius:4px; overflow:hidden;">
-                            <div style="width:${pct}%; height:100%; background:linear-gradient(90deg,${color},${isCompleted ? '#34d399' : '#60a5fa'}); border-radius:4px;"></div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    // Update summary metrics
-    const metricsRow = document.querySelector('#panel-myinvestments .dashboard-metrics-row');
-    if (metricsRow) {
-        const vals = metricsRow.querySelectorAll('.metric-val');
-        if (vals[0]) vals[0].textContent = `$${totalPrincipal.toFixed(2)}`;
-        if (vals[1]) vals[1].textContent = `+$${totalProfit.toFixed(2)}`;
-        if (vals[2]) vals[2].textContent = completed;
+    if (!rows.length) {
+        container.innerHTML = '<div class="financial-empty"><span class="material-symbols-outlined">account_balance</span><strong>No investments yet</strong><small>Choose an investment plan to start your first 24-hour earning cycle.</small><button type="button" onclick="switchTab(\'invest\')">Browse investment plans</button></div>';
+        return;
     }
+
+    const dayMs = 86400000;
+    container.innerHTML = rows.map(inv => {
+        const amount = Number(inv.amount) || 0;
+        const roi = Number(inv.daily_profit_pct) || 0;
+        const duration = Math.max(1, Number(inv.duration_days) || 1);
+        let started = Number(inv.created_at) || Date.parse(inv.start_date || '') || Date.now();
+        if (started < 1000000000000) started *= 1000;
+        const elapsed = Math.max(0, Date.now() - started);
+        const completedCycles = Math.min(duration, Math.floor(elapsed / dayMs));
+        const completed = inv.status === 'Completed';
+        const cycleProgress = completed ? 100 : Math.min(100, Math.round(((elapsed % dayMs) / dayMs) * 100));
+        const remaining = completed ? 0 : Math.max(0, dayMs - (elapsed % dayMs));
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        return `<article class="my-investment-card">
+            <div class="my-investment-title"><span class="material-symbols-outlined">show_chart</span><div><small>Investment Plan · #${Number(inv.id) || '—'}</small><h2>${escapeUi(inv.name || 'Investment')}</h2></div><b class="status-badge-lbl ${completed ? 'confirmed' : 'active'}">${escapeUi(inv.status || 'Active')}</b></div>
+            <div class="my-investment-values"><div><span>Principal</span><strong>${formatUSD(amount)}</strong></div><div><span>Daily ROI</span><strong>+${roi.toFixed(2)}%</strong></div><div><span>Daily commission</span><strong>${formatUSD(amount * roi / 100)}</strong></div><div><span>Cycles</span><strong>${completedCycles} / ${duration}</strong></div></div>
+            <div class="my-investment-progress"><div><span>${completed ? 'Plan completed' : `${hours}h ${minutes}m until next commission`}</span><strong>${cycleProgress}%</strong></div><i><em style="width:${cycleProgress}%"></em></i></div>
+            <footer><span>Started: ${escapeUi(inv.start_date || '—')}</span><span>Type: Fixed daily-return plan</span></footer>
+        </article>`;
+    }).join('');
+}
+
+function financialStartDate(period) {
+    const now = new Date();
+    if (period === 'daily') return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    if (period === 'weekly') return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).getTime();
+    if (period === 'yearly') return new Date(now.getFullYear(), 0, 1).getTime();
+    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+}
+
+function setFinancialPeriod(period) {
+    if (!['daily', 'weekly', 'monthly', 'yearly'].includes(period)) return;
+    financialPeriod = period;
+    renderFinancialOverview(period);
+}
+
+function renderFinancialOverview(period = 'monthly') {
+    const activity = document.getElementById('financial-activity-list');
+    if (!activity) return;
+    document.querySelectorAll('.financial-period-filter button').forEach(button => button.classList.toggle('active', button.dataset.period === period));
+    const start = financialStartDate(period);
+    const rows = dashboardTransactions.filter(tx => {
+        const timestamp = Date.parse(String(tx.date || '').replace(' at ', ' '));
+        return Number.isFinite(timestamp) && timestamp >= start && String(tx.status || '') === 'Confirmed';
+    });
+    const sumType = matcher => rows.filter(tx => matcher(String(tx.type || ''))).reduce((sum, tx) => sum + Math.abs(Number(tx.amount) || 0), 0);
+    const totals = {
+        deposits: sumType(type => type === 'Deposit'),
+        invested: sumType(type => type === 'Investment'),
+        commissions: sumType(type => /daily commission|profit|earning/i.test(type) && !/referral/i.test(type)),
+        referrals: sumType(type => /referral/i.test(type)),
+        withdrawals: sumType(type => type === 'Withdrawal')
+    };
+    const net = totals.deposits + totals.commissions + totals.referrals - totals.invested - totals.withdrawals;
+    ['deposits', 'invested', 'commissions', 'referrals', 'withdrawals'].forEach(key => {
+        const node = document.getElementById(`fin-${key}`); if (node) node.textContent = formatUSD(totals[key]);
+    });
+    const netNode = document.getElementById('fin-net');
+    if (netNode) { netNode.textContent = `${net < 0 ? '-' : ''}${formatUSD(Math.abs(net))}`; netNode.classList.toggle('negative', net < 0); }
+
+    const bars = document.getElementById('financial-breakdown-bars');
+    const labels = [['Deposits','deposits'],['Invested','invested'],['Daily commissions','commissions'],['Referral earnings','referrals'],['Withdrawals','withdrawals']];
+    const max = Math.max(1, ...Object.values(totals));
+    bars.innerHTML = labels.map(([label,key]) => `<div class="financial-bar-row"><div><span>${label}</span><strong>${formatUSD(totals[key])}</strong></div><i><em class="${key}" style="width:${Math.round(totals[key] / max * 100)}%"></em></i></div>`).join('');
+
+    activity.innerHTML = rows.length ? rows.slice(0, 8).map(tx => `<article class="financial-activity-row"><span class="material-symbols-outlined">${tx.type === 'Deposit' ? 'download' : tx.type === 'Withdrawal' ? 'upload' : /referral/i.test(tx.type) ? 'group' : 'paid'}</span><div><strong>${escapeUi(tx.type)}</strong><small>${escapeUi(tx.date)} · ${escapeUi(tx.ref || '—')}</small></div><b>${formatUSD(tx.amount)}</b></article>`).join('') : '<div class="financial-empty"><strong>No activity in this period</strong><small>Try another date range or make your first transaction.</small></div>';
 }
 
 // ============================================================
@@ -1742,9 +1776,6 @@ function renderDummyMyInvestments() {
     function tryInit() {
         if (document.getElementById('db-investments-grid')) {
             filterDashboardPlans('all');
-        }
-        if (document.getElementById('myinvestments-table-body')) {
-            renderDummyMyInvestments();
         }
         // Start simulated transaction notification feed
         startLiveTransactionsFeed();

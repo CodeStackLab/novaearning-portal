@@ -264,6 +264,47 @@ html, body {
 
 /* Dashboard polish — clear hierarchy, touch-friendly controls and mobile rhythm */
 #panel-notifications, #panel-email-preferences, #panel-smtp { width: 100%; max-width: 900px; margin-inline: auto; }
+
+/* Dedicated investment portfolio and financial overview */
+.investment-summary-grid, .financial-metrics-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.85rem; margin:1rem 0; }
+.investment-summary-grid article, .financial-metrics-grid article { position:relative; min-width:0; padding:1rem; overflow:hidden; background:linear-gradient(145deg,rgba(17,29,48,.96),rgba(8,17,31,.98)); border:1px solid rgba(126,156,205,.18); border-radius:14px; }
+.investment-summary-grid span, .financial-metrics-grid span { display:block; color:#8997aa; font-size:.68rem; font-weight:650; }
+.investment-summary-grid strong, .financial-metrics-grid strong { display:block; margin-top:.35rem; color:#f4f7fb; font:750 1.2rem/1.2 'Inter',sans-serif; }
+.financial-metrics-grid article > i { position:absolute; right:.8rem; bottom:.65rem; color:rgba(96,165,250,.22); font-size:2.1rem; }
+.financial-metrics-grid .financial-net-card { border-color:rgba(16,185,129,.3); }
+.financial-net-card strong { color:#34d399; }.financial-net-card strong.negative { color:#fb7185; }
+.my-investments-list { display:grid; gap:.85rem; }
+.my-investment-card { padding:1rem; background:linear-gradient(145deg,rgba(16,27,45,.97),rgba(7,15,28,.99)); border:1px solid rgba(126,156,205,.18); border-radius:16px; }
+.my-investment-title { display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:.75rem; }
+.my-investment-title > .material-symbols-outlined { display:grid; width:42px; height:42px; place-items:center; color:#60a5fa; background:rgba(59,130,246,.13); border-radius:11px; }
+.my-investment-title small { color:#718096; font-size:.62rem; }.my-investment-title h2 { margin:.15rem 0 0; color:#f2f6fc; font-size:.95rem; }
+.my-investment-values { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.75rem; margin:.95rem 0; padding:.85rem; background:rgba(3,9,18,.38); border-radius:11px; }
+.my-investment-values span { display:block; color:#718096; font-size:.6rem; }.my-investment-values strong { display:block; margin-top:.2rem; color:#e8eef7; font-size:.78rem; }
+.my-investment-progress > div { display:flex; justify-content:space-between; gap:1rem; color:#8090a5; font-size:.66rem; }.my-investment-progress > div strong { color:#60a5fa; }
+.my-investment-progress > i, .financial-bar-row > i { display:block; height:6px; margin-top:.4rem; overflow:hidden; background:#17243a; border-radius:99px; }.my-investment-progress > i em { display:block; height:100%; background:linear-gradient(90deg,#3b82f6,#22c55e); border-radius:inherit; }
+.my-investment-card footer { display:flex; justify-content:space-between; gap:1rem; margin-top:.75rem; color:#65748a; font-size:.61rem; }
+.financial-period-filter { display:flex; gap:.45rem; margin:1rem 0; padding:.35rem; width:max-content; max-width:100%; background:rgba(5,13,25,.72); border:1px solid rgba(126,156,205,.15); border-radius:11px; }
+.financial-period-filter button { padding:.55rem .85rem; color:#8897ab; background:transparent; border:0; border-radius:8px; font-size:.7rem; font-weight:700; cursor:pointer; }.financial-period-filter button.active { color:#fff; background:#2563eb; box-shadow:0 5px 14px rgba(37,99,235,.28); }
+.financial-overview-grid { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:1rem; }
+.financial-breakdown-card, .financial-activity-card { min-width:0; padding:1rem; background:linear-gradient(145deg,rgba(16,27,45,.96),rgba(7,15,28,.98)); border:1px solid rgba(126,156,205,.18); border-radius:16px; }
+.financial-breakdown-card h2, .financial-activity-card h2 { margin:0 0 .9rem; color:#f1f5fb; font-size:.9rem; }
+.financial-bar-row { margin:.8rem 0; }.financial-bar-row > div { display:flex; justify-content:space-between; gap:.75rem; color:#8998ac; font-size:.66rem; }.financial-bar-row strong { color:#dce5f1; }
+.financial-bar-row em { display:block; height:100%; min-width:2px; border-radius:inherit; background:#3b82f6; }.financial-bar-row em.invested{background:#a855f7}.financial-bar-row em.commissions{background:#10b981}.financial-bar-row em.referrals{background:#f59e0b}.financial-bar-row em.withdrawals{background:#f43f5e}
+.financial-activity-row { display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:.65rem; padding:.7rem 0; border-bottom:1px solid rgba(126,156,205,.1); }.financial-activity-row:last-child{border:0}.financial-activity-row > span{display:grid;width:34px;height:34px;place-items:center;color:#60a5fa;background:rgba(59,130,246,.1);border-radius:9px;font-size:1rem}.financial-activity-row strong,.financial-activity-row small{display:block;min-width:0}.financial-activity-row strong{color:#e6edf7;font-size:.72rem}.financial-activity-row small{margin-top:.15rem;overflow:hidden;color:#718096;font-size:.59rem;text-overflow:ellipsis;white-space:nowrap}.financial-activity-row b{color:#dce5f1;font-size:.72rem}
+.financial-empty { display:grid; min-height:150px; padding:1rem; place-content:center; justify-items:center; gap:.35rem; color:#718096; text-align:center; border:1px dashed rgba(126,156,205,.17); border-radius:13px; }.financial-empty > span{font-size:2rem}.financial-empty strong{color:#dce5f1}.financial-empty small{max-width:320px;font-size:.68rem}.financial-empty button{margin-top:.55rem;padding:.55rem .8rem;color:#fff;background:#2563eb;border:0;border-radius:8px;font-weight:700;cursor:pointer}
+
+@media (max-width:700px) {
+    #panel-myinvestments, #panel-financial { padding-bottom:74px; }
+    .investment-summary-grid, .financial-metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; }
+    .investment-summary-grid article, .financial-metrics-grid article { padding:.8rem; }
+    .investment-summary-grid strong, .financial-metrics-grid strong { font-size:1rem; }
+    .my-investment-title { grid-template-columns:38px minmax(0,1fr); }.my-investment-title > .material-symbols-outlined{width:38px;height:38px}.my-investment-title > b{grid-column:1/-1;width:max-content}
+    .my-investment-values { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .my-investment-card footer { flex-direction:column; gap:.25rem; }
+    .financial-period-filter { width:100%; box-sizing:border-box; }.financial-period-filter button{flex:1;padding:.5rem .25rem;font-size:.62rem}
+    .financial-overview-grid { grid-template-columns:1fr; }
+    .financial-activity-row { grid-template-columns:32px minmax(0,1fr); }.financial-activity-row b{grid-column:2}
+}
 .dashboard-panel-view > .panel-title { margin-bottom: .4rem; letter-spacing: -.025em; }
 .dashboard-panel-view > .panel-desc { max-width: 720px; line-height: 1.55; }
 .notification-settings-grid { gap: .8rem !important; }

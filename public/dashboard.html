@@ -47,6 +47,18 @@
                     <span>Investment Plans</span>
                 </a>
             </li>
+            <li>
+                <a href="#myinvestments" class="sidebar-item-link" data-tab="myinvestments">
+                    <span class="material-symbols-outlined sidebar-icon">account_balance</span>
+                    <span>My Investments</span>
+                </a>
+            </li>
+            <li>
+                <a href="#financial" class="sidebar-item-link" data-tab="financial">
+                    <span class="material-symbols-outlined sidebar-icon">monitoring</span>
+                    <span>Financial Overview</span>
+                </a>
+            </li>
 
             <li>
                 <a href="#transactions" class="sidebar-item-link" data-tab="transactions">
@@ -276,6 +288,46 @@
                     <button class="filter-btn" id="db-prev-btn" onclick="changeDashboardPage(-1)" style="padding:0.4rem 1rem;">&#8592; Prev</button>
                     <div id="db-page-info" style="font-size:0.85rem; color:#94a3b8; font-weight:600;">Page 1</div>
                     <button class="filter-btn" id="db-next-btn" onclick="changeDashboardPage(1)" style="padding:0.4rem 1rem;">Next &#8594;</button>
+                </div>
+            </section>
+
+            <!-- PANEL: MY INVESTMENTS -->
+            <section id="panel-myinvestments" class="dashboard-panel-view">
+                <div class="reference-panel-heading">
+                    <div><h1 class="panel-title font-display">My Investments</h1><p class="panel-desc">Track every active and completed plan, earning cycle and expected return.</p></div>
+                    <button type="button" class="section-link-btn" onclick="switchTab('invest')">Browse plans <span class="material-symbols-outlined">arrow_forward</span></button>
+                </div>
+                <div class="investment-summary-grid">
+                    <article><span>Active principal</span><strong id="myinv-active-principal">$0.00</strong></article>
+                    <article><span>Expected daily commission</span><strong id="myinv-daily-return">$0.00</strong></article>
+                    <article><span>Total plans</span><strong id="myinv-total-plans">0</strong></article>
+                </div>
+                <div id="my-investments-list" class="my-investments-list"><div class="financial-empty">Loading investments…</div></div>
+            </section>
+
+            <!-- PANEL: FINANCIAL OVERVIEW -->
+            <section id="panel-financial" class="dashboard-panel-view">
+                <div class="reference-panel-heading">
+                    <div><h1 class="panel-title font-display">Financial Overview</h1><p class="panel-desc">Understand deposits, invested funds, commissions, referrals and withdrawals by period.</p></div>
+                    <span class="material-symbols-outlined reference-panel-art" aria-hidden="true">monitoring</span>
+                </div>
+                <div class="financial-period-filter" role="group" aria-label="Financial overview period">
+                    <button type="button" data-period="daily" onclick="setFinancialPeriod('daily')">Daily</button>
+                    <button type="button" data-period="weekly" onclick="setFinancialPeriod('weekly')">Weekly</button>
+                    <button type="button" data-period="monthly" class="active" onclick="setFinancialPeriod('monthly')">Monthly</button>
+                    <button type="button" data-period="yearly" onclick="setFinancialPeriod('yearly')">Yearly</button>
+                </div>
+                <div class="financial-metrics-grid">
+                    <article><span>Deposits</span><strong id="fin-deposits">$0.00</strong><i class="material-symbols-outlined">download</i></article>
+                    <article><span>Invested</span><strong id="fin-invested">$0.00</strong><i class="material-symbols-outlined">show_chart</i></article>
+                    <article><span>Daily commissions</span><strong id="fin-commissions">$0.00</strong><i class="material-symbols-outlined">paid</i></article>
+                    <article><span>Referral earnings</span><strong id="fin-referrals">$0.00</strong><i class="material-symbols-outlined">group</i></article>
+                    <article><span>Withdrawals</span><strong id="fin-withdrawals">$0.00</strong><i class="material-symbols-outlined">upload</i></article>
+                    <article class="financial-net-card"><span>Net cash flow</span><strong id="fin-net">$0.00</strong><i class="material-symbols-outlined">account_balance_wallet</i></article>
+                </div>
+                <div class="financial-overview-grid">
+                    <section class="financial-breakdown-card"><h2 class="font-display">Activity breakdown</h2><div id="financial-breakdown-bars"></div></section>
+                    <section class="financial-activity-card"><div class="section-title-row"><h2 class="font-display">Period activity</h2><button type="button" class="section-link-btn" onclick="switchTab('transactions')">All records</button></div><div id="financial-activity-list"></div></section>
                 </div>
             </section>
 
