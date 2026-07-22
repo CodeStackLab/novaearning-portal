@@ -27,7 +27,7 @@
   - `IONOS_SFTP_PORT`: `22`
   - `IONOS_SFTP_USER`: configured
   - `IONOS_SFTP_PASSWORD`: configured as an encrypted repository secret
-  - `IONOS_REMOTE_PATH`: production web root (for the current shared-hosting setup this is `/novaearning/`; the workflow falls back to `.` only when omitted)
+  - `IONOS_REMOTE_PATH`: production web root (for the current shared-hosting setup this is `/novaearning/`; the workflow safely uses `/novaearning/` when omitted)
 
 ---
 
