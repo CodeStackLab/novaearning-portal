@@ -18,8 +18,8 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=78.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=78.0">
+    <link rel="stylesheet" href="/style.css?v=80.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=80.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -219,26 +219,15 @@
                 <div class="recent-deposits-section active-investments-card">
                     <div class="section-title-row">
                         <h2 class="recent-deposits-title font-display">Active Investments</h2>
-                        <button type="button" class="section-link-btn" onclick="switchTab('invest'); return false;" aria-label="View investment plans">View plans <span class="material-symbols-outlined">arrow_forward</span></button>
+                        <button type="button" class="btn-browse-plans" onclick="switchTab('invest'); return false;" aria-label="View investment plans" style="padding:0.45rem 0.85rem !important; font-size:0.75rem !important;">
+                            <span>Browse plans</span>
+                            <span class="material-symbols-outlined" style="font-size:1.05rem;">arrow_forward</span>
+                        </button>
                     </div>
-                    <div class="table-responsive-box active-investments-table-wrap">
-                        <table class="deposits-table-list" style="width: 100%; border-collapse: collapse; min-width: 600px;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid #1e2538;">
-                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Investment Plan</th>
-                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Amount</th>
-                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Daily ROI</th>
-                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Est. Returns</th>
-                                    <th style="text-align: left; padding: 1rem 1.25rem; color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="active-investments-tbody">
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 1.5rem; color: #94a3b8;">No active investments today. Go to 'Investment Plans' to start.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="profile-active-investments-container" class="profile-investments-grid">
+                        <div class="financial-empty">No active investments today. Go to 'Investment Plans' to start.</div>
                     </div>
+                    <table style="display:none;"><tbody id="active-investments-tbody"></tbody></table>
                 </div>
 
             </section>
@@ -964,6 +953,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=78.0"></script>
+    <script src="/app.js?v=80.0"></script>
 </body>
 </html>

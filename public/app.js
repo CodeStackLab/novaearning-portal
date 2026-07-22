@@ -1014,36 +1014,102 @@ function renderInvestmentsTable(investments) {
 }
 
 function renderActiveInvestmentsTracking(investments) {
+    const cardContainer = document.getElementById('profile-active-investments-container');
     const tbody = document.getElementById('active-investments-tbody');
-    if (!tbody) return;
 
     const active = (Array.isArray(investments) ? investments : []).filter(inv => inv.status === 'Active');
 
     if (!active.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#94a3b8">No active investments yet.</td></tr>';
+        if (cardContainer) {
+            cardContainer.innerHTML = '<div class="financial-empty">No active investments yet. Go to Investment Plans to start.</div>';
+        }
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#94a3b8">No active investments yet.</td></tr>';
+        }
         return;
     }
 
-    tbody.innerHTML = active.map(inv => {
-        const investmentAmount = Number(inv.amount) || 0;
-        const dailyProfitPct = Number(inv.daily_profit_pct) || 0;
-        const estReturns = investmentAmount * (dailyProfitPct / 100);
+    if (cardContainer) {
         const cycleMs = 24 * 60 * 60 * 1000;
-        const elapsed = Math.max(0, Date.now() - Number(inv.created_at || Date.now()));
-        const cycleProgress = Math.min(1, (elapsed % cycleMs) / cycleMs);
-        const remaining = Math.max(0, cycleMs - (elapsed % cycleMs));
-        const hours = Math.floor(remaining / 3600000);
-        const minutes = Math.floor((remaining % 3600000) / 60000);
-        return `
-        <tr style="border-bottom: 1px solid #1e2538;">
-            <td data-label="Investment plan" style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${escapeUi(inv.name || 'Investment')}</td>
-            <td data-label="Amount" style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">${formatUSD(investmentAmount)}</td>
-            <td data-label="Daily ROI" style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${dailyProfitPct.toFixed(2)}% / day</td>
-            <td data-label="Est. return" style="padding: 1rem 1.25rem; color:#10b981; font-weight:700;">+$${estReturns.toFixed(2)}</td>
-            <td data-label="Status" style="padding: 1rem 1.25rem;"><div class="investment-cycle"><span><b>${hours}h ${minutes}m</b> to next credit</span><i><em style="width:${Math.round(cycleProgress * 100)}%"></em></i></div></td>
-        </tr>
-        `;
-    }).join('');
+        cardContainer.innerHTML = active.map(inv => {
+            const investmentAmount = Number(inv.amount) || 0;
+            const dailyProfitPct = Number(inv.daily_profit_pct) || 0;
+            const estReturns = investmentAmount * (dailyProfitPct / 100);
+            let started = Number(inv.created_at) || Date.parse(inv.start_date || '') || Date.now();
+            if (started < 1000000000000) started *= 1000;
+            const elapsed = Math.max(0, Date.now() - started);
+            const cycleProgress = Math.min(1, (elapsed % cycleMs) / cycleMs);
+            const remaining = Math.max(0, cycleMs - (elapsed % cycleMs));
+            const hours = Math.floor(remaining / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            const progressPct = Math.max(2, Math.round(cycleProgress * 100));
+
+            return `
+                <div class="profile-inv-card">
+                    <div class="profile-inv-header">
+                        <div class="profile-inv-title-group">
+                            <div class="profile-inv-icon">
+                                <span class="material-symbols-outlined">analytics</span>
+                            </div>
+                            <div class="profile-inv-name">${escapeUi(inv.name || 'Investment Plan')}</div>
+                        </div>
+                        <span class="profile-inv-status-pill">
+                            <span class="dot"></span>
+                            <span>Active</span>
+                        </span>
+                    </div>
+
+                    <div class="profile-inv-metrics">
+                        <div class="profile-inv-metric-item">
+                            <span>Principal</span>
+                            <strong>${formatUSD(investmentAmount)}</strong>
+                        </div>
+                        <div class="profile-inv-metric-item">
+                            <span>Daily ROI</span>
+                            <strong class="roi-pct">+${dailyProfitPct.toFixed(2)}%</strong>
+                        </div>
+                        <div class="profile-inv-metric-item">
+                            <span>Est. Return</span>
+                            <strong class="est-returns">+$${estReturns.toFixed(2)}</strong>
+                        </div>
+                    </div>
+
+                    <div class="profile-inv-footer">
+                        <div class="profile-inv-timer-bar">
+                            <span>Cycle Progress</span>
+                            <b>${hours}h ${minutes}m left</b>
+                        </div>
+                        <div class="profile-inv-progress">
+                            <div class="profile-inv-progress-bar" style="width: ${progressPct}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    if (tbody) {
+        tbody.innerHTML = active.map(inv => {
+            const investmentAmount = Number(inv.amount) || 0;
+            const dailyProfitPct = Number(inv.daily_profit_pct) || 0;
+            const estReturns = investmentAmount * (dailyProfitPct / 100);
+            const cycleMs = 24 * 60 * 60 * 1000;
+            const elapsed = Math.max(0, Date.now() - Number(inv.created_at || Date.now()));
+            const cycleProgress = Math.min(1, (elapsed % cycleMs) / cycleMs);
+            const remaining = Math.max(0, cycleMs - (elapsed % cycleMs));
+            const hours = Math.floor(remaining / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            return `
+            <tr style="border-bottom: 1px solid #1e2538;">
+                <td data-label="Investment plan" style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${escapeUi(inv.name || 'Investment')}</td>
+                <td data-label="Amount" style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">${formatUSD(investmentAmount)}</td>
+                <td data-label="Daily ROI" style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${dailyProfitPct.toFixed(2)}% / day</td>
+                <td data-label="Est. return" style="padding: 1rem 1.25rem; color:#10b981; font-weight:700;">+$${estReturns.toFixed(2)}</td>
+                <td data-label="Status" style="padding: 1rem 1.25rem;"><div class="investment-cycle"><span><b>${hours}h ${minutes}m</b> to next credit</span><i><em style="width:${Math.round(cycleProgress * 100)}%"></em></i></div></td>
+            </tr>
+            `;
+        }).join('');
+    }
 }
 
 function renderTicketsTable(tickets) {
