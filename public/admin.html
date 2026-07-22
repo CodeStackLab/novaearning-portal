@@ -542,20 +542,31 @@
                 <div class="admin-support-layout" style="display: grid; grid-template-columns: 280px 1fr; gap: 1rem; background-color: #111622; border: 1px solid #1e2538; border-radius: 12px; height: 600px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                     <!-- Left Pane: User List -->
                     <div class="admin-support-users" style="background-color: #171d2c; border-right: 1px solid #1e2538; display: flex; flex-direction: column;">
-                        <div style="padding: 1rem; border-bottom: 1px solid #1e2538; font-weight: 700; color: #f8fafc;" class="font-display">
-                            Conversations
+                        <div class="admin-conversation-toolbar">
+                            <div class="admin-conversation-title font-display">Conversations</div>
+                            <label class="admin-conversation-search">
+                                <span class="material-symbols-outlined">search</span>
+                                <input type="search" id="admin-chat-user-search" maxlength="120" placeholder="Search users…" oninput="filterAdminConversations()">
+                            </label>
+                            <div class="admin-conversation-filters" role="group" aria-label="Conversation status filter">
+                                <button type="button" class="active" data-chat-filter="Open" onclick="setAdminConversationFilter('Open', this)">Active</button>
+                                <button type="button" data-chat-filter="Closed" onclick="setAdminConversationFilter('Closed', this)">Closed</button>
+                                <button type="button" data-chat-filter="All" onclick="setAdminConversationFilter('All', this)">All</button>
+                            </div>
                         </div>
                         <div style="flex-grow: 1; overflow-y: auto;" id="admin-chat-users-list">
                             <!-- Populated dynamically -->
                             <p style="text-align: center; color: #64748b; font-size: 0.85rem; padding: 1.5rem 0;">No active threads found.</p>
                         </div>
+                        <div class="admin-conversation-pagination" id="admin-chat-pagination" aria-label="Conversation pages"></div>
                     </div>
 
                     <!-- Right Pane: Active Chat Box -->
                     <div class="admin-support-chat" style="display: flex; flex-direction: column; background-color: #0b0e14; height: 100%; position: relative;">
                         <!-- Header -->
                         <div style="padding: 0.85rem 1.25rem; background-color: #171d2c; border-bottom: 1px solid #1e2538; display: flex; justify-content: space-between; align-items: center;" id="admin-chat-header">
-                            <div>
+                            <button type="button" class="admin-chat-back-btn" onclick="closeAdminMobileChat()" aria-label="Back to conversations"><span class="material-symbols-outlined">arrow_back</span></button>
+                            <div class="admin-chat-client-heading">
                                 <span id="admin-chat-user-name" style="font-weight: 700; color: #f8fafc;" class="font-display">Select a conversation thread</span>
                                 <span id="admin-chat-user-email" style="font-size: 0.75rem; color: #94a3b8; display: block;">Click on a user from the list to start messaging</span>
                             </div>

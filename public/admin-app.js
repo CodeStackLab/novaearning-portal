@@ -902,6 +902,9 @@ let activeChatUserId = null;
 let activeChatUserTickets = [];
 let allTicketsData = [];
 let adminChatUserGroups = {};
+let adminChatFilter = 'Open';
+let adminChatPage = 1;
+const adminChatPageSize = 8;
 
 function renderTicketsTable(tickets) {
     allTicketsData = tickets;
@@ -909,7 +912,8 @@ function renderTicketsTable(tickets) {
     if (!usersListContainer) return;
 
     if (tickets.length === 0) {
-        usersListContainer.innerHTML = `<p style="text-align: center; color: #64748b; font-size: 0.85rem; padding: 1.5rem 0;">No active threads found.</p>`;
+        adminChatUserGroups = {};
+        renderAdminConversationList();
         return;
     }
 
@@ -933,33 +937,72 @@ function renderTicketsTable(tickets) {
         }
     });
 
-    const groupsArray = Object.values(userGroups).sort((a, b) => b.latestDate - a.latestDate);
     adminChatUserGroups = userGroups;
+    renderAdminConversationList();
 
-    usersListContainer.innerHTML = groupsArray.map(g => {
-        const isCurrent = activeChatUserId === g.userId;
-        const statusColor = g.status === 'Open' ? '#10b981' : '#64748b';
-        const badgeBg = g.status === 'Open' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.15)';
-        return `
-            <div onclick="selectAdminChatUser(${Number(g.userId)})" style="padding: 1rem; border-bottom: 1px solid #1e2538; cursor: pointer; transition: background 0.2s; background-color: ${isCurrent ? '#0b0e14' : 'transparent'}; display: flex; flex-direction: column; gap: 0.35rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; color: #f8fafc; font-size: 0.85rem;">${escapeUi(g.userName)}</span>
-                    <span style="background-color: ${badgeBg}; color: ${statusColor}; border: 1px solid rgba(16,185,129,0.1); padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.65rem; font-weight: 700;">${g.status}</span>
-                </div>
-                <div style="font-size: 0.75rem; color: #94a3b8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                    ${escapeUi(g.userEmail)}
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    // If there is an active selected chat user, refresh their chat box too!
-    if (activeChatUserId !== null) {
-        const activeGroup = userGroups[activeChatUserId];
-        if (activeGroup) {
-            selectAdminChatUser(activeChatUserId, false);
-        }
+    // If there is an active selected chat user, refresh their chat box too.
+    if (activeChatUserId !== null && userGroups[activeChatUserId]) {
+        selectAdminChatUser(activeChatUserId, false, false);
     }
+}
+
+function renderAdminConversationList() {
+    const usersListContainer = document.getElementById('admin-chat-users-list');
+    const pagination = document.getElementById('admin-chat-pagination');
+    if (!usersListContainer) return;
+    const query = document.getElementById('admin-chat-user-search')?.value.toLowerCase().trim() || '';
+    const groupsArray = Object.values(adminChatUserGroups)
+        .filter(group => adminChatFilter === 'All' || group.status === adminChatFilter)
+        .filter(group => !query || `${group.userName} ${group.userEmail}`.toLowerCase().includes(query))
+        .sort((a, b) => b.latestDate - a.latestDate);
+    const totalPages = Math.max(1, Math.ceil(groupsArray.length / adminChatPageSize));
+    adminChatPage = Math.min(Math.max(1, adminChatPage), totalPages);
+    const pageGroups = groupsArray.slice((adminChatPage - 1) * adminChatPageSize, adminChatPage * adminChatPageSize);
+
+    if (pageGroups.length === 0) {
+        usersListContainer.innerHTML = `<div class="admin-conversation-empty"><span class="material-symbols-outlined">forum</span><strong>No ${adminChatFilter === 'All' ? '' : adminChatFilter.toLowerCase()} conversations</strong><small>Try another filter or search.</small></div>`;
+    } else {
+        usersListContainer.innerHTML = pageGroups.map(g => {
+            const isCurrent = Number(activeChatUserId) === Number(g.userId);
+            return `
+                <button type="button" class="admin-conversation-item ${isCurrent ? 'selected' : ''}" onclick="selectAdminChatUser(${Number(g.userId)})">
+                    <span class="admin-conversation-avatar">${escapeUi((g.userName || 'U').substring(0, 2).toUpperCase())}</span>
+                    <span class="admin-conversation-details">
+                        <span class="admin-conversation-name">${escapeUi(g.userName)}</span>
+                        <span class="admin-conversation-email">${escapeUi(g.userEmail)}</span>
+                    </span>
+                    <span class="admin-conversation-status ${g.status.toLowerCase()}">${escapeUi(g.status === 'Open' ? 'Active' : 'Closed')}</span>
+                </button>`;
+        }).join('');
+    }
+
+    if (pagination) {
+        pagination.innerHTML = groupsArray.length > adminChatPageSize ? `
+            <button type="button" onclick="changeAdminConversationPage(-1)" ${adminChatPage === 1 ? 'disabled' : ''} aria-label="Previous page"><span class="material-symbols-outlined">chevron_left</span></button>
+            <span>Page ${adminChatPage} of ${totalPages}</span>
+            <button type="button" onclick="changeAdminConversationPage(1)" ${adminChatPage === totalPages ? 'disabled' : ''} aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></button>` : `<span>${groupsArray.length} conversation${groupsArray.length === 1 ? '' : 's'}</span>`;
+    }
+}
+
+function setAdminConversationFilter(filter, button) {
+    adminChatFilter = filter;
+    adminChatPage = 1;
+    document.querySelectorAll('.admin-conversation-filters button').forEach(item => item.classList.toggle('active', item === button));
+    renderAdminConversationList();
+}
+
+function filterAdminConversations() {
+    adminChatPage = 1;
+    renderAdminConversationList();
+}
+
+function changeAdminConversationPage(direction) {
+    adminChatPage += direction;
+    renderAdminConversationList();
+}
+
+function closeAdminMobileChat() {
+    document.querySelector('.admin-support-layout')?.classList.remove('mobile-chat-open');
 }
 
 // Edit balance Modal handlers
@@ -1107,12 +1150,14 @@ function clearAdminChatImageSelection() {
     document.getElementById('admin-chat-image-preview-box').style.display = 'none';
 }
 
-function selectAdminChatUser(userId, shouldScroll = true) {
+function selectAdminChatUser(userId, shouldScroll = true, openMobile = true) {
     const selectedGroup = adminChatUserGroups[userId];
     if (!selectedGroup) { showToast('Conversation is no longer available.'); return; }
     const userName = selectedGroup.userName;
     const userEmail = selectedGroup.userEmail;
     activeChatUserId = userId;
+    if (openMobile) document.querySelector('.admin-support-layout')?.classList.add('mobile-chat-open');
+    renderAdminConversationList();
 
     document.getElementById('admin-chat-user-name').textContent = userName;
     document.getElementById('admin-chat-user-email').textContent = userEmail;
@@ -1122,7 +1167,7 @@ function selectAdminChatUser(userId, shouldScroll = true) {
     document.getElementById('admin-chat-status-toggle-container').style.display = 'flex';
 
     // Filter tickets for this user
-    const userTickets = allTicketsData.filter(t => t.user_id === userId);
+    const userTickets = allTicketsData.filter(t => Number(t.user_id) === Number(userId));
     // Sort oldest first (chronological order)
     const sorted = [...userTickets].reverse();
 

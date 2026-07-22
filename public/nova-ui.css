@@ -633,19 +633,52 @@ img, svg, video, canvas { max-width:100%; }
 }
 
 /* Support desk mobile layout: stacked threads and a usable full-width composer */
+.admin-support-layout { grid-template-columns:320px minmax(0,1fr) !important; gap:0 !important; }
+.admin-conversation-toolbar { display:grid; gap:.65rem; padding:.9rem; border-bottom:1px solid #1e2538; }
+.admin-conversation-title { color:#f8fafc; font-size:1rem; font-weight:750; }
+.admin-conversation-search { display:flex; align-items:center; gap:.45rem; min-height:40px; padding:0 .65rem; background:#0b0e14; border:1px solid #263249; border-radius:9px; color:#718096; }
+.admin-conversation-search .material-symbols-outlined { font-size:1rem; }
+.admin-conversation-search input { width:100%; min-width:0; padding:.55rem 0; background:transparent; border:0; outline:0; color:#f1f5f9; font-size:.76rem; }
+.admin-conversation-filters { display:grid; grid-template-columns:repeat(3,1fr); gap:.35rem; }
+.admin-conversation-filters button { min-height:34px; padding:.35rem; background:#111827; border:1px solid #263249; border-radius:7px; color:#94a3b8; cursor:pointer; font-size:.68rem; font-weight:700; }
+.admin-conversation-filters button.active { background:rgba(59,130,246,.16); border-color:rgba(59,130,246,.45); color:#7fb0ff; }
+#admin-chat-users-list { min-height:0; }
+.admin-conversation-item { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:.65rem; width:100%; padding:.8rem .85rem; background:transparent; border:0; border-bottom:1px solid #1e2538; color:inherit; cursor:pointer; text-align:left; }
+.admin-conversation-item:hover, .admin-conversation-item.selected { background:#0b0e14; }
+.admin-conversation-avatar { display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; font-size:.72rem; font-weight:800; }
+.admin-conversation-details { display:flex; min-width:0; flex-direction:column; gap:.18rem; }
+.admin-conversation-name, .admin-conversation-email { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin-conversation-name { color:#f8fafc; font-size:.8rem; font-weight:700; }
+.admin-conversation-email { color:#718096; font-size:.68rem; }
+.admin-conversation-status { padding:.18rem .48rem; border-radius:99px; font-size:.62rem; font-weight:750; }
+.admin-conversation-status.open { color:#10b981; background:rgba(16,185,129,.13); }
+.admin-conversation-status.closed { color:#94a3b8; background:rgba(100,116,139,.14); }
+.admin-conversation-pagination { display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:.45rem .7rem; border-top:1px solid #1e2538; color:#718096; font-size:.68rem; }
+.admin-conversation-pagination button { display:flex; align-items:center; justify-content:center; width:32px; height:32px; background:#111827; border:1px solid #263249; border-radius:7px; color:#cbd5e1; cursor:pointer; }
+.admin-conversation-pagination button:disabled { opacity:.35; cursor:not-allowed; }
+.admin-conversation-pagination .material-symbols-outlined { font-size:1rem; }
+.admin-conversation-empty { display:flex; min-height:180px; padding:1rem; flex-direction:column; align-items:center; justify-content:center; gap:.3rem; color:#718096; text-align:center; }
+.admin-conversation-empty .material-symbols-outlined { margin-bottom:.3rem; font-size:2rem; }
+.admin-conversation-empty strong { color:#cbd5e1; font-size:.78rem; }
+.admin-conversation-empty small { font-size:.68rem; }
+.admin-chat-back-btn { display:none; }
+.admin-chat-client-heading { min-width:0; }
+
 @media (max-width: 700px) {
-    #panel-tickets { min-width:0; overflow:visible; }
+    #panel-tickets { min-width:0; padding-bottom:74px; overflow:visible; }
     #panel-tickets > .panel-title { font-size:1.25rem !important; line-height:1.2 !important; }
     #panel-tickets > .panel-desc { margin-bottom:.9rem !important; font-size:.78rem !important; line-height:1.45 !important; }
-    #panel-tickets .admin-support-layout { display:flex !important; flex-direction:column !important; width:100% !important; height:auto !important; min-height:0 !important; max-height:none !important; border-radius:14px !important; overflow:hidden !important; }
-    #panel-tickets .admin-support-users { flex:0 0 auto; width:100%; max-height:180px !important; border-right:0 !important; border-bottom:1px solid #1e2538 !important; overflow:hidden; }
-    #panel-tickets .admin-support-users > div:first-child { padding:.8rem .9rem !important; }
-    #panel-tickets #admin-chat-users-list { display:flex; gap:.55rem; max-height:none !important; padding:.65rem !important; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x proximity; scrollbar-width:none; }
-    #panel-tickets #admin-chat-users-list::-webkit-scrollbar { display:none; }
-    #panel-tickets #admin-chat-users-list > div { flex:0 0 min(78vw,265px); min-width:0; padding:.7rem .75rem !important; border:1px solid #263249 !important; border-radius:10px; scroll-snap-align:start; }
-    #panel-tickets .admin-support-chat { width:100%; height:min(62dvh,560px) !important; min-height:430px !important; }
+    #panel-tickets .admin-support-layout { display:block !important; width:100% !important; height:min(70dvh,620px) !important; min-height:500px !important; max-height:none !important; border-radius:14px !important; overflow:hidden !important; }
+    #panel-tickets .admin-support-users { display:flex !important; width:100%; height:100%; max-height:none !important; border:0 !important; }
+    #panel-tickets .admin-conversation-toolbar { flex:0 0 auto; }
+    #panel-tickets #admin-chat-users-list { display:block; flex:1 1 auto; max-height:none !important; padding:0 !important; overflow-x:hidden; overflow-y:auto; }
+    #panel-tickets .admin-conversation-pagination { flex:0 0 auto; }
+    #panel-tickets .admin-support-chat { display:none !important; width:100%; height:100% !important; min-height:0 !important; }
+    #panel-tickets .admin-support-layout.mobile-chat-open .admin-support-users { display:none !important; }
+    #panel-tickets .admin-support-layout.mobile-chat-open .admin-support-chat { display:flex !important; }
+    #panel-tickets .admin-chat-back-btn { display:flex; flex:0 0 36px; align-items:center; justify-content:center; width:36px; height:36px; margin-right:.5rem; background:transparent; border:0; border-radius:50%; color:#cbd5e1; cursor:pointer; }
     #panel-tickets #admin-chat-header { flex:0 0 auto; align-items:flex-start !important; padding:.72rem .8rem !important; }
-    #panel-tickets #admin-chat-header > div:first-child { min-width:0; flex:1; }
+    #panel-tickets #admin-chat-header .admin-chat-client-heading { min-width:0; flex:1; }
     #panel-tickets #admin-chat-user-name, #panel-tickets #admin-chat-user-email { display:block; max-width:100% !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     #panel-tickets #admin-chat-status-toggle-container { flex:0 0 auto; flex-direction:column; align-items:flex-end !important; gap:.3rem !important; }
     #panel-tickets #admin-chat-toggle-btn { padding:.32rem .5rem !important; font-size:.66rem !important; }
@@ -656,10 +689,10 @@ img, svg, video, canvas { max-width:100%; }
     #panel-tickets #admin-chat-message-input { width:100% !important; min-width:0 !important; margin:0 !important; padding:.65rem .7rem !important; }
     #panel-tickets #admin-chat-input-box .chat-send-btn { width:42px !important; min-width:42px !important; height:42px !important; }
 
-    #panel-support { min-width:0; }
+    #panel-support { min-width:0; padding-bottom:74px; }
     #panel-support .panel-title { font-size:1.3rem !important; }
     #panel-support .panel-desc { margin-bottom:.9rem !important; font-size:.78rem !important; }
-    #panel-support .chat-container { height:min(68dvh,590px) !important; min-height:450px; margin-bottom:.75rem !important; border-radius:14px !important; }
+    #panel-support .chat-container { height:min(68dvh,590px) !important; min-height:450px; margin-bottom:0 !important; border-radius:14px !important; }
     #panel-support .chat-header { padding:.72rem .8rem !important; }
     #panel-support .chat-header-title { font-size:.86rem !important; }
     #panel-support .chat-status-text { font-size:.66rem !important; }
