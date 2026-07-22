@@ -616,7 +616,7 @@
             </section>
 
             <section id="panel-security" class="dashboard-panel-view">
-                <h1 class="panel-title font-display">Account Security</h1><p class="panel-desc">Review recent sign-ins and protect your Nova account.</p>
+                <h1 class="panel-title font-display">Account Security</h1><p class="panel-desc">Manage your password and protect your Nova account.</p>
                 <div class="security-summary-card"><span class="material-symbols-outlined">verified_user</span><div><strong>Password protected</strong><small>Never share your password or verification codes. Contact support if an activity is unfamiliar.</small></div></div>
 
                 <form class="notification-inbox-card" onsubmit="changeUserPassword(event)">
@@ -628,18 +628,6 @@
                     <div class="smtp-actions"><button class="form-btn-db" type="submit"><span class="material-symbols-outlined">password</span> Update Password</button></div>
                 </form>
 
-                <div class="notification-inbox-card">
-                    <div class="notification-inbox-heading">
-                        <div><h2 class="font-display">Change email address</h2><p>Update your account email with OTP verification.</p></div>
-                    </div>
-                    <div class="smtp-actions" style="margin-top:0.5rem;">
-                        <button type="button" class="form-btn-db" onclick="openChangeEmailModal()">
-                            <span class="material-symbols-outlined">alternate_email</span> Change Email
-                        </button>
-                    </div>
-                </div>
-
-                <div class="notification-inbox-card"><div class="notification-inbox-heading"><div><h2 class="font-display">Recent login activity</h2><p>Latest devices and network addresses.</p></div><button type="button" onclick="loadLoginActivity()">Refresh</button></div><div id="login-activity-list" class="audit-log-list"><div class="notification-inbox-empty">Loading login activity…</div></div></div>
             </section>
 
         </main>
@@ -855,6 +843,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=65.0"></script>
+    <script src="/app.js?v=70.0"></script>
 </body>
 </html>
