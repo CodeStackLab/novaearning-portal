@@ -1248,17 +1248,53 @@ let dbCurrentPage = 1;
 let dbCurrentFilter = 'all';
 let dbFilteredPlans = [...ALL_INVESTMENT_PLANS];
 
+let dbSearchQuery = '';
+
 async function filterDashboardPlans(filter) {
-    dbCurrentFilter = filter;
+    dbCurrentFilter = filter || 'all';
     dbCurrentPage = 1;
 
     try {
         const serverPlans = await apiRequest('/investments/plans');
-        ALL_INVESTMENT_PLANS = serverPlans.map(p => ({ name:p.name, img:p.img || 'images/amc_theater.png', price:Number(p.price), roi:Number(p.roi), duration:`${Number(p.duration_days)} day(s)` }));
+        ALL_INVESTMENT_PLANS = serverPlans.map(p => ({
+            id: p.id,
+            name: p.name,
+            img: p.img || 'images/amc_theater.png',
+            price: Number(p.price),
+            roi: Number(p.roi),
+            duration: `${Number(p.duration_days)} day(s)`
+        }));
     } catch (error) {
         showToast(error.message || 'Unable to load investment plans');
     }
-    dbFilteredPlans = [...ALL_INVESTMENT_PLANS];
+    applyDashboardFilters();
+}
+
+function filterDashboardPlansCategory(category, element) {
+    dbCurrentFilter = category;
+    dbCurrentPage = 1;
+    if (element) {
+        document.querySelectorAll('.invest-chip').forEach(chip => chip.classList.remove('active'));
+        element.classList.add('active');
+    }
+    applyDashboardFilters();
+}
+
+function filterInvestmentsBySearch(query) {
+    dbSearchQuery = (query || '').toLowerCase().trim();
+    dbCurrentPage = 1;
+    applyDashboardFilters();
+}
+
+function applyDashboardFilters() {
+    dbFilteredPlans = ALL_INVESTMENT_PLANS.filter(plan => {
+        const matchesCategory = (dbCurrentFilter === 'all') ||
+            (dbCurrentFilter === 'movies' && (plan.name.toLowerCase().includes('movie') || plan.name.toLowerCase().includes('amc') || plan.name.toLowerCase().includes('avengers'))) ||
+            (dbCurrentFilter === 'cards' && (plan.name.toLowerCase().includes('card') || plan.name.toLowerCase().includes('gift') || plan.name.toLowerCase().includes('netflix') || plan.name.toLowerCase().includes('amazon')));
+        
+        const matchesSearch = !dbSearchQuery || plan.name.toLowerCase().includes(dbSearchQuery);
+        return matchesCategory && matchesSearch;
+    });
 
     renderDashboardPlansPage();
 }
@@ -1281,34 +1317,72 @@ function renderDashboardPlansPage() {
     const pagePlans = dbFilteredPlans.slice(start, start + DB_PLANS_PER_PAGE);
 
     if (pagePlans.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b;">No plans found.</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3.5rem 1.5rem; color:#94a3b8; background:rgba(15,23,42,0.4); border:1px dashed rgba(255,255,255,0.1); border-radius:16px;">
+            <span class="material-symbols-outlined" style="font-size:36px; color:#64748b; margin-bottom:0.5rem; display:block;">search_off</span>
+            <strong style="color:#f1f5f9; display:block; font-size:1.05rem;">No matching investment plans</strong>
+            <span style="font-size:0.85rem; color:#64748b;">Try searching for different keywords or select 'All Plans'.</span>
+        </div>`;
     } else {
-        grid.innerHTML = pagePlans.map((plan, i) => `
+        grid.innerHTML = pagePlans.map((plan, i) => {
+            const dailyProfitUsd = (plan.price * (plan.roi / 100)).toFixed(2);
+            const totalPayoutUsd = (plan.price + (plan.price * (plan.roi / 100))).toFixed(2);
+            const isPopular = i === 0 || plan.name.includes('Avengers');
+
+            return `
             <article class="investment-card db-investment-card">
                 <div class="investment-img-container">
                     <img src="${plan.img}" alt="${plan.name}" class="investment-img" onerror="this.src='images/amc_theater.png'">
+                    <div class="card-badge-overlay">
+                        <span class="card-roi-pill"><span class="material-symbols-outlined" style="font-size:13px;">trending_up</span> +${plan.roi}% Daily</span>
+                        ${isPopular ? '<span class="card-tag-pill hot">🔥 Popular</span>' : ''}
+                    </div>
                 </div>
                 <div class="investment-content">
                     <div class="db-investment-heading">
-                        <h3 class="investment-title font-display" style="font-size:1rem; margin:0;">${plan.name}</h3>
+                        <h3 class="investment-title font-display">${plan.name}</h3>
                     </div>
-                    <div class="daily-profit-badge"><span class="material-symbols-outlined">trending_up</span> Daily Profit ${plan.roi}%</div>
-                    <div class="investment-meta-grid db-investment-meta">
-                        <div>
-                            <div class="meta-item-label">Price</div>
-                            <div class="meta-item-value highlight">$${plan.price.toFixed(2)}</div>
+                    
+                    <!-- Financial Metrics 2x2 Grid -->
+                    <div class="investment-metrics-grid">
+                        <div class="metric-cell">
+                            <span class="metric-label">Min Entry</span>
+                            <span class="metric-value highlight">$${plan.price.toFixed(2)}</span>
                         </div>
-                        <div>
-                            <div class="meta-item-label">Duration</div>
-                            <div class="meta-item-value">${plan.duration}</div>
+                        <div class="metric-cell">
+                            <span class="metric-label">Daily Profit</span>
+                            <span class="metric-value profit">+$${dailyProfitUsd}</span>
+                        </div>
+                        <div class="metric-cell">
+                            <span class="metric-label">Duration</span>
+                            <span class="metric-value">${plan.duration}</span>
+                        </div>
+                        <div class="metric-cell">
+                            <span class="metric-label">24h Est. Payout</span>
+                            <span class="metric-value payout">$${totalPayoutUsd}</span>
                         </div>
                     </div>
+
+                    <!-- Progress Return Meter -->
+                    <div class="plan-yield-meter">
+                        <div class="yield-meter-info">
+                            <span>100% Capital Return</span>
+                            <span>Auto Payout</span>
+                        </div>
+                        <div class="yield-meter-track">
+                            <div class="yield-meter-bar" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
                     <div class="db-investment-action">
-                        <button class="db-buy-btn" onclick="openBuyPlanModal('${plan.name.replace(/'/g,"\\'")}', ${plan.price})"><span>Buy Now</span><span class="material-symbols-outlined">arrow_forward</span></button>
+                        <button class="db-buy-btn" onclick="openBuyPlanModal('${plan.name.replace(/'/g,"\\'")}', ${plan.price}, ${plan.roi})">
+                            <span>Invest Now</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </button>
                     </div>
                 </div>
             </article>
-        `).join('');
+            `;
+        }).join('');
     }
 
     if (pageInfo) pageInfo.textContent = `Page ${dbCurrentPage} / ${totalPages}`;
@@ -1318,10 +1392,12 @@ function renderDashboardPlansPage() {
 
 let currentBuyPlanName = '';
 let currentBuyPlanPrice = 0;
+let currentBuyPlanRoi = 2.5;
 
-function openBuyPlanModal(planName, price) {
+function openBuyPlanModal(planName, price, roi) {
     currentBuyPlanName = planName;
     currentBuyPlanPrice = parseFloat(price) || 0;
+    currentBuyPlanRoi = parseFloat(roi) || 2.5;
 
     const modal = document.getElementById('buy-plan-modal');
     const titleEl = document.getElementById('buy-modal-title');
@@ -1330,7 +1406,7 @@ function openBuyPlanModal(planName, price) {
     const errorBox = document.getElementById('buy-modal-error-box');
     const confirmBtn = document.getElementById('buy-modal-confirm-btn');
 
-    if (titleEl) titleEl.innerText = `Buy: ${planName}`;
+    if (titleEl) titleEl.innerText = `Invest: ${planName}`;
     if (priceEl) priceEl.innerText = `$${currentBuyPlanPrice.toFixed(2)}`;
     if (qtyInput) qtyInput.value = '1';
     if (errorBox) errorBox.style.display = 'none';
@@ -1355,6 +1431,13 @@ function closeBuyPlanModal() {
     }
 }
 
+function setBuyModalQty(qty) {
+    const qtyInput = document.getElementById('buy-modal-qty-input');
+    if (!qtyInput) return;
+    qtyInput.value = Math.max(1, parseInt(qty) || 1);
+    updateBuyModalTotalCost();
+}
+
 function changeBuyModalQty(delta) {
     const qtyInput = document.getElementById('buy-modal-qty-input');
     if (!qtyInput) return;
@@ -1367,6 +1450,8 @@ function changeBuyModalQty(delta) {
 function updateBuyModalTotalCost() {
     const qtyInput = document.getElementById('buy-modal-qty-input');
     const totalEl = document.getElementById('buy-modal-total-display');
+    const dailyProfitEl = document.getElementById('buy-modal-daily-profit-display');
+    const estPayoutEl = document.getElementById('buy-modal-est-payout-display');
     const errorBox = document.getElementById('buy-modal-error-box');
     const confirmBtn = document.getElementById('buy-modal-confirm-btn');
     if (!qtyInput || !totalEl) return;
@@ -1378,7 +1463,12 @@ function updateBuyModalTotalCost() {
     }
 
     const totalCost = currentBuyPlanPrice * qty;
+    const estDailyProfit = totalCost * (currentBuyPlanRoi / 100);
+    const estPayout = totalCost + estDailyProfit;
+
     totalEl.innerText = `$${totalCost.toFixed(2)}`;
+    if (dailyProfitEl) dailyProfitEl.innerText = `+$${estDailyProfit.toFixed(2)} / day`;
+    if (estPayoutEl) estPayoutEl.innerText = `$${estPayout.toFixed(2)}`;
 
     // Check balance
     const balanceEl = document.getElementById('db-total-balance');
@@ -1387,7 +1477,7 @@ function updateBuyModalTotalCost() {
 
     if (currentBalance < totalCost) {
         if (errorBox) {
-            errorBox.innerHTML = `Insufficient balance in your account. Please deposit amount using <a href="javascript:void(0)" onclick="closeBuyPlanModal(); switchTab('deposit')" style="color:#60a5fa; text-decoration:underline; font-weight:700;">Deposit Link</a>.`;
+            errorBox.innerHTML = `Insufficient balance ($${currentBalance.toFixed(2)} available). Please add funds using <a href="javascript:void(0)" onclick="closeBuyPlanModal(); switchTab('deposit')" style="color:#60a5fa; text-decoration:underline; font-weight:700;">Deposit Page</a>.`;
             errorBox.style.display = 'block';
         }
         if (confirmBtn) {

@@ -215,30 +215,64 @@
             const endIndex = startIndex + itemsPerPage;
             const paginatedPlans = filteredPlans.slice(startIndex, endIndex);
 
-            grid.innerHTML = paginatedPlans.map(plan => `
-                <div class="investment-card">
+            grid.innerHTML = paginatedPlans.map(plan => {
+                const roiNum = parseFloat(plan.profit) || 2.5;
+                const dailyProfitUsd = (plan.price * (roiNum / 100)).toFixed(2);
+                const totalPayoutUsd = (plan.price + (plan.price * (roiNum / 100))).toFixed(2);
+
+                return `
+                <div class="investment-card db-investment-card">
                     <div class="investment-img-container">
-                        <img src="${plan.image}" alt="${plan.name}" class="investment-img">
+                        <img src="${plan.image}" alt="${plan.name}" class="investment-img" onerror="this.src='images/amc_theater.png'">
+                        <div class="card-badge-overlay">
+                            <span class="card-roi-pill"><span class="material-symbols-outlined" style="font-size:13px;">trending_up</span> +${plan.profit} Daily</span>
+                            <span class="card-tag-pill hot">🔥 Featured</span>
+                        </div>
                     </div>
                     <div class="investment-content">
-                        <h3 class="investment-title font-display">${plan.name}</h3>
-                        <div class="daily-profit-badge">Daily Profit ${plan.profit}</div>
-                        
-                        <div class="investment-meta-grid">
-                            <div class="meta-col-left">
-                                <div class="meta-item-label">Price</div>
-                                <div class="meta-item-value">$${plan.price.toFixed(2)}</div>
-                            </div>
-                            <div class="meta-col-right">
-                                <div class="meta-item-label">Duration</div>
-                                <div class="meta-item-value">${plan.duration}</div>
-                            </div>
+                        <div class="db-investment-heading">
+                            <h3 class="investment-title font-display">${plan.name}</h3>
                         </div>
                         
-                        <a href="/dashboard.html?tab=invest&plan=${plan.id}" class="invest-btn" onclick="handleInvestClick(event, '${plan.id}')">Invest Now</a>
+                        <div class="investment-metrics-grid">
+                            <div class="metric-cell">
+                                <span class="metric-label">Price</span>
+                                <span class="metric-value highlight">$${plan.price.toFixed(2)}</span>
+                            </div>
+                            <div class="metric-cell">
+                                <span class="metric-label">Daily Profit</span>
+                                <span class="metric-value profit">+$${dailyProfitUsd}</span>
+                            </div>
+                            <div class="metric-cell">
+                                <span class="metric-label">Duration</span>
+                                <span class="metric-value">${plan.duration}</span>
+                            </div>
+                            <div class="metric-cell">
+                                <span class="metric-label">24h Payout</span>
+                                <span class="metric-value payout">$${totalPayoutUsd}</span>
+                            </div>
+                        </div>
+
+                        <div class="plan-yield-meter">
+                            <div class="yield-meter-info">
+                                <span>100% Capital Guaranteed</span>
+                                <span>Instant Payout</span>
+                            </div>
+                            <div class="yield-meter-track">
+                                <div class="yield-meter-bar" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="db-investment-action">
+                            <a href="/dashboard.html?tab=invest&plan=${plan.id}" class="db-buy-btn invest-btn" onclick="handleInvestClick(event, '${plan.id}')" style="text-decoration:none;">
+                                <span>Invest Now</span>
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
             renderPagination(filteredPlans.length);
         }

@@ -225,10 +225,49 @@
 
             <!-- PANEL: INVEST -->
             <section id="panel-invest" class="dashboard-panel-view">
-                <h1 class="panel-title font-display">Investment Plans</h1>
-                <p class="panel-desc">Choose a plan from our featured selection and start earning daily returns.</p>
+                <div class="invest-hero-banner">
+                    <div class="invest-hero-main">
+                        <div class="invest-pill-badge"><span class="material-symbols-outlined" style="font-size: 1rem;">rocket_launch</span> Curated Investment Portfolio</div>
+                        <h1 class="panel-title font-display" style="margin-top: 0.4rem; margin-bottom: 0.4rem;">Investment Plans</h1>
+                        <p class="panel-desc" style="max-width: 600px; margin-bottom: 0;">Choose a plan from our featured selection and start earning daily returns with automatic payouts.</p>
+                    </div>
+                    <div class="invest-quick-stats">
+                        <div class="invest-stat-pill">
+                            <div class="invest-stat-icon green"><span class="material-symbols-outlined">trending_up</span></div>
+                            <div class="invest-stat-data">
+                                <span class="invest-stat-val">2.5%</span>
+                                <span class="invest-stat-lbl">Fixed Daily ROI</span>
+                            </div>
+                        </div>
+                        <div class="invest-stat-pill">
+                            <div class="invest-stat-icon blue"><span class="material-symbols-outlined">schedule</span></div>
+                            <div class="invest-stat-data">
+                                <span class="invest-stat-val">24 Hours</span>
+                                <span class="invest-stat-lbl">Payout Cycle</span>
+                            </div>
+                        </div>
+                        <div class="invest-stat-pill">
+                            <div class="invest-stat-icon gold"><span class="material-symbols-outlined">verified_user</span></div>
+                            <div class="invest-stat-data">
+                                <span class="invest-stat-val">100%</span>
+                                <span class="invest-stat-lbl">Capital Protected</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-
+                <!-- Interactive Toolbar: Search & Category Chips -->
+                <div class="invest-toolbar">
+                    <div class="invest-search-box">
+                        <span class="material-symbols-outlined search-icon">search</span>
+                        <input type="text" id="invest-search-input" placeholder="Search plans (e.g. AMC, Netflix, Gift Card)..." oninput="filterInvestmentsBySearch(this.value)">
+                    </div>
+                    <div class="invest-filter-chips">
+                        <button class="invest-chip active" data-filter="all" onclick="filterDashboardPlansCategory('all', this)">All Plans</button>
+                        <button class="invest-chip" data-filter="movies" onclick="filterDashboardPlansCategory('movies', this)">🎬 Cinema & Movies</button>
+                        <button class="invest-chip" data-filter="cards" onclick="filterDashboardPlansCategory('cards', this)">💳 Gift Cards</button>
+                    </div>
+                </div>
 
                 <!-- Dynamic Grid -->
                 <div id="db-investments-grid" class="db-investments-grid">
@@ -711,40 +750,76 @@
     </div>
 
     <!-- MODAL OVERLAY: BUY PLAN QUANTITY SELECT & CONFIRM -->
-    <div id="buy-plan-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center;">
-        <div class="modal-content-box" style="background:#0f172a; border:1px solid #1e2538; border-radius:12px; width:90%; max-width:400px; padding:1.5rem; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-                <h3 class="modal-title font-display" style="font-size:1.2rem; color:#f8fafc; margin:0;" id="buy-modal-title">Buy Investment Plan</h3>
-                <button onclick="closeBuyPlanModal()" style="background:none; border:none; color:#94a3b8; cursor:pointer;"><span class="material-symbols-outlined">close</span></button>
+    <div id="buy-plan-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(4, 9, 20, 0.75); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center; padding: 1rem;">
+        <div class="modal-content-box buy-plan-modal-box">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding-bottom:1rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom:1.25rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2)); border:1px solid rgba(99,102,241,0.3); display:flex; align-items:center; justify-content:center; color:#818cf8;">
+                        <span class="material-symbols-outlined" style="font-size:20px;">shopping_bag</span>
+                    </div>
+                    <h3 class="modal-title font-display" style="font-size:1.15rem; color:#f8fafc; margin:0;" id="buy-modal-title">Confirm Investment</h3>
+                </div>
+                <button onclick="closeBuyPlanModal()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#94a3b8; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
             </div>
-            <div class="modal-body" style="margin-bottom:1.5rem; display:flex; flex-direction:column; gap:1rem;">
+            <div class="modal-body" style="margin-bottom:1.5rem; display:flex; flex-direction:column; gap:1.1rem;">
                 <!-- Error notification box -->
-                <div id="buy-modal-error-box" style="display:none; background-color:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem 1rem; color:#f87171; font-size:0.82rem; line-height:1.5;">
+                <div id="buy-modal-error-box" style="display:none; background-color:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:0.85rem 1rem; color:#fca5a5; font-size:0.83rem; line-height:1.5;">
                     <!-- Filled dynamically -->
                 </div>
                 
-                <div>
-                    <label style="display:block; font-size:0.8rem; color:#94a3b8; margin-bottom:0.35rem;">Plan Price</label>
-                    <div style="font-size:1.15rem; font-weight:700; color:#f8fafc;" id="buy-modal-price-display">$0.00</div>
-                </div>
-
-                <div>
-                    <label style="display:block; font-size:0.8rem; color:#94a3b8; margin-bottom:0.35rem;">Select Quantity</label>
-                    <div style="display:flex; align-items:center; background:#111622; border:1px solid #1e2538; border-radius:6px; padding:0.5rem 1rem; justify-content:space-between;">
-                        <button onclick="changeBuyModalQty(-1)" style="background:none; border:none; color:#cbd5e1; font-size:1.5rem; font-weight:bold; cursor:pointer; padding:0 0.5rem; outline:none; -webkit-user-select:none; user-select:none;">-</button>
-                        <input type="number" id="buy-modal-qty-input" value="1" min="1" style="background:none; border:none; color:#f8fafc; font-size:1.15rem; font-weight:700; outline:none; text-align:center; width:60px;" oninput="updateBuyModalTotalCost()">
-                        <button onclick="changeBuyModalQty(1)" style="background:none; border:none; color:#cbd5e1; font-size:1.2rem; font-weight:bold; cursor:pointer; padding:0 0.5rem; outline:none; -webkit-user-select:none; user-select:none;">+</button>
+                <!-- Plan Quick Specs Summary Card -->
+                <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:0.9rem 1.1rem; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:0.75rem; color:#94a3b8; display:block; margin-bottom:0.15rem;">Unit Plan Price</span>
+                        <span style="font-size:1.1rem; font-weight:800; color:#f8fafc;" id="buy-modal-price-display">$0.00</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:0.75rem; color:#94a3b8; display:block; margin-bottom:0.15rem;">Daily Yield Rate</span>
+                        <span style="font-size:0.85rem; font-weight:700; color:#34d399; background:rgba(16,185,129,0.12); padding:0.2rem 0.5rem; border-radius:6px; display:inline-block;">+2.5% Daily</span>
                     </div>
                 </div>
 
+                <!-- Quantity Selector with Quick Preset Chips -->
                 <div>
-                    <label style="display:block; font-size:0.8rem; color:#94a3b8; margin-bottom:0.35rem;">Total Cost</label>
-                    <div style="font-size:1.35rem; font-weight:800; color:#10b981;" id="buy-modal-total-display">$0.00</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem;">
+                        <label style="font-size:0.82rem; color:#94a3b8; font-weight:600;">Investment Units / Quantity</label>
+                        <span style="font-size:0.75rem; color:#64748b;">Min 1 Unit</span>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; background:#0b1120; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0.4rem 0.75rem; justify-content:space-between; margin-bottom:0.6rem;">
+                        <button onclick="changeBuyModalQty(-1)" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; width:36px; height:36px; border-radius:8px; font-size:1.3rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">-</button>
+                        <input type="number" id="buy-modal-qty-input" value="1" min="1" style="background:none; border:none; color:#f8fafc; font-size:1.25rem; font-weight:800; outline:none; text-align:center; width:70px;" oninput="updateBuyModalTotalCost()">
+                        <button onclick="changeBuyModalQty(1)" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; width:36px; height:36px; border-radius:8px; font-size:1.1rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;">+</button>
+                    </div>
+
+                    <!-- Quick Qty Selector Chips -->
+                    <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+                        <button onclick="setBuyModalQty(1)" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:6px; cursor:pointer;">1x</button>
+                        <button onclick="setBuyModalQty(2)" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:6px; cursor:pointer;">2x</button>
+                        <button onclick="setBuyModalQty(5)" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:6px; cursor:pointer;">5x</button>
+                        <button onclick="setBuyModalQty(10)" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#94a3b8; font-size:0.75rem; padding:0.25rem 0.6rem; border-radius:6px; cursor:pointer;">10x</button>
+                    </div>
+                </div>
+
+                <!-- Financial Calculation Summary Box -->
+                <div style="background:linear-gradient(145deg, rgba(16,24,40,0.9), rgba(11,18,33,0.9)); border:1px solid rgba(99,102,241,0.25); border-radius:12px; padding:1rem; display:flex; flex-direction:column; gap:0.6rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.8rem; color:#94a3b8;">Total Investment Cost:</span>
+                        <span style="font-size:1.15rem; font-weight:800; color:#60a5fa;" id="buy-modal-total-display">$0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:0.4rem; border-top:1px dashed rgba(255,255,255,0.1);">
+                        <span style="font-size:0.8rem; color:#94a3b8;">Est. Daily Profit (+2.5%):</span>
+                        <span style="font-size:0.95rem; font-weight:700; color:#34d399;" id="buy-modal-daily-profit-display">+$0.00 / day</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.8rem; color:#94a3b8;">Est. 24h Payout:</span>
+                        <span style="font-size:0.95rem; font-weight:700; color:#f8fafc;" id="buy-modal-est-payout-display">$0.00</span>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.75rem;">
-                <button onclick="closeBuyPlanModal()" style="background:none; border:1px solid #334155; color:#cbd5e1; padding:0.55rem 1.25rem; border-radius:6px; font-weight:600; cursor:pointer; font-size:0.85rem;">Cancel</button>
-                <button onclick="confirmBuyPlan()" id="buy-modal-confirm-btn" style="background:#3b82f6; color:white; border:none; padding:0.55rem 1.25rem; border-radius:6px; font-weight:600; cursor:pointer; font-size:0.85rem;">Confirm</button>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.75rem; padding-top:0.75rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                <button onclick="closeBuyPlanModal()" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#cbd5e1; padding:0.65rem 1.25rem; border-radius:10px; font-weight:600; cursor:pointer; font-size:0.85rem; transition:all 0.2s;">Cancel</button>
+                <button onclick="confirmBuyPlan()" id="buy-modal-confirm-btn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:white; border:none; padding:0.65rem 1.4rem; border-radius:10px; font-weight:700; cursor:pointer; font-size:0.88rem; box-shadow:0 4px 14px rgba(99,102,241,0.35); transition:all 0.2s; display:inline-flex; align-items:center; gap:0.4rem;"><span>Confirm Investment</span><span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span></button>
             </div>
         </div>
     </div>
