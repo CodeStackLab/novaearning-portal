@@ -1985,5 +1985,133 @@ html, body,
         font-size: 0.78rem !important;
         white-space: nowrap !important;
     }
+
+    /* Master Admin Panel Headings & Section Descriptions */
+    .admin-dashboard-body .panel-title,
+    .dashboard-panel-view .panel-title {
+        font-size: clamp(1.25rem, 5.2vw, 1.7rem) !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.3rem !important;
+        word-break: break-word !important;
+    }
+
+    .admin-dashboard-body .panel-desc,
+    .dashboard-panel-view .panel-desc {
+        font-size: 0.8rem !important;
+        line-height: 1.45 !important;
+        color: #94a3b8 !important;
+        margin-bottom: 1rem !important;
+    }
+
+    /* System Overview Grid & Cards */
+    .admin-dashboard-body .dashboard-metrics-row {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.65rem !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    /* Manage Plans Form */
+    #panel-plans .deposit-step-box {
+        padding: 0.85rem !important;
+        border-radius: 12px !important;
+        margin-bottom: 1.25rem !important;
+    }
+
+    #panel-plans .deposit-step-box > div {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+
+    #panel-plans button[onclick*="adminCreatePlan"],
+    #panel-plans .form-btn-db {
+        width: 100% !important;
+        font-size: 0.84rem !important;
+        padding: 0.75rem 1rem !important;
+        justify-content: center !important;
+    }
+
+    /* Support Desk Layout */
+    .admin-support-layout {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 480px !important;
+        border-radius: 14px !important;
+    }
+
+    .admin-support-users {
+        max-height: 150px !important;
+        min-height: 110px !important;
+        border-right: none !important;
+        border-bottom: 1px solid #1e2538 !important;
+    }
+
+    .admin-support-chat {
+        min-height: 320px !important;
+        flex: 1 1 auto !important;
+    }
+
+    /* Notification & Alert Preferences */
+    .notification-settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.65rem !important;
+    }
+
+    .notification-setting {
+        padding: 0.75rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* SMTP Configuration Card & Forms */
+    .smtp-settings-card {
+        padding: 0.85rem !important;
+        border-radius: 14px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .smtp-form-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+    }
+
+    .smtp-provider-tools {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.65rem !important;
+    }
+
+    .smtp-actions {
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+    }
+
+    .smtp-actions button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Audit Log Toolbar */
+    .audit-toolbar {
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+        width: 100% !important;
+    }
+
+    .audit-toolbar input,
+    .audit-toolbar button {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .admin-dashboard-body .dashboard-metrics-row {
+        grid-template-columns: 1fr !important;
+    }
 }
 
