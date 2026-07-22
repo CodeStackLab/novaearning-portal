@@ -4,6 +4,8 @@
 function handleInvestments($action, $pdo, $body) {
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit();
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'plans') {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
         $stmt = $pdo->query('SELECT id, name, price, daily_profit_pct AS roi, duration_days, image_url AS img FROM plans WHERE is_active = 1 ORDER BY id');
         sendJson($stmt->fetchAll());
     }

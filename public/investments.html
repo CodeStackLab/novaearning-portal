@@ -159,7 +159,7 @@
             if (!grid) return;
             let combinedPlans;
             try {
-                const response = await fetch('/api/investments/plans');
+                const response = await fetch('/api/investments/plans?t=' + Date.now());
                 if (!response.ok) throw new Error('Unable to load plans');
                 combinedPlans = (await response.json()).map(p => ({ id:p.id, name:p.name, image:p.img || 'images/amc_theater.png', profit:`${Number(p.roi)}%`, price:Number(p.price), duration:`${Number(p.duration_days)} day(s)` }));
                 catalogPlans = combinedPlans;
