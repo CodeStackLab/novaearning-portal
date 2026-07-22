@@ -7,6 +7,7 @@ let globalUsersList = [];
 let globalAuditLog = [];
 
 function escapeAdminUi(value) { const node = document.createElement('div'); node.textContent = String(value ?? ''); return node.innerHTML; }
+function escapeUi(value) { return escapeAdminUi(value); }
 
 // Format Currency
 function formatUSD(amount) {

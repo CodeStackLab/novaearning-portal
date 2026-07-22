@@ -2115,3 +2115,40 @@ html, body,
     }
 }
 
+/* ── Toast Notification Elevation Above Mobile Bottom Navbar (386x870 & Mobile Screens) ── */
+@media (max-width: 650px) {
+    .toast-notification {
+        position: fixed !important;
+        bottom: 75px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        max-width: calc(100vw - 24px) !important;
+        box-sizing: border-box !important;
+        z-index: 100000 !important;
+        padding: 0.65rem 0.9rem !important;
+        font-size: 0.8rem !important;
+        border-radius: 10px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    #panel-deposits .panel-title,
+    #panel-payouts .panel-title {
+        font-size: 1.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    #panel-deposits .panel-desc,
+    #panel-payouts .panel-desc {
+        font-size: 0.78rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.85rem !important;
+    }
+
+    #panel-deposits .recent-deposits-section,
+    #panel-payouts .recent-deposits-section {
+        padding: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+}
+
