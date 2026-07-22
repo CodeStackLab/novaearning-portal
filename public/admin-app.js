@@ -649,6 +649,60 @@ function renderDepositsTable(deposits) {
     }).join('');
 }
 
+function openManualDepositModal() {
+    const userSelect = document.getElementById('manual-dep-user-select');
+    const planSelect = document.getElementById('manual-dep-plan-select');
+    const amtInput = document.getElementById('manual-dep-amount');
+
+    if (amtInput) amtInput.value = '';
+
+    if (userSelect && Array.isArray(globalUsersList)) {
+        userSelect.innerHTML = globalUsersList.map(u => 
+            `<option value="${u.id}">${escapeUi(u.name || u.email)} (ID #${u.id} - ${formatUSD(u.balance)})</option>`
+        ).join('');
+    }
+
+    if (planSelect && Array.isArray(allPlans)) {
+        planSelect.innerHTML = `<option value="">-- None (Add to Wallet Balance Only) --</option>` + 
+            allPlans.map(p => `<option value="${escapeUi(p.name)}">${escapeUi(p.name)} ($${Number(p.price).toFixed(2)})</option>`).join('');
+    }
+
+    const modal = document.getElementById('manual-deposit-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeManualDepositModal() {
+    const modal = document.getElementById('manual-deposit-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+async function submitManualDeposit() {
+    const userSelect = document.getElementById('manual-dep-user-select');
+    const amtInput = document.getElementById('manual-dep-amount');
+    const planSelect = document.getElementById('manual-dep-plan-select');
+
+    const userId = userSelect ? parseInt(userSelect.value) : 0;
+    const amount = amtInput ? parseFloat(amtInput.value) : 0;
+    const planName = planSelect ? planSelect.value : '';
+
+    if (!userId || isNaN(amount) || amount <= 0) {
+        alert('Please select a client and enter a valid positive amount.');
+        return;
+    }
+
+    try {
+        const result = await adminRequest('/admin/deposits/manual-create', {
+            method: 'POST',
+            body: JSON.stringify({ userId, amount, planName })
+        });
+        closeManualDepositModal();
+        await fetchAdminDashboardData();
+        showToast(result.message || 'Manual deposit created successfully!');
+    } catch (err) {
+        alert(err.message || 'Failed to submit manual deposit');
+    }
+}
+
 function renderPayoutsTable(payouts) {
     const tbody = document.getElementById('admin-payouts-table-body');
     if (!tbody) return;

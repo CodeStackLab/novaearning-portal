@@ -375,22 +375,31 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $stmt->execute([$newStatus, $deposit['txn_id']]);
 
                 if ($act === 'Approve') {
+                    // Always credit the user's balance
+                    $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
+                    $stmt->execute([$deposit['amount'], $deposit['user_id']]);
+
+                    // If a plan was selected with the deposit, create an active investment
                     if ($deposit['plan_name']) {
                         $dateStr = date('M j, Y h:i A');
                         $nowMs = time() * 1000;
+                        $pStmt = $pdo->prepare('SELECT daily_profit_pct, duration_days FROM plans WHERE name = ? AND is_active = 1 LIMIT 1');
+                        $pStmt->execute([$deposit['plan_name']]);
+                        $pInfo = $pStmt->fetch();
+                        $roiVal = $pInfo ? (float)$pInfo['daily_profit_pct'] : 2.5;
+                        $durVal = $pInfo ? (int)$pInfo['duration_days'] : 1;
+
                         $stmt = $pdo->prepare('INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-                        $stmt->execute([$deposit['user_id'], $deposit['plan_name'], $deposit['amount'], 2.5, 1, 'Active', $dateStr, $nowMs]);
-                    } else {
-                        $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
-                        $stmt->execute([$deposit['amount'], $deposit['user_id']]);
+                        $stmt->execute([$deposit['user_id'], $deposit['plan_name'], $deposit['amount'], $roiVal, $durVal, 'Active', $dateStr, $nowMs]);
                     }
 
+                    // 5% Referral Commission on Deposit/Investment
                     $stmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
                     $stmt->execute([$deposit['user_id']]);
                     $user = $stmt->fetch();
 
                     if ($user && $user['referred_by']) {
-                        $referralBonusAmt = $deposit['amount'] * 0.10;
+                        $referralBonusAmt = $deposit['amount'] * 0.05; // 5% commission
                         $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                         $stmt->execute([$referralBonusAmt, $user['referred_by']]);
 
@@ -398,29 +407,96 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         $refCode = 'REF-DEP-' . strtoupper(substr(md5(uniqid()), 0, 6));
                         $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
                         $stmt->execute([$user['referred_by'], $dateStr, 'Referral Bonus', $referralBonusAmt, $refCode, 'Confirmed']);
+
+                        $bonusText = number_format($referralBonusAmt, 2);
+                        notifyAdmins($pdo, '5% Referral Commission Credited', "<p>A 5% referral commission of <strong>\${$bonusText}</strong> was automatically credited to Referrer User ID #{$user['referred_by']}.</p>", 'commission');
                     }
                 }
                 $pdo->commit();
                 auditAdminAction($pdo, $userId, 'deposit.' . strtolower($newStatus), 'deposit', $depositId, ['amount' => (float)$deposit['amount'], 'userId' => $deposit['user_id']]);
-                if ($act === 'Approve' && !$deposit['plan_name']) {
+                if ($act === 'Approve') {
                     $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$deposit['user_id']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
                     recordBalanceLedger($pdo, $deposit['user_id'], $deposit['txn_id'], 'deposit_credit', (float)$deposit['amount'], $current - (float)$deposit['amount'], 'Confirmed deposit');
                 }
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt, $refCode)) {
                     $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$user['referred_by']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
-                    recordBalanceLedger($pdo, $user['referred_by'], $refCode, 'referral_bonus', $referralBonusAmt, $current - $referralBonusAmt, 'Deposit referral bonus');
+                    recordBalanceLedger($pdo, $user['referred_by'], $refCode, 'referral_bonus', $referralBonusAmt, $current - $referralBonusAmt, 'Deposit 5% referral bonus');
                 }
                 $amountText = number_format((float)$deposit['amount'], 2);
                 $safeRef = htmlspecialchars($deposit['txn_id']);
                 notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
                     $bonusText = number_format($referralBonusAmt, 2);
-                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
+                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A 5% referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
                 }
                 sendJson(['message' => "Deposit successfully " . strtolower($act) . "d."]);
             } catch (Exception $e) {
                 $pdo->rollBack();
                 sendJson(['message' => 'Server error'], 500);
+            }
+        }
+
+        if ($action === 'deposits' && $subaction === 'manual-create') {
+            $targetUserId = (int)($body['userId'] ?? 0);
+            $amount = (float)($body['amount'] ?? 0);
+            $planName = !empty($body['planName']) ? trim($body['planName']) : null;
+
+            if ($targetUserId <= 0 || $amount <= 0) {
+                sendJson(['message' => 'Please select a valid user and non-zero amount.'], 400);
+            }
+
+            $dateStr = date('M j, Y h:i A');
+            $depCode = 'MANUAL-DEP-' . strtoupper(substr(md5(uniqid()), 0, 6));
+
+            $pdo->beginTransaction();
+            try {
+                // 1. Insert deposit record
+                $stmt = $pdo->prepare('INSERT INTO deposits (user_id, date, amount, txn_id, plan_name, status) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$targetUserId, $dateStr, $amount, $depCode, $planName, 'Confirmed']);
+
+                // 2. Credit user balance
+                $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
+                $stmt->execute([$amount, $targetUserId]);
+
+                // 3. Create investment if plan selected
+                if ($planName) {
+                    $nowMs = time() * 1000;
+                    $pStmt = $pdo->prepare('SELECT daily_profit_pct, duration_days FROM plans WHERE name = ? AND is_active = 1 LIMIT 1');
+                    $pStmt->execute([$planName]);
+                    $pInfo = $pStmt->fetch();
+                    $roiVal = $pInfo ? (float)$pInfo['daily_profit_pct'] : 2.5;
+                    $durVal = $pInfo ? (int)$pInfo['duration_days'] : 1;
+
+                    $stmt = $pdo->prepare('INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([$targetUserId, $planName, $amount, $roiVal, $durVal, 'Active', $dateStr, $nowMs]);
+                }
+
+                // 4. Log transaction
+                $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$targetUserId, $dateStr, 'Deposit', $amount, $depCode, 'Confirmed']);
+
+                // 5. 5% Referral Commission
+                $rStmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
+                $rStmt->execute([$targetUserId]);
+                $uInfo = $rStmt->fetch();
+                if ($uInfo && $uInfo['referred_by']) {
+                    $refBonus = $amount * 0.05;
+                    $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
+                    $stmt->execute([$refBonus, $uInfo['referred_by']]);
+
+                    $refCode = 'REF-DEP-' . strtoupper(substr(md5(uniqid()), 0, 6));
+                    $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([$uInfo['referred_by'], $dateStr, 'Referral Bonus', $refBonus, $refCode, 'Confirmed']);
+
+                    $bonusText = number_format($refBonus, 2);
+                    notifyAdmins($pdo, '5% Referral Commission Credited', "<p>A 5% commission of <strong>\${$bonusText}</strong> was credited to Referrer User ID #{$uInfo['referred_by']}.</p>", 'commission');
+                }
+
+                $pdo->commit();
+                sendJson(['message' => 'Manual deposit of $' . number_format($amount, 2) . ' successfully credited!']);
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                sendJson(['message' => 'Failed to create manual deposit.'], 500);
             }
         }
 
