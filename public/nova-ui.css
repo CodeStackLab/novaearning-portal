@@ -683,7 +683,10 @@ img, svg, video, canvas { max-width:100%; }
 .withdrawal-status-badge { max-width:175px; padding:.25rem .55rem; border-radius:99px; font-size:.62rem; font-weight:750; text-align:center; }
 .withdrawal-status-badge.pending { color:#fbbf24; background:rgba(245,158,11,.13); }
 .withdrawal-status-badge.confirmed { color:#10b981; background:rgba(16,185,129,.13); }
+.withdrawal-status-badge.rejected { color:#fb7185; background:rgba(244,63,94,.13); }
 .withdrawal-status-empty { padding:1.25rem; color:#718096; font-size:.75rem; text-align:center; }
+.withdrawal-view-all { display:flex; justify-content:center; margin-top:.8rem; padding:.7rem; color:#60a5fa; border:1px solid #1e2538; border-radius:9px; font-size:.72rem; font-weight:700; text-decoration:none; }
+.withdrawal-view-all:hover { color:#93c5fd; background:rgba(59,130,246,.08); }
 
 @media (max-width: 700px) {
     #panel-tickets { min-width:0; padding-bottom:74px; overflow:visible; }

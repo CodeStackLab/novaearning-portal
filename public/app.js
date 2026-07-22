@@ -359,19 +359,21 @@ async function fetchAllDashboardData() {
             }
         }
 
-        // Fetch logs
-        const deposits = await apiRequest('/deposits');
-        renderDepositsTable(deposits);
+        // Fetch account activity together so a rendering issue in one section can
+        // never prevent the Transactions or Withdrawal Status panels from loading.
+        const [deposits, investments, transactions] = await Promise.all([
+            apiRequest('/deposits'),
+            apiRequest('/investments'),
+            apiRequest('/transactions')
+        ]);
 
-        const investments = await apiRequest('/investments');
+        renderDepositsTable(deposits);
+        renderAllTransactionsTable(transactions);
+        renderWithdrawalStatus(transactions);
         renderInvestmentsTable(investments);
         if (typeof renderActiveInvestmentsTracking === 'function') {
             renderActiveInvestmentsTracking(investments);
         }
-
-        const transactions = await apiRequest('/transactions');
-        renderAllTransactionsTable(transactions);
-        renderWithdrawalStatus(transactions);
 
         // Compute total deposits and withdrawals sums
         const totalDepositsSum = deposits
@@ -762,7 +764,7 @@ async function requestWithdrawal() {
     }
 
     try {
-        await apiRequest('/withdrawals', {
+        const response = await apiRequest('/withdrawals', {
             method: 'POST',
             body: JSON.stringify({
                 address,
@@ -773,7 +775,7 @@ async function requestWithdrawal() {
         addressInput.value = '';
         amountInput.value = '';
         
-        showToast("Withdrawal submitted — waiting for admin approval.");
+        showToast(response.message || "Withdrawal request submitted — waiting for admin approval.");
         await fetchAllDashboardData();
     } catch (e) {
         alert(e.message || 'Failed to submit withdrawal request.');
@@ -785,18 +787,21 @@ function renderWithdrawalStatus(transactions) {
     if (!container) return;
     const withdrawals = (Array.isArray(transactions) ? transactions : [])
         .filter(transaction => transaction.type === 'Withdrawal')
-        .slice(0, 10);
+        .slice(0, 4);
     if (withdrawals.length === 0) {
         container.innerHTML = '<div class="withdrawal-status-empty">No withdrawal requests yet.</div>';
         return;
     }
     container.innerHTML = withdrawals.map(withdrawal => {
-        const pending = withdrawal.status === 'Pending';
-        const statusLabel = pending ? 'Waiting for admin approval' : (withdrawal.status === 'Confirmed' ? 'Approved & completed' : withdrawal.status);
+        const status = String(withdrawal.status || 'Pending');
+        const pending = status === 'Pending';
+        const confirmed = status === 'Confirmed';
+        const statusLabel = pending ? 'Waiting for admin approval' : (confirmed ? 'Withdrawal successful' : status);
+        const statusClass = pending ? 'pending' : (confirmed ? 'confirmed' : 'rejected');
         return `<article class="withdrawal-status-item">
-            <span class="withdrawal-status-icon material-symbols-outlined">${pending ? 'schedule' : 'check_circle'}</span>
-            <span class="withdrawal-status-details"><strong>${formatUSD(withdrawal.amount)}</strong><small>${escapeUi(withdrawal.date || '')} · ${escapeUi(withdrawal.ref || '')}</small></span>
-            <span class="withdrawal-status-badge ${pending ? 'pending' : 'confirmed'}">${escapeUi(statusLabel)}</span>
+            <span class="withdrawal-status-icon material-symbols-outlined">${pending ? 'schedule' : (confirmed ? 'check_circle' : 'cancel')}</span>
+            <span class="withdrawal-status-details"><strong>${formatUSD(withdrawal.amount)}</strong><small>${escapeUi(withdrawal.date || '')} · ID: ${escapeUi(withdrawal.ref || '—')}</small></span>
+            <span class="withdrawal-status-badge ${statusClass}">${escapeUi(statusLabel)}</span>
         </article>`;
     }).join('');
 }
@@ -936,23 +941,26 @@ function renderAllTransactionsTable(transactions) {
         const isDebit = tx.type === 'Withdrawal' || tx.type === 'Investment';
         const amountText = `${isDebit ? '-' : ''}$${numericAmount.toFixed(2)}`;
         const amountColor = isDebit ? '#f47d8b' : '#f8fafc';
+        const date = String(tx.date || '—');
+        const type = String(tx.type || 'Transaction');
         const reference = String(tx.ref || 'Pending');
         const status = String(tx.status || 'Pending');
         const statusClass = status.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+        const encodedReference = encodeURIComponent(reference);
 
         return `
             <tr>
-                <td data-label="Date">${tx.date}</td>
-                <td data-label="Type" style="font-weight:600; color: ${typeColor};">${tx.type}</td>
+                <td data-label="Date">${escapeUi(date)}</td>
+                <td data-label="Type" style="font-weight:600; color: ${typeColor};">${escapeUi(type)}</td>
                 <td data-label="Amount" style="font-weight: 700; color: ${amountColor};">${amountText}</td>
                 <td data-label="Reference" class="deposit-tx-hash" style="font-family: monospace; white-space: nowrap;">
-                    <span>${reference.substring(0, 16)}${reference.length > 16 ? '...' : ''}</span>
-                    <button onclick="copyToClipboard('${reference.replace(/'/g, "\\'")}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Full Reference">
+                    <span title="${escapeUi(reference)}">${escapeUi(reference.substring(0, 16))}${reference.length > 16 ? '...' : ''}</span>
+                    <button onclick="copyToClipboard(decodeURIComponent('${encodedReference}'))" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Full Reference">
                         <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
                     </button>
                 </td>
                 <td data-label="Status">
-                    <span class="status-badge-lbl ${statusClass}">${status}</span>
+                    <span class="status-badge-lbl ${statusClass}">${escapeUi(status)}</span>
                 </td>
             </tr>
         `;
@@ -974,20 +982,20 @@ function renderInvestmentsTable(investments) {
     const tbody = document.getElementById('my-investments-table-body');
     if (!tbody) return;
 
-    const dummyInvestments = [
-        { name: 'AMC Movie Ticket', amount: 100.00, daily_profit_pct: 2.5, duration_days: 1, status: 'Active' },
-        { name: 'Avengers Movie Plan', amount: 150.00, daily_profit_pct: 2.5, duration_days: 1, status: 'Completed' }
-    ];
+    const allInvestments = Array.isArray(investments) ? investments : [];
 
-    const allInvestments = [...dummyInvestments, ...investments];
+    if (allInvestments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="padding:1.5rem;text-align:center;color:#718096;">No investments yet.</td></tr>';
+        return;
+    }
 
     tbody.innerHTML = allInvestments.map(inv => `
         <tr>
-            <td style="font-weight:600; color:#f8fafc;">${inv.name}</td>
-            <td style="font-weight:700; color:#3b82f6;">$${inv.amount.toFixed(2)}</td>
-            <td style="color:#10b981; font-weight:600;">+${inv.daily_profit_pct}% / day</td>
-            <td>${inv.duration_days} Days</td>
-            <td><span class="status-badge-lbl confirmed">${inv.status}</span></td>
+            <td style="font-weight:600; color:#f8fafc;">${escapeUi(inv.name || 'Investment')}</td>
+            <td style="font-weight:700; color:#3b82f6;">${formatUSD(inv.amount)}</td>
+            <td style="color:#10b981; font-weight:600;">+${Number(inv.daily_profit_pct || 0).toFixed(2)}% / day</td>
+            <td>${Number(inv.duration_days || 0)} Days</td>
+            <td><span class="status-badge-lbl confirmed">${escapeUi(inv.status || 'Active')}</span></td>
         </tr>
     `).join('');
 }
@@ -996,7 +1004,7 @@ function renderActiveInvestmentsTracking(investments) {
     const tbody = document.getElementById('active-investments-tbody');
     if (!tbody) return;
 
-    const active = investments.filter(inv => inv.status === 'Active');
+    const active = (Array.isArray(investments) ? investments : []).filter(inv => inv.status === 'Active');
 
     if (!active.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#94a3b8">No active investments yet.</td></tr>';
@@ -1004,7 +1012,9 @@ function renderActiveInvestmentsTracking(investments) {
     }
 
     tbody.innerHTML = active.map(inv => {
-        const estReturns = inv.amount * (inv.daily_profit_pct / 100);
+        const investmentAmount = Number(inv.amount) || 0;
+        const dailyProfitPct = Number(inv.daily_profit_pct) || 0;
+        const estReturns = investmentAmount * (dailyProfitPct / 100);
         const cycleMs = 24 * 60 * 60 * 1000;
         const elapsed = Math.max(0, Date.now() - Number(inv.created_at || Date.now()));
         const cycleProgress = Math.min(1, (elapsed % cycleMs) / cycleMs);
@@ -1013,9 +1023,9 @@ function renderActiveInvestmentsTracking(investments) {
         const minutes = Math.floor((remaining % 3600000) / 60000);
         return `
         <tr style="border-bottom: 1px solid #1e2538;">
-            <td style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${inv.name}</td>
-            <td style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">$${inv.amount.toFixed(2)}</td>
-            <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${inv.daily_profit_pct}% / day</td>
+            <td style="padding: 1rem 1.25rem; font-weight:600; color:#f8fafc;">${escapeUi(inv.name || 'Investment')}</td>
+            <td style="padding: 1rem 1.25rem; font-weight:700; color:#3b82f6;">${formatUSD(investmentAmount)}</td>
+            <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:600;">+${dailyProfitPct.toFixed(2)}% / day</td>
             <td style="padding: 1rem 1.25rem; color:#10b981; font-weight:700;">+$${estReturns.toFixed(2)}</td>
             <td style="padding: 1rem 1.25rem;"><div class="investment-cycle"><span><b>${hours}h ${minutes}m</b> to next credit</span><i><em style="width:${Math.round(cycleProgress * 100)}%"></em></i></div></td>
         </tr>

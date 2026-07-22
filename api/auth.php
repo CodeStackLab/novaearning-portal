@@ -162,6 +162,9 @@ function handleAuth($action, $subaction, $pdo, $body) {
         $newUserId = $pdo->lastInsertId();
 
         if ($referrerId) {
+            $referralEventRef = 'REFJOIN-' . (int)$newUserId;
+            $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$referrerId, date('M j, Y h:i A'), 'Referral Joined', 0, $referralEventRef, 'Confirmed']);
             notifyUserById($pdo, $referrerId, 'You have a new referral', '<p><strong>' . htmlspecialchars($name) . '</strong> joined Nova using your referral code.</p><p>You will receive referral commission when eligible activity is completed.</p>', 'referral');
         }
 
