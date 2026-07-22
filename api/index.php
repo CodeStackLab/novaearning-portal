@@ -99,10 +99,6 @@ switch ($endpoint) {
             ]);
         }
         break;
-    case 'test-users':
-        $stmt = $pdo->query("SELECT id, name, email, username, role FROM users");
-        sendJson($stmt->fetchAll());
-        break;
     case 'admin':
         require_once 'admin.php';
         handleAdmin($action, $subaction, $pdo, $body);

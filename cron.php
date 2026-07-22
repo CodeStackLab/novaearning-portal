@@ -2,6 +2,32 @@
 // Run every few minutes. Earnings are credited once per completed 24-hour cycle.
 require_once 'config.php';
 
+// HTTP scheduler requests must prove they came from the deployment account.
+// Direct CLI cron jobs remain supported by IONOS control-panel scheduling.
+if (PHP_SAPI !== 'cli') {
+    $authFile = __DIR__ . '/cron-auth.php';
+    $providedToken = $_SERVER['HTTP_X_NOVA_CRON_TOKEN'] ?? '';
+    if (!is_file($authFile)) {
+        http_response_code(503);
+        exit('Cron authentication is not configured.');
+    }
+    require $authFile;
+    if (!defined('NOVA_CRON_TOKEN_HASH') || $providedToken === '' || !hash_equals(NOVA_CRON_TOKEN_HASH, hash('sha256', $providedToken))) {
+        http_response_code(403);
+        exit('Forbidden');
+    }
+}
+
+// Prevent overlapping scheduler runs and repair installations that stored
+// millisecond timestamps in a 32-bit INT column.
+$cronLock = (int)$pdo->query("SELECT GET_LOCK('nova_commission_cron', 0)")->fetchColumn();
+if ($cronLock !== 1) exit('Cron is already running.');
+$createdAtColumn = $pdo->query("SHOW COLUMNS FROM investments LIKE 'created_at'")->fetch();
+if ($createdAtColumn && stripos((string)$createdAtColumn['Type'], 'bigint') !== 0) {
+    $pdo->exec('ALTER TABLE investments MODIFY created_at BIGINT NULL');
+}
+$pdo->exec("UPDATE investments SET created_at = UNIX_TIMESTAMP(STR_TO_DATE(start_date, '%b %e, %Y %h:%i %p')) * 1000 WHERE created_at IS NULL OR created_at <= 2147483647");
+
 $pdo->exec("CREATE TABLE IF NOT EXISTS notification_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     investment_id INT NOT NULL,
@@ -120,6 +146,7 @@ foreach ($activeInvestments as $inv) {
 
 $stmt = $pdo->prepare("INSERT INTO settings (`key`, value) VALUES ('cron_last_run', ?) ON DUPLICATE KEY UPDATE value = VALUES(value)");
 $stmt->execute([gmdate('Y-m-d H:i:s')]);
+$pdo->query("SELECT RELEASE_LOCK('nova_commission_cron')");
 
 echo 'Cron executed successfully at ' . date('Y-m-d H:i:s');
 ?>

@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS investments (
     duration_days INT NOT NULL,
     status VARCHAR(50) NOT NULL,
     start_date VARCHAR(255) NOT NULL,
-    created_at INT,
+    created_at BIGINT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

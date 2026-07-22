@@ -57,7 +57,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'commissions') {
-            $stmt = $pdo->query("SELECT transactions.*, users.name as user_name, users.email as user_email FROM transactions JOIN users ON transactions.user_id = users.id WHERE transactions.type = 'Referral Bonus' ORDER BY transactions.id DESC");
+            $stmt = $pdo->query("SELECT transactions.*, users.name as user_name, users.email as user_email FROM transactions JOIN users ON transactions.user_id = users.id WHERE transactions.type IN ('Referral Bonus', 'Referral Commission') ORDER BY transactions.id DESC");
             sendJson($stmt->fetchAll());
         }
 
@@ -584,8 +584,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $transactionId = $body['transactionId'] ?? null;
             if (!$transactionId) sendJson(['message' => 'Valid transaction ID required'], 400);
 
-            $stmt = $pdo->prepare('SELECT * FROM transactions WHERE id = ? AND type = ?');
-            $stmt->execute([$transactionId, 'Referral Bonus']);
+            $stmt = $pdo->prepare("SELECT * FROM transactions WHERE id = ? AND type IN ('Referral Bonus', 'Referral Commission')");
+            $stmt->execute([$transactionId]);
             $tx = $stmt->fetch();
 
             if (!$tx) sendJson(['message' => 'Commission not found'], 404);

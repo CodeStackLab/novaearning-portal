@@ -1,0 +1,24 @@
+name: Run investment commission scheduler
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: nova-commission-scheduler
+  cancel-in-progress: false
+
+jobs:
+  run-commission-cron:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run protected production scheduler
+        env:
+          IONOS_SOURCE_SECRET: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          TOKEN="$(php -r 'echo hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET"));')"
+          curl --fail --silent --show-error --retry 2 --max-time 90 \
+            -H "X-Nova-Cron-Token: $TOKEN" \
+            https://novaearning.com/cron.php

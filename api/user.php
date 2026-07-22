@@ -39,7 +39,14 @@ function handleUser($action, $subaction, $pdo, $body) {
         $refActiveSumRow = $stmt->fetch();
         $refActiveTotal = $refActiveSumRow['refActiveSum'] ? (float)$refActiveSumRow['refActiveSum'] : 0.00;
 
-        $todayProfit = ($activeTotal * 0.025) + ($refActiveTotal * 0.0025);
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount * daily_profit_pct / 100), 0) FROM investments WHERE user_id = ? AND status = 'Active'");
+        $stmt->execute([$userId]);
+        $ownDailyProfit = (float)$stmt->fetchColumn();
+        $dailyReferralPct = getNumericSetting($pdo, 'referral_daily_commission_pct', 10, 0, 100);
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(investments.amount * investments.daily_profit_pct / 100), 0) FROM investments JOIN users ON investments.user_id = users.id WHERE users.referred_by = ? AND investments.status = 'Active'");
+        $stmt->execute([$userId]);
+        $referralDailyProfit = (float)$stmt->fetchColumn() * ($dailyReferralPct / 100);
+        $todayProfit = $ownDailyProfit + $referralDailyProfit;
 
         $stmt = $pdo->prepare('SELECT id, name, email FROM users WHERE referred_by = ? ORDER BY id DESC LIMIT 5');
         $stmt->execute([$userId]);
