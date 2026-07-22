@@ -18,8 +18,8 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=80.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=80.0">
+    <link rel="stylesheet" href="/style.css?v=81.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=81.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -391,23 +391,11 @@
                 </div>
                 
                 <div class="recent-deposits-section transactions-card">
-                    <div class="table-responsive-box transactions-table-wrap" style="display:none;">
-                        <table class="deposits-table-list">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Amount</th>
-                                    <th>Reference / TXN ID</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="all-transactions-table-body">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
+                    <div id="transactions-responsive-container" class="transactions-responsive-container">
+                        <div class="financial-empty">Loading transaction history…</div>
                     </div>
-                    <div id="transactions-empty-state" class="transactions-empty-state">
+                    <table style="display:none;"><tbody id="all-transactions-table-body"></tbody></table>
+                    <div id="transactions-empty-state" class="transactions-empty-state" style="display:none;">
                         <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
                         <strong>No transactions yet</strong>
                         <small>Your deposits, investments, commissions, and withdrawals will appear here.</small>
@@ -953,6 +941,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=80.0"></script>
+    <script src="/app.js?v=81.0"></script>
 </body>
 </html>

@@ -915,19 +915,15 @@ function renderDepositsTable(deposits) {
 }
 
 function renderAllTransactionsTable(transactions) {
+    const cardContainer = document.getElementById('transactions-responsive-container');
     const tbody = document.getElementById('all-transactions-table-body');
-    const tableWrap = document.querySelector('.transactions-table-wrap');
     const emptyState = document.getElementById('transactions-empty-state');
-    if (!tbody) return;
 
     const filtered = Array.isArray(transactions) ? transactions : [];
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '';
-        if (tableWrap) {
-            tableWrap.hidden = true;
-            tableWrap.style.display = 'none';
-        }
+        if (cardContainer) cardContainer.style.display = 'none';
+        if (tbody) tbody.innerHTML = '';
         if (emptyState) {
             emptyState.hidden = false;
             emptyState.style.display = 'grid';
@@ -935,49 +931,75 @@ function renderAllTransactionsTable(transactions) {
         return;
     }
 
-    if (tableWrap) {
-        tableWrap.hidden = false;
-        tableWrap.style.display = 'block';
-    }
     if (emptyState) {
         emptyState.hidden = true;
         emptyState.style.display = 'none';
     }
 
-    tbody.innerHTML = filtered.map(tx => {
-        let typeColor = "#3b82f6";
-        if (tx.type === "Investment") typeColor = "#a855f7";
-        if (tx.type === "Withdrawal") typeColor = "#ef4444";
-        if (/commission|referral|profit|earning/i.test(tx.type || '')) typeColor = "#22c55e";
+    if (cardContainer) {
+        cardContainer.style.display = 'flex';
+        cardContainer.innerHTML = filtered.map(tx => {
+            let typeIcon = "swap_horiz";
+            let typeClass = "deposit";
+            if (tx.type === "Investment") { typeIcon = "analytics"; typeClass = "investment"; }
+            else if (tx.type === "Withdrawal") { typeIcon = "arrow_upward"; typeClass = "withdrawal"; }
+            else if (tx.type === "Deposit") { typeIcon = "south_west"; typeClass = "deposit"; }
+            else if (/commission|referral|profit|earning/i.test(tx.type || '')) { typeIcon = "paid"; typeClass = "commission"; }
 
-        const numericAmount = Math.abs(Number(tx.amount) || 0);
-        const isDebit = tx.type === 'Withdrawal' || tx.type === 'Investment';
-        const amountText = `${isDebit ? '-' : ''}$${numericAmount.toFixed(2)}`;
-        const amountColor = isDebit ? '#f47d8b' : '#f8fafc';
-        const date = String(tx.date || '—');
-        const type = String(tx.type || 'Transaction');
-        const reference = String(tx.ref || 'Pending');
-        const status = String(tx.status || 'Pending');
-        const statusClass = status.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
-        const encodedReference = encodeURIComponent(reference);
+            const numericAmount = Math.abs(Number(tx.amount) || 0);
+            const isDebit = tx.type === 'Withdrawal' || tx.type === 'Investment';
+            const amountText = `${isDebit ? '-' : '+'}$${numericAmount.toFixed(2)}`;
+            const date = String(tx.date || '—');
+            const type = String(tx.type || 'Transaction');
+            const reference = String(tx.ref || 'Pending');
+            const status = String(tx.status || 'Pending');
+            const statusClass = status.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+            const encodedReference = encodeURIComponent(reference);
 
-        return `
-            <tr>
-                <td data-label="Date">${escapeUi(date)}</td>
-                <td data-label="Type" style="font-weight:600; color: ${typeColor};">${escapeUi(type)}</td>
-                <td data-label="Amount" style="font-weight: 700; color: ${amountColor};">${amountText}</td>
-                <td data-label="Reference" class="deposit-tx-hash" style="font-family: monospace; white-space: nowrap;">
-                    <span title="${escapeUi(reference)}">${escapeUi(reference.substring(0, 16))}${reference.length > 16 ? '...' : ''}</span>
-                    <button onclick="copyToClipboard(decodeURIComponent('${encodedReference}'))" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Full Reference">
-                        <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
-                    </button>
-                </td>
-                <td data-label="Status">
-                    <span class="status-badge-lbl ${statusClass}">${escapeUi(status)}</span>
-                </td>
-            </tr>
-        `;
-    }).join('');
+            return `
+                <div class="tx-responsive-card">
+                    <div class="tx-card-left">
+                        <div class="tx-icon-box ${typeClass}">
+                            <span class="material-symbols-outlined">${typeIcon}</span>
+                        </div>
+                        <div class="tx-main-info">
+                            <div class="tx-type-title">${escapeUi(type)}</div>
+                            <div class="tx-date-subtitle">${escapeUi(date)}</div>
+                            <div class="tx-ref-pill">
+                                <span class="tx-ref-code">${escapeUi(reference.substring(0, 14))}${reference.length > 14 ? '...' : ''}</span>
+                                <button type="button" class="tx-copy-btn" onclick="copyToClipboard(decodeURIComponent('${encodedReference}'))" title="Copy Reference">
+                                    <span class="material-symbols-outlined">content_copy</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tx-card-right">
+                        <div class="tx-amount-display ${isDebit ? 'debit' : 'credit'}">${amountText}</div>
+                        <span class="tx-status-badge ${statusClass}">${escapeUi(status)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    if (tbody) {
+        tbody.innerHTML = filtered.map(tx => {
+            const numericAmount = Math.abs(Number(tx.amount) || 0);
+            const isDebit = tx.type === 'Withdrawal' || tx.type === 'Investment';
+            const amountText = `${isDebit ? '-' : '+'}$${numericAmount.toFixed(2)}`;
+            const status = String(tx.status || 'Pending');
+            const statusClass = status.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+            return `
+                <tr>
+                    <td>${escapeUi(tx.date || '')}</td>
+                    <td>${escapeUi(tx.type || '')}</td>
+                    <td>${amountText}</td>
+                    <td>${escapeUi(tx.ref || '')}</td>
+                    <td><span class="status-badge-lbl ${statusClass}">${escapeUi(status)}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
 }
 
 async function downloadAccountStatement() {
