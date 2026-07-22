@@ -195,11 +195,10 @@
                     </button>
                 </div>
 
-                <!-- Track Today's Investments -->
                 <div class="recent-deposits-section active-investments-card">
                     <div class="section-title-row">
                         <h2 class="recent-deposits-title font-display">Active Investments</h2>
-                        <button class="section-link-btn" onclick="switchTab('invest')">View plans <span class="material-symbols-outlined">arrow_forward</span></button>
+                        <button type="button" class="section-link-btn" onclick="switchTab('invest'); return false;" aria-label="View investment plans">View plans <span class="material-symbols-outlined">arrow_forward</span></button>
                     </div>
                     <div class="table-responsive-box active-investments-table-wrap">
                         <table class="deposits-table-list" style="width: 100%; border-collapse: collapse; min-width: 600px;">
@@ -813,6 +812,7 @@
     </div>
 
     <aside id="dashboard-pwa-banner" class="dashboard-pwa-banner" aria-live="polite" aria-label="Install Nova app" hidden>
+        <button type="button" class="dashboard-pwa-close" id="dashboard-pwa-close" aria-label="Close prompt"><span class="material-symbols-outlined">close</span></button>
         <div class="dashboard-pwa-icon"><span class="material-symbols-outlined" aria-hidden="true">install_mobile</span></div>
         <div class="dashboard-pwa-copy">
             <strong>Add Nova to Home Screen</strong>

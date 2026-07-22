@@ -1923,10 +1923,19 @@ function startLiveTransactionsFeed() {
         if (isIos && help) help.textContent = 'In Safari tap Share, then “Add to Home Screen”.';
     });
 
+    const closeButton = document.getElementById('dashboard-pwa-close');
+
     laterButton.addEventListener('click', () => {
         localStorage.setItem(snoozeKey, String(Date.now()));
         hideBanner();
     });
+
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            localStorage.setItem(snoozeKey, String(Date.now()));
+            hideBanner();
+        });
+    }
 
     showTimer = window.setTimeout(showBanner, 30000 + Math.random() * 10000);
 })();
