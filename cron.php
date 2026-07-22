@@ -65,12 +65,30 @@ foreach ($activeInvestments as $inv) {
     $durationDays = max(1, (int)$inv['duration_days']);
     $completedCycles = min($durationDays, (int)floor($elapsed / $dayMs));
 
-    // Professional reminders before the first 24-hour commission cycle.
-    foreach ([19 => 5, 22 => 2] as $elapsedHour => $hoursLeft) {
-        if ($elapsed >= $elapsedHour * 60 * 60 * 1000 && $elapsed < $dayMs) {
-            $eventKey = 'first-cycle-reminder-' . $hoursLeft . 'h';
+    // Notify before every 24-hour earning cycle. The scheduler runs every five
+    // minutes and the event log guarantees each milestone is delivered once.
+    $nextCycle = (int)floor($elapsed / $dayMs) + 1;
+    if ($nextCycle <= $durationDays) {
+        $remainingMs = ($nextCycle * $dayMs) - $elapsed;
+        $reminders = [
+            ['key' => '3h', 'label' => 'About 3 hours', 'max' => 3 * 60 * 60 * 1000, 'min' => 30 * 60 * 1000],
+            ['key' => '30m', 'label' => '30 minutes', 'max' => 30 * 60 * 1000, 'min' => 10 * 60 * 1000],
+            ['key' => '10m', 'label' => '10 minutes', 'max' => 10 * 60 * 1000, 'min' => 0]
+        ];
+        foreach ($reminders as $reminder) {
+            if ($remainingMs > $reminder['max'] || $remainingMs <= $reminder['min']) continue;
+            $eventKey = 'cycle-' . $nextCycle . '-reminder-' . $reminder['key'];
             if (claimInvestmentEvent($pdo, $inv['id'], $eventKey)) {
-                notifyUserById($pdo, $inv['user_id'], "{$hoursLeft} hours until your daily commission", '<p>Your investment <strong>' . htmlspecialchars($inv['name']) . '</strong> is approaching its first completed 24-hour earning cycle.</p><p>Keep the investment active. Commission is credited only after the full cycle is completed and remains subject to your plan terms.</p>', 'reminder');
+                $commissionEstimate = (float)$inv['amount'] * ((float)$inv['daily_profit_pct'] / 100);
+                notifyUserById(
+                    $pdo,
+                    $inv['user_id'],
+                    $reminder['label'] . ' until your commission',
+                    '<p>Your investment <strong>' . htmlspecialchars($inv['name']) . '</strong> is close to completing earning cycle <strong>' . $nextCycle . ' of ' . $durationDays . '</strong>.</p>'
+                    . '<p>Estimated commission: <strong>$' . number_format($commissionEstimate, 2) . '</strong>.</p>'
+                    . '<p>The commission will be credited automatically after the complete 24-hour cycle.</p>',
+                    'reminder'
+                );
             }
         }
     }
@@ -136,6 +154,7 @@ foreach ($activeInvestments as $inv) {
             $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$inv['user_id']]); $currentBalance = (float)($stmt->fetch()['balance'] ?? 0);
             recordBalanceLedger($pdo, $inv['user_id'], $refCode, 'principal_return', (float)$inv['amount'], $currentBalance - (float)$inv['amount'], 'Investment principal returned');
             notifyUserById($pdo, $inv['user_id'], 'Investment completed', '<p>Your <strong>' . htmlspecialchars($inv['name']) . '</strong> plan has completed successfully.</p><p><strong>$' . number_format((float)$inv['amount'], 2) . '</strong> principal was returned to your balance.</p>', 'investment');
+            notifyAdmins($pdo, 'Investment completed', '<p>Investment <strong>#' . (int)$inv['id'] . '</strong> completed all ' . $durationDays . ' earning cycles.</p><p><strong>$' . number_format((float)$inv['amount'], 2) . '</strong> principal was returned to User ID #' . (int)$inv['user_id'] . '.</p>', 'investment');
         } catch (Exception $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             releaseInvestmentEvent($pdo, $inv['id'], 'matured');
