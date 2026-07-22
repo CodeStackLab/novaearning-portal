@@ -977,30 +977,44 @@ html, body,
 
 .invest-hero-banner {
     background: linear-gradient(135deg, rgba(16, 26, 46, 0.95), rgba(10, 16, 30, 0.98));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 1.5rem 1.75rem;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 20px;
+    padding: 1.6rem 1.8rem;
     margin-bottom: 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.invest-hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
 }
 
 .invest-pill-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    background: rgba(99, 102, 241, 0.12);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #818cf8;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
     font-size: 0.75rem;
     font-weight: 700;
-    padding: 0.3rem 0.75rem;
+    padding: 0.35rem 0.85rem;
     border-radius: 20px;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
 }
 
 .invest-quick-stats {
@@ -1011,30 +1025,38 @@ html, body,
 }
 
 .invest-stat-pill {
-    background: rgba(15, 23, 42, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    padding: 0.65rem 1rem;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.75rem 1.1rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.invest-stat-pill:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.3);
 }
 
 .invest-stat-icon {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
-.invest-stat-icon.green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.invest-stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-.invest-stat-icon.gold { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.invest-stat-icon.green { background: rgba(16, 185, 129, 0.18); color: #34d399; box-shadow: 0 0 12px rgba(16, 185, 129, 0.2); }
+.invest-stat-icon.blue { background: rgba(59, 130, 246, 0.18); color: #60a5fa; box-shadow: 0 0 12px rgba(59, 130, 246, 0.2); }
+.invest-stat-icon.gold { background: rgba(245, 158, 11, 0.18); color: #fbbf24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.2); }
 
 .invest-stat-val {
     display: block;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
     font-weight: 800;
     color: #f8fafc;
     line-height: 1.1;
@@ -1044,6 +1066,7 @@ html, body,
     font-size: 0.7rem;
     color: #94a3b8;
     font-weight: 500;
+    margin-top: 0.15rem;
 }
 
 /* Toolbar & Filters */
@@ -1052,7 +1075,7 @@ html, body,
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.75rem;
 }
 
 .invest-search-box {
@@ -1066,111 +1089,182 @@ html, body,
     top: 50%;
     transform: translateY(-50%);
     color: #64748b;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    transition: color 0.2s;
 }
 .invest-search-box input {
     width: 100%;
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 0.65rem 1rem 0.65rem 2.6rem;
+    border-radius: 14px;
+    padding: 0.7rem 1rem 0.7rem 2.7rem;
     color: #f8fafc;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 .invest-search-box input:focus {
+    background: rgba(15, 23, 42, 0.95);
     border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+.invest-search-box input:focus + .search-icon {
+    color: #818cf8;
 }
 
 .invest-filter-chips {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     overflow-x: auto;
-    padding-bottom: 0.2rem;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.invest-filter-chips::-webkit-scrollbar {
+    display: none;
 }
 
 .invest-chip {
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(15, 23, 42, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: #94a3b8;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    padding: 0.55rem 1rem;
-    border-radius: 10px;
+    padding: 0.6rem 1.1rem;
+    border-radius: 12px;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 .invest-chip:hover {
-    background: rgba(30, 41, 59, 0.8);
+    background: rgba(30, 41, 59, 0.85);
     color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.15);
 }
 .invest-chip.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
-    border-color: rgba(99, 102, 241, 0.5);
-    color: #a5b4fc;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+}
+
+/* Popular Categories Grid (Public Investments Page) */
+.popular-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+}
+.pop-cat-card {
+    background: linear-gradient(145deg, rgba(16, 24, 40, 0.8), rgba(11, 16, 28, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-decoration: none !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pop-cat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 15px rgba(99, 102, 241, 0.15);
+}
+.pop-cat-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #818cf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.85rem;
+}
+.pop-cat-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 0.3rem;
+}
+.pop-cat-desc {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.4;
 }
 
 /* Card Grid */
-.db-investments-grid {
+.db-investments-grid,
+.investment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.35rem;
     min-height: 200px;
     align-items: stretch;
 }
 
-.db-investment-card {
+.db-investment-card,
+.investment-card {
     min-width: 0;
-    border-radius: 20px !important;
+    border-radius: 22px !important;
     overflow: hidden;
     background: linear-gradient(145deg, rgba(16, 24, 40, 0.95), rgba(11, 16, 28, 0.98)) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease !important;
     display: flex;
     flex-direction: column;
-}
-.db-investment-card:hover {
-    transform: translateY(-6px) !important;
-    border-color: rgba(99, 102, 241, 0.4) !important;
-    box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.2) !important;
+    position: relative;
 }
 
-.db-investment-card .investment-img-container {
-    height: 160px;
+.db-investment-card:hover,
+.investment-card:hover {
+    transform: translateY(-8px) !important;
+    border-color: rgba(99, 102, 241, 0.45) !important;
+    box-shadow: 0 22px 45px -10px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.db-investment-card .investment-img-container,
+.investment-card .investment-img-container {
+    height: 175px;
     position: relative;
     overflow: hidden;
     background: #0b0f19;
 }
-.db-investment-card .investment-img {
+
+.db-investment-card .investment-img,
+.investment-card .investment-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.db-investment-card:hover .investment-img {
+
+.db-investment-card:hover .investment-img,
+.investment-card:hover .investment-img {
     transform: scale(1.08);
 }
-.db-investment-card .investment-img-container::after {
+
+.db-investment-card .investment-img-container::after,
+.investment-card .investment-img-container::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
-    background: linear-gradient(to top, rgba(11, 16, 28, 0.95), transparent);
+    height: 65px;
+    background: linear-gradient(to top, rgba(11, 16, 28, 0.98), transparent);
 }
 
 .card-badge-overlay {
     position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    right: 0.75rem;
+    top: 0.85rem;
+    left: 0.85rem;
+    right: 0.85rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1178,41 +1272,48 @@ html, body,
 }
 
 .card-roi-pill {
-    background: rgba(16, 185, 129, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(16, 185, 129, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.35rem 0.7rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-tag-pill {
+    background: rgba(245, 158, 11, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: #ffffff;
     font-size: 0.72rem;
     font-weight: 800;
     padding: 0.3rem 0.65rem;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.card-tag-pill {
-    background: rgba(245, 158, 11, 0.85);
-    backdrop-filter: blur(8px);
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 0.25rem 0.6rem;
-    border-radius: 8px;
-}
-
-.db-investment-card .investment-content {
-    padding: 1.25rem;
+.db-investment-card .investment-content,
+.investment-card .investment-content {
+    padding: 1.35rem;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
 }
 
-.db-investment-heading .investment-title {
-    font-size: 1.05rem;
+.db-investment-heading .investment-title,
+.investment-card .investment-title {
+    font-size: 1.12rem;
     font-weight: 800;
     color: #f8fafc;
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
     line-height: 1.35;
     letter-spacing: -0.01em;
 }
@@ -1221,57 +1322,59 @@ html, body,
 .investment-metrics-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem 0.8rem;
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 0.85rem;
-    margin-bottom: 1rem;
+    gap: 0.65rem 0.85rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.1rem;
 }
 
 .metric-cell {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.2rem;
 }
 .metric-label {
     font-size: 0.68rem;
     color: #64748b;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
 }
 .metric-value {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     font-weight: 700;
     color: #e2e8f0;
 }
-.metric-value.highlight { color: #818cf8; font-size: 1rem; font-weight: 800; }
+.metric-value.highlight { color: #818cf8; font-size: 1.05rem; font-weight: 800; }
 .metric-value.profit { color: #34d399; font-weight: 800; }
 .metric-value.payout { color: #f8fafc; font-weight: 800; }
 
 /* Yield Progress Meter */
 .plan-yield-meter {
-    margin-bottom: 1.1rem;
+    margin-bottom: 1.25rem;
 }
 .yield-meter-info {
     display: flex;
     justify-content: space-between;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     color: #94a3b8;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.4rem;
     font-weight: 600;
 }
 .yield-meter-track {
-    height: 4px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.08);
-    border-radius: 4px;
+    border-radius: 6px;
     overflow: hidden;
+    position: relative;
 }
 .yield-meter-bar {
     height: 100%;
-    background: linear-gradient(90deg, #34d399, #10b981);
-    border-radius: 4px;
+    background: linear-gradient(90deg, #34d399, #10b981, #6366f1);
+    border-radius: 6px;
+    transition: width 0.6s ease;
 }
 
 .db-investment-action {
@@ -1280,27 +1383,27 @@ html, body,
 
 .db-buy-btn {
     width: 100%;
-    min-height: 46px;
+    min-height: 48px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     border: 0;
-    border-radius: 12px;
+    border-radius: 14px;
     color: #ffffff;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    font: 750 0.88rem/1 'Inter', sans-serif;
+    font: 750 0.9rem/1 'Inter', sans-serif;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
     transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 .db-buy-btn:hover {
     filter: brightness(1.1);
     transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.45);
+    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.5);
 }
 .db-buy-btn .material-symbols-outlined {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     transition: transform 0.2s ease;
 }
 .db-buy-btn:hover .material-symbols-outlined {
@@ -1310,20 +1413,21 @@ html, body,
 .buy-plan-modal-box {
     background: #0b1120 !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 20px !important;
+    border-radius: 24px !important;
     width: 100%;
-    max-width: 440px;
-    padding: 1.5rem;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+    max-width: 450px;
+    padding: 1.75rem;
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.7) !important;
 }
 
-/* Mobile Responsiveness Overhaul (< 768px) */
+/* Mobile Responsiveness Breakpoints (< 768px & < 480px) */
 @media (max-width: 768px) {
     .invest-hero-banner {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         padding: 1.25rem;
         gap: 1.1rem;
+        border-radius: 16px;
     }
     .invest-quick-stats {
         width: 100%;
@@ -1332,72 +1436,112 @@ html, body,
         gap: 0.5rem;
     }
     .invest-stat-pill {
-        padding: 0.55rem 0.5rem;
+        padding: 0.6rem 0.5rem;
         flex-direction: column;
         text-align: center;
         gap: 0.35rem;
+        border-radius: 12px;
     }
     .invest-stat-icon {
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
     }
     .invest-stat-icon .material-symbols-outlined {
-        font-size: 16px;
+        font-size: 18px;
     }
     .invest-stat-val {
-        font-size: 0.85rem;
+        font-size: 0.88rem;
     }
     .invest-stat-lbl {
-        font-size: 0.62rem;
+        font-size: 0.65rem;
     }
 
     .invest-toolbar {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.75rem;
+        gap: 0.85rem;
+        margin-bottom: 1.25rem;
     }
     .invest-search-box {
         max-width: 100%;
     }
 
-    .db-investments-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+    .popular-categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.85rem;
     }
-    .db-investment-card {
+    .pop-cat-card {
+        padding: 1rem;
+        border-radius: 14px;
+    }
+    .pop-cat-icon-circle {
+        width: 38px;
+        height: 38px;
+        margin-bottom: 0.6rem;
+    }
+
+    .db-investments-grid,
+    .investment-grid {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+    }
+    .db-investment-card,
+    .investment-card {
         display: flex;
         flex-direction: column;
         min-height: auto;
+        border-radius: 18px !important;
     }
-    .db-investment-card .investment-img-container {
-        height: 150px;
+    .db-investment-card .investment-img-container,
+    .investment-card .investment-img-container {
+        height: 160px;
     }
-    .db-investment-card .investment-content {
-        padding: 1.1rem;
+    .db-investment-card .investment-content,
+    .investment-card .investment-content {
+        padding: 1.15rem;
     }
     .db-buy-btn {
         min-height: 48px;
         font-size: 0.9rem;
     }
+
+    .buy-plan-modal-box {
+        padding: 1.25rem;
+        border-radius: 20px !important;
+        margin: 0 0.5rem;
+    }
 }
 
 @media (max-width: 480px) {
+    .invest-hero-banner {
+        padding: 1rem;
+    }
     .invest-quick-stats {
         grid-template-columns: 1fr;
+        gap: 0.45rem;
     }
     .invest-stat-pill {
         flex-direction: row;
         text-align: left;
-        padding: 0.6rem 0.85rem;
+        padding: 0.65rem 0.85rem;
     }
-    .db-investment-card .investment-img-container {
-        height: 140px;
+    .popular-categories-grid {
+        grid-template-columns: 1fr;
+    }
+    .db-investment-card .investment-img-container,
+    .investment-card .investment-img-container {
+        height: 145px;
     }
     .investment-metrics-grid {
         gap: 0.5rem;
-        padding: 0.7rem;
+        padding: 0.75rem;
     }
     .metric-value {
-        font-size: 0.82rem;
+        font-size: 0.85rem;
+    }
+    .metric-value.highlight {
+        font-size: 0.95rem;
     }
 }
+

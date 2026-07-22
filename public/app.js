@@ -1317,24 +1317,25 @@ function renderDashboardPlansPage() {
     const pagePlans = dbFilteredPlans.slice(start, start + DB_PLANS_PER_PAGE);
 
     if (pagePlans.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3.5rem 1.5rem; color:#94a3b8; background:rgba(15,23,42,0.4); border:1px dashed rgba(255,255,255,0.1); border-radius:16px;">
-            <span class="material-symbols-outlined" style="font-size:36px; color:#64748b; margin-bottom:0.5rem; display:block;">search_off</span>
-            <strong style="color:#f1f5f9; display:block; font-size:1.05rem;">No matching investment plans</strong>
-            <span style="font-size:0.85rem; color:#64748b;">Try searching for different keywords or select 'All Plans'.</span>
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3.5rem 1.5rem; color:#94a3b8; background:rgba(15,23,42,0.4); border:1px dashed rgba(255,255,255,0.1); border-radius:18px;">
+            <span class="material-symbols-outlined" style="font-size:40px; color:#64748b; margin-bottom:0.6rem; display:block;">search_off</span>
+            <strong style="color:#f1f5f9; display:block; font-size:1.1rem; margin-bottom:0.2rem;">No matching investment plans</strong>
+            <span style="font-size:0.88rem; color:#64748b;">Try searching for different keywords or select 'All Plans'.</span>
         </div>`;
     } else {
         grid.innerHTML = pagePlans.map((plan, i) => {
             const dailyProfitUsd = (plan.price * (plan.roi / 100)).toFixed(2);
             const totalPayoutUsd = (plan.price + (plan.price * (plan.roi / 100))).toFixed(2);
             const isPopular = i === 0 || plan.name.includes('Avengers');
+            const isHot = plan.name.includes('AMC') || plan.price >= 200;
 
             return `
             <article class="investment-card db-investment-card">
                 <div class="investment-img-container">
                     <img src="${plan.img}" alt="${plan.name}" class="investment-img" onerror="this.src='images/amc_theater.png'">
                     <div class="card-badge-overlay">
-                        <span class="card-roi-pill"><span class="material-symbols-outlined" style="font-size:13px;">trending_up</span> +${plan.roi}% Daily</span>
-                        ${isPopular ? '<span class="card-tag-pill hot">🔥 Popular</span>' : ''}
+                        <span class="card-roi-pill"><span class="material-symbols-outlined" style="font-size:14px;">trending_up</span> +${plan.roi}% Daily</span>
+                        ${isPopular ? '<span class="card-tag-pill hot">🔥 Popular</span>' : (isHot ? '<span class="card-tag-pill hot">⚡ High Yield</span>' : '<span class="card-tag-pill hot">🛡️ Protected</span>')}
                     </div>
                 </div>
                 <div class="investment-content">
@@ -1345,7 +1346,7 @@ function renderDashboardPlansPage() {
                     <!-- Financial Metrics 2x2 Grid -->
                     <div class="investment-metrics-grid">
                         <div class="metric-cell">
-                            <span class="metric-label">Min Entry</span>
+                            <span class="metric-label">Min Deposit</span>
                             <span class="metric-value highlight">$${plan.price.toFixed(2)}</span>
                         </div>
                         <div class="metric-cell">
@@ -1353,7 +1354,7 @@ function renderDashboardPlansPage() {
                             <span class="metric-value profit">+$${dailyProfitUsd}</span>
                         </div>
                         <div class="metric-cell">
-                            <span class="metric-label">Duration</span>
+                            <span class="metric-label">Cycle Duration</span>
                             <span class="metric-value">${plan.duration}</span>
                         </div>
                         <div class="metric-cell">
@@ -1365,7 +1366,7 @@ function renderDashboardPlansPage() {
                     <!-- Progress Return Meter -->
                     <div class="plan-yield-meter">
                         <div class="yield-meter-info">
-                            <span>100% Capital Return</span>
+                            <span>100% Capital Safe</span>
                             <span>Auto Payout</span>
                         </div>
                         <div class="yield-meter-track">
