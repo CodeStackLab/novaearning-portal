@@ -823,8 +823,9 @@
             <div style="margin-bottom: 1.5rem;">
                 <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">New TRON Wallet Address</label>
                 <input type="text" id="tron-address-new-input" placeholder="Enter new TRC20 wallet address..." class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; font-family: monospace; font-size: 0.85rem; box-sizing: border-box;">
+                <p id="tron-address-result" role="status" aria-live="polite" style="display:none; margin:.65rem 0 0; font-size:.78rem; line-height:1.4;"></p>
             </div>
-            <button type="button" id="save-tron-address-btn" class="modal-submit-btn" style="background: linear-gradient(135deg, #e05252 0%, #b91c1c 100%); color: white; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <button type="button" id="save-tron-address-btn" onclick="saveTronAddress()" class="modal-submit-btn" style="background: linear-gradient(135deg, #e05252 0%, #b91c1c 100%); color: white; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">save</span>
                 Save New Deposit Address
             </button>
@@ -856,6 +857,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=4.6"></script>
+    <script src="admin-app.js?v=4.7"></script>
 </body>
 </html>

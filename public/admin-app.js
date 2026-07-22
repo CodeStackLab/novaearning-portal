@@ -340,7 +340,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const changeTronAddressButton = document.getElementById('change-tron-address-btn');
     const closeTronAddressButton = document.getElementById('close-tron-address-modal-btn');
-    const saveTronAddressButton = document.getElementById('save-tron-address-btn');
     const tronAddressModal = document.getElementById('tron-address-modal');
     changeTronAddressButton?.addEventListener('click', (event) => {
         event.preventDefault();
@@ -351,7 +350,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         event.preventDefault();
         closeTronAddressModal();
     });
-    saveTronAddressButton?.addEventListener('click', saveTronAddress);
     tronAddressModal?.addEventListener('click', (event) => {
         if (event.target === tronAddressModal) closeTronAddressModal();
     });
@@ -1317,6 +1315,8 @@ function openTronAddressModal() {
 
     if (displayEl) displayEl.value = globalTronAddress;
     if (inputEl) inputEl.value = '';
+    const resultEl = document.getElementById('tron-address-result');
+    if (resultEl) { resultEl.style.display = 'none'; resultEl.textContent = ''; }
 
     modal.setAttribute('aria-hidden', 'false');
     modal.classList.add('active');
@@ -1348,17 +1348,31 @@ function closeTronAddressModal() {
 
 async function saveTronAddress() {
     const inputEl = document.getElementById('tron-address-new-input');
+    const resultEl = document.getElementById('tron-address-result');
+    const setResult = (message, success = false) => {
+        if (!resultEl) return;
+        resultEl.textContent = message;
+        resultEl.style.display = 'block';
+        resultEl.style.color = success ? '#5bd69a' : '#fb8d99';
+    };
     if (!inputEl) return;
     const newAddress = inputEl.value.trim();
     if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(newAddress)) {
-        showToast('Enter a valid TRON TRC20 address.');
+        setResult('Enter a valid 34-character TRON TRC20 address beginning with T.');
+        inputEl.focus();
         return;
     }
 
     const saveButton = document.getElementById('save-tron-address-btn');
-    if (saveButton) saveButton.disabled = true;
+    if (saveButton) { saveButton.disabled = true; saveButton.setAttribute('aria-busy', 'true'); }
+    setResult('Saving address…', true);
 
     const token = localStorage.getItem('nova_token');
+    if (!token) {
+        setResult('Your admin session expired. Please sign in again.');
+        if (saveButton) { saveButton.disabled = false; saveButton.removeAttribute('aria-busy'); }
+        return;
+    }
     try {
         const response = await fetch('/api/admin/settings/tron-address', {
             method: 'POST',
@@ -1372,13 +1386,15 @@ async function saveTronAddress() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Failed to update address');
 
-        showToast('TRON Deposit Address updated successfully!');
-        closeTronAddressModal();
         await fetchAdminTronAddress();
+        setResult('Deposit address updated successfully.', true);
+        showToast('TRON Deposit Address updated successfully!');
+        window.setTimeout(closeTronAddressModal, 700);
     } catch (err) {
+        setResult(err.message || 'Unable to update the deposit address.');
         showToast(err.message);
     } finally {
-        if (saveButton) saveButton.disabled = false;
+        if (saveButton) { saveButton.disabled = false; saveButton.removeAttribute('aria-busy'); }
     }
 }
 
