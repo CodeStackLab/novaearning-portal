@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="/style.css?v=50.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=50.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=50.1">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -86,6 +86,12 @@
                 <a href="#support" class="sidebar-item-link" data-tab="support">
                     <span class="material-symbols-outlined sidebar-icon">help_outline</span>
                     <span>Support</span>
+                </a>
+            </li>
+            <li class="sidebar-logout-item">
+                <a href="#" class="sidebar-item-link logout" aria-label="Log out of Nova">
+                    <span class="material-symbols-outlined sidebar-icon">logout</span>
+                    <span>Logout</span>
                 </a>
             </li>
         </ul>
@@ -164,7 +170,7 @@
                 <div class="profile-balance-card">
                     <div class="balance-card-top">
                         <div>
-                            <div class="balance-eyebrow">Total Balance</div>
+                            <div class="balance-eyebrow">Available Balance</div>
                             <div class="balance-value" id="db-total-balance">$0.00</div>
                         </div>
                         <div class="balance-wallet-icon" aria-hidden="true">
@@ -843,6 +849,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=70.0"></script>
+    <script src="/app.js?v=70.1"></script>
 </body>
 </html>

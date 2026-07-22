@@ -429,10 +429,18 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     $bonusText = number_format($referralBonusAmt, 2);
                     notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A 5% referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
                 }
-                sendJson(['message' => "Deposit successfully " . strtolower($act) . "d."]);
-            } catch (Exception $e) {
-                $pdo->rollBack();
-                sendJson(['message' => 'Server error'], 500);
+                $response = ['message' => "Deposit successfully " . strtolower($act) . "d."];
+                if ($act === 'Approve') {
+                    $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?');
+                    $stmt->execute([$deposit['user_id']]);
+                    $response['newBalance'] = (float)($stmt->fetchColumn() ?: 0);
+                    $response['message'] = 'Deposit approved. User available balance is now $' . number_format($response['newBalance'], 2) . '.';
+                }
+                sendJson($response);
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                error_log('Deposit verification failed for #' . $depositId . ': ' . $e->getMessage());
+                sendJson(['message' => 'Deposit verification failed. No partial balance update was applied.'], 500);
             }
         }
 

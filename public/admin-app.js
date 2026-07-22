@@ -622,8 +622,8 @@ function renderDepositsTable(deposits) {
         if (depStatus === 'Pending') {
             actionCell = `
                 <div style="display:flex; gap:0.5rem;">
-                    <button type="button" onclick="verifyDeposit(${depId}, 'Approve')" style="background-color:#10b981; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Approve</button>
-                    <button type="button" onclick="verifyDeposit(${depId}, 'Reject')" style="background-color:#ef4444; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Reject</button>
+                    <button type="button" onclick="verifyDeposit(${depId}, 'Approve', this)" style="background-color:#10b981; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Approve</button>
+                    <button type="button" onclick="verifyDeposit(${depId}, 'Reject', this)" style="background-color:#ef4444; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Reject</button>
                 </div>
             `;
         }
@@ -863,17 +863,27 @@ async function applyEditBalance() {
 }
 
 // Verify Deposit approvals
-async function verifyDeposit(depositId, action) {
+async function verifyDeposit(depositId, action, button = null) {
+    const originalLabel = button?.textContent;
+    if (button) {
+        button.disabled = true;
+        button.textContent = action === 'Approve' ? 'Approving…' : 'Rejecting…';
+    }
     try {
-        await adminRequest('/admin/deposits/verify', {
+        const result = await adminRequest('/admin/deposits/verify', {
             method: 'POST',
             body: JSON.stringify({ depositId, action })
         });
 
-        showToast(`Deposit ${action === 'Approve' ? 'Approved' : 'Rejected'}!`);
+        showToast(result.message || `Deposit ${action === 'Approve' ? 'Approved' : 'Rejected'}!`);
         await fetchActiveTabDetails('deposits');
+        await fetchActiveTabDetails('overview');
     } catch (e) {
         alert(e.message || 'Verification action failed');
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalLabel;
+        }
     }
 }
 

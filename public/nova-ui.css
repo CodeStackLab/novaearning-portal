@@ -466,6 +466,29 @@ html, body {
     .notification-setting { padding-inline: .75rem !important; }
 }
 
+/* ── Compact dashboard navigation and iPhone-safe spacing ── */
+.sidebar-logout-item { margin-top: auto; padding-top: .45rem; }
+.sidebar-logout-item .sidebar-item-link.logout { margin-top: 0 !important; border-top: 1px solid rgba(148,163,184,.12); }
+.dashboard-body { width: 100%; max-width: 100%; overflow-x: clip !important; }
+.dashboard-wrapper, .dashboard-main-content, .dashboard-panel-view { min-width: 0; box-sizing: border-box; }
+
+@media (max-width: 900px) {
+    /* The centered header already contains the brand on mobile; removing the
+       duplicate drawer logo also removes the empty block above navigation. */
+    .dashboard-sidebar .sidebar-logo { display: none !important; }
+    .dashboard-sidebar .sidebar-product-label { padding: max(.85rem, env(safe-area-inset-top)) 1rem .45rem !important; margin: 0 !important; }
+    .dashboard-sidebar .sidebar-menu { padding: 0 .65rem .7rem !important; gap: .15rem !important; }
+    .dashboard-sidebar .sidebar-system-card { margin: .55rem .65rem calc(.65rem + env(safe-area-inset-bottom)) !important; }
+    .dashboard-main-content { padding-top: 1rem !important; }
+    .dashboard-panel-view { margin: 0 !important; }
+}
+
+@media (max-width: 430px) {
+    .dashboard-header { padding-left: max(.55rem, env(safe-area-inset-left)) !important; padding-right: max(.55rem, env(safe-area-inset-right)) !important; }
+    .dashboard-main-content { padding-left: max(.65rem, env(safe-area-inset-left)) !important; padding-right: max(.65rem, env(safe-area-inset-right)) !important; }
+    .dashboard-footer { padding-left: max(.75rem, env(safe-area-inset-left)) !important; padding-right: max(.75rem, env(safe-area-inset-right)) !important; }
+}
+
 /* Final small-screen hardening across the full user/admin application */
 img, svg, video, canvas { max-width:100%; }
 .dashboard-panel-view, .recent-deposits-section, .deposit-step-box, .metric-card-box { min-width:0; }
@@ -2411,4 +2434,3 @@ html, body,
         font-size: 1.1rem !important;
     }
 }
-
