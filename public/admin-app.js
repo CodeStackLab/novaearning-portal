@@ -242,7 +242,7 @@ async function saveSmtpSettings(event) {
 
 function applyIonosSmtpPreset() {
     const username = document.getElementById('smtp-username');
-    document.getElementById('smtp-host').value = 'smtp.ionos.com';
+    document.getElementById('smtp-host').value = 'smtp.ionos.co.uk';
     document.getElementById('smtp-port').value = '587';
     document.getElementById('smtp-encryption').value = 'tls';
     if (username && !username.value.trim()) username.value = document.getElementById('smtp-from-email').value.trim();

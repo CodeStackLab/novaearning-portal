@@ -152,7 +152,7 @@ INSERT IGNORE INTO plans (name, price, daily_profit_pct, duration_days, image_ur
 
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');
-INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.com');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.co.uk');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_port', '587');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_encryption', 'tls');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_username', 'admin@novaearning.com');

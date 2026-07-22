@@ -186,7 +186,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             if ($username !== '' && !filter_var($username, FILTER_VALIDATE_EMAIL) && strlen($username) < 3) {
                 sendJson(['message' => 'SMTP username is invalid'], 400);
             }
-            if ($host === 'smtp.ionos.com' && !filter_var($username, FILTER_VALIDATE_EMAIL)) {
+            if (in_array($host, ['smtp.ionos.com', 'smtp.ionos.co.uk'], true) && !filter_var($username, FILTER_VALIDATE_EMAIL)) {
                 sendJson(['message' => 'IONOS requires the full mailbox email address as SMTP username.'], 400);
             }
 

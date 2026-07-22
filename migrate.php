@@ -80,6 +80,7 @@ try {
     // Forward-compatible production upgrades for installations created before these columns/tables existed.
     $pdo->exec("DELETE FROM password_reset_tokens WHERE expires_at < DATE_SUB(NOW(), INTERVAL 1 DAY) OR used_at IS NOT NULL");
     $pdo->exec("UPDATE settings SET value = 'admin@novaearning.com' WHERE `key` IN ('smtp_username', 'smtp_from_email') AND LOWER(value) = 'contact@novaearning.com'");
+    $pdo->exec("UPDATE settings SET value = 'smtp.ionos.co.uk' WHERE `key` = 'smtp_host' AND LOWER(value) = 'smtp.ionos.com'");
 
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");

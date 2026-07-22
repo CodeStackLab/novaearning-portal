@@ -59,7 +59,7 @@
 ## 5. SMTP Email System & Configuration
 
 - **Primary Admin & Sender Email**: `admin@novaearning.com`
-- **SMTP Host**: `smtp.ionos.com`
+- **SMTP Host**: `smtp.ionos.co.uk`
 - **SMTP Port**: `587`
 - **Encryption**: `TLS`
 - **SMTP Username**: `admin@novaearning.com`
