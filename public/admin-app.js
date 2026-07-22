@@ -591,45 +591,57 @@ function renderDepositsTable(deposits) {
     const tbody = document.getElementById('admin-deposits-table-body');
     if (!tbody) return;
 
-    let pendingCount = deposits.filter(d => d.status === 'Pending').length;
+    if (!Array.isArray(deposits)) deposits = [];
+
+    let pendingCount = deposits.filter(d => d && d.status === 'Pending').length;
     if (pendingCount > 0 && !window.hasShownPendingDepositsToast) {
         window.hasShownPendingDepositsToast = true;
         setTimeout(() => {
-            showToast(`You have ${pendingCount} pending deposit(s) awaiting review!`);
+            if (typeof showToast === 'function') showToast(`You have ${pendingCount} pending deposit(s) awaiting review!`);
         }, 1500);
     }
 
     if (deposits.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748b;">No deposits log found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color:#64748b; font-size: 0.9rem;"><span class="material-symbols-outlined" style="display:block; font-size: 2rem; margin-bottom: 0.5rem; color: #475569;">inbox</span>No pending or processed deposits found yet.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = deposits.map(dep => {
+        if (!dep) return '';
+        const depId = dep.id || 0;
+        const depStatus = dep.status || 'Pending';
+        const rawAmount = parseFloat(dep.amount) || 0;
+        const formattedAmount = rawAmount.toFixed(2);
+        const userName = escapeUi(dep.user_name || dep.user_email || ('User #' + (dep.user_id || '')));
+        const txnId = escapeUi(dep.txn_id || 'N/A');
+        const screenshotPath = dep.screenshot_path ? escapeUi(dep.screenshot_path) : '';
+        const depDate = escapeUi(dep.date || '');
+
         let actionCell = `<span style="color:#64748b; font-size:0.8rem;">Processed</span>`;
-        if (dep.status === 'Pending') {
+        if (depStatus === 'Pending') {
             actionCell = `
                 <div style="display:flex; gap:0.5rem;">
-                    <button onclick="verifyDeposit(${dep.id}, 'Approve')" style="background-color:#10b981; color:white; padding:0.3rem 0.60rem; border-radius:6px; font-size:0.75rem; font-weight:600;">Approve</button>
-                    <button onclick="verifyDeposit(${dep.id}, 'Reject')" style="background-color:#ef4444; color:white; padding:0.3rem 0.60rem; border-radius:6px; font-size:0.75rem; font-weight:600;">Reject</button>
+                    <button type="button" onclick="verifyDeposit(${depId}, 'Approve')" style="background-color:#10b981; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Approve</button>
+                    <button type="button" onclick="verifyDeposit(${depId}, 'Reject')" style="background-color:#ef4444; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Reject</button>
                 </div>
             `;
         }
 
         return `
             <tr>
-                <td>${dep.date}</td>
-                <td style="font-weight:600; color:#f1f5f9;">${escapeUi(dep.user_name || 'User #' + dep.user_id)}</td>
-                <td style="font-weight:700; color:#3b82f6;">$${Number(dep.amount || 0).toFixed(2)}</td>
+                <td style="white-space:nowrap;">${depDate}</td>
+                <td style="font-weight:600; color:#f1f5f9;">${userName}</td>
+                <td style="font-weight:700; color:#3b82f6;">$${formattedAmount}</td>
                 <td style="font-family: monospace; white-space: nowrap;">
-                    <span>${dep.txn_id || 'N/A'}</span>
-                    <button onclick="copyToClipboard('${dep.txn_id || ''}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Transaction ID">
+                    <span>${txnId}</span>
+                    <button type="button" onclick="copyToClipboard('${txnId}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Transaction ID">
                         <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
                     </button>
                 </td>
                 <td>
-                    ${dep.screenshot_path ? `<a href="${dep.screenshot_path}" target="_blank" style="color: #3b82f6; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">image</span>View Screenshot</a>` : `<span style="color: #64748b; font-size: 0.8rem;">No screenshot</span>`}
+                    ${screenshotPath ? `<a href="${screenshotPath}" target="_blank" style="color: #3b82f6; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">image</span>View Screenshot</a>` : `<span style="color: #64748b; font-size: 0.8rem;">No screenshot</span>`}
                 </td>
-                <td><span class="status-badge-lbl ${dep.status.toLowerCase()}">${dep.status}</span></td>
+                <td><span class="status-badge-lbl ${depStatus.toLowerCase()}">${escapeUi(depStatus)}</span></td>
                 <td>${actionCell}</td>
             </tr>
         `;
