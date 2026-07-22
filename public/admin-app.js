@@ -1831,6 +1831,8 @@ async function adminVerifyChangeEmailOtp() {
 
 let adminInvestmentsData = [];
 let adminInvestmentsFilter = 'All';
+let adminInvestmentsPage = 1;
+const ADMIN_INVESTMENTS_PER_PAGE = 8;
 
 async function loadAdminInvestments() {
     const tbody = document.getElementById('admin-investments-tbody');
@@ -1839,6 +1841,7 @@ async function loadAdminInvestments() {
     try {
         const rows = await adminRequest('/admin/investments');
         adminInvestmentsData = Array.isArray(rows) ? rows : [];
+        adminInvestmentsPage = 1;
         renderAdminInvestments();
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:#f87171;">Failed to load investments: ${escapeAdminUi(e.message)}</td></tr>`;
@@ -1852,6 +1855,26 @@ function filterAdminInvestments(filterName) {
             btn.classList.toggle('active', btn.getAttribute('data-filter') === filterName);
         });
     }
+    adminInvestmentsPage = 1;
+    renderAdminInvestments();
+}
+
+function changeAdminInvestmentsPage(direction) {
+    let filtered = adminInvestmentsData;
+    if (adminInvestmentsFilter !== 'All') {
+        filtered = filtered.filter(inv => inv.status === adminInvestmentsFilter);
+    }
+    const searchTerm = (document.getElementById('admin-inv-search')?.value || '').toLowerCase().trim();
+    if (searchTerm) {
+        filtered = filtered.filter(inv => 
+            (inv.name || '').toLowerCase().includes(searchTerm) ||
+            (inv.user_name || '').toLowerCase().includes(searchTerm) ||
+            (inv.user_email || '').toLowerCase().includes(searchTerm) ||
+            String(inv.id || '').includes(searchTerm)
+        );
+    }
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_INVESTMENTS_PER_PAGE));
+    adminInvestmentsPage = Math.min(totalPages, Math.max(1, adminInvestmentsPage + Number(direction || 0)));
     renderAdminInvestments();
 }
 
@@ -1879,13 +1902,29 @@ function renderAdminInvestments() {
         );
     }
 
+    const paginationElem = document.getElementById('admin-investments-pagination');
     if (!filtered.length) {
+        if (paginationElem) paginationElem.style.display = 'none';
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#8897ab;">No user investments found</td></tr>';
         return;
     }
 
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_INVESTMENTS_PER_PAGE));
+    adminInvestmentsPage = Math.min(Math.max(1, adminInvestmentsPage), totalPages);
+    const visibleRows = filtered.slice((adminInvestmentsPage - 1) * ADMIN_INVESTMENTS_PER_PAGE, adminInvestmentsPage * ADMIN_INVESTMENTS_PER_PAGE);
+
+    if (paginationElem) {
+        paginationElem.style.display = filtered.length <= ADMIN_INVESTMENTS_PER_PAGE ? 'none' : 'flex';
+    }
+    const pageInfo = document.getElementById('admin-inv-page-info');
+    if (pageInfo) pageInfo.textContent = `Page ${adminInvestmentsPage} of ${totalPages} (${filtered.length} items)`;
+    const prevBtn = document.getElementById('admin-inv-prev');
+    const nextBtn = document.getElementById('admin-inv-next');
+    if (prevBtn) prevBtn.disabled = adminInvestmentsPage <= 1;
+    if (nextBtn) nextBtn.disabled = adminInvestmentsPage >= totalPages;
+
     const dayMs = 86400000;
-    tbody.innerHTML = filtered.map(inv => {
+    tbody.innerHTML = visibleRows.map(inv => {
         const amount = Number(inv.amount) || 0;
         const roi = Number(inv.daily_profit_pct) || 0;
         const duration = Math.max(1, Number(inv.duration_days) || 1);
@@ -1905,8 +1944,11 @@ function renderAdminInvestments() {
             <td style="font-weight:700; color:#94a3b8;">#${inv.id}</td>
             <td>
                 <div style="font-weight:600; color:#f8fafc;">${escapeAdminUi(inv.user_name || 'User #' + inv.user_id)}</div>
-                <small style="color:#64748b;">${escapeAdminUi(inv.user_email || '')}</small>
-                <button type="button" onclick="openUserFinancialOverviewModal(${inv.user_id})" style="display:block; margin-top:2px; background:none; border:none; color:#60a5fa; font-size:0.7rem; cursor:pointer; text-decoration:underline; padding:0;">View Financial Overview</button>
+                <small style="color:#64748b; display:block; margin-bottom:2px;">${escapeAdminUi(inv.user_email || '')}</small>
+                <button type="button" class="btn-user-overview-sm" onclick="openUserFinancialOverviewModal(${inv.user_id})">
+                    <span class="material-symbols-outlined" style="font-size:0.85rem;">monitoring</span>
+                    <span>Financial Overview</span>
+                </button>
             </td>
             <td>
                 <div style="font-weight:600; color:#e2e8f0;">${escapeAdminUi(inv.name)}</div>
@@ -1914,18 +1956,18 @@ function renderAdminInvestments() {
             </td>
             <td style="font-weight:700; color:#f8fafc;">${formatUSD(amount)}</td>
             <td style="color:#34d399; font-weight:700;">+${roi.toFixed(2)}% / day</td>
-            <td><span style="padding:0.25rem 0.6rem; border-radius:99px; font-size:0.72rem; font-weight:700; ${badgeStyle}">${escapeAdminUi(inv.status)}</span></td>
+            <td><span style="padding:0.25rem 0.65rem; border-radius:99px; font-size:0.72rem; font-weight:700; ${badgeStyle}">${escapeAdminUi(inv.status)}</span></td>
             <td style="font-size:0.78rem; color:#94a3b8;">${escapeAdminUi(inv.start_date || '—')}</td>
             <td style="text-align:right;">
                 <div style="display:flex; justify-content:flex-end; gap:0.35rem; flex-wrap:wrap;">
                     ${inv.status === 'Active' ? `
-                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Hold')" style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Hold</button>
-                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Suspended')" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Suspend</button>
+                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Hold')" style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Hold</button>
+                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Suspended')" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Suspend</button>
                     ` : inv.status === 'Hold' || inv.status === 'Suspended' ? `
-                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Active')" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Resume</button>
+                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Active')" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Resume</button>
                     ` : ''}
-                    <button type="button" onclick="openEditInvestmentModal(${invJson})" style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Edit</button>
-                    <button type="button" onclick="adminDeleteInvestment(${inv.id})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Delete</button>
+                    <button type="button" onclick="openEditInvestmentModal(${invJson})" style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Edit</button>
+                    <button type="button" onclick="adminDeleteInvestment(${inv.id})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Delete</button>
                 </div>
             </td>
         </tr>`;
