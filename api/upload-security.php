@@ -15,7 +15,13 @@ function saveValidatedBase64Image($dataUrl, $prefix, &$error, $maxBytes = 524288
         $error = 'The uploaded file is not a valid image.';
         return false;
     }
-    $uploadsDir = __DIR__ . '/../public/uploads';
+    // The repository keeps assets in public/, while IONOS deploys the contents
+    // of public/ directly into its document root. Always use the actual web
+    // root so the returned /uploads/... URL resolves in both environments.
+    $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+    $uploadsDir = $documentRoot && is_dir($documentRoot)
+        ? rtrim($documentRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads'
+        : __DIR__ . '/../public/uploads';
     if (!is_dir($uploadsDir) && !mkdir($uploadsDir, 0755, true)) {
         $error = 'Unable to prepare image storage.';
         return false;
@@ -26,4 +32,16 @@ function saveValidatedBase64Image($dataUrl, $prefix, &$error, $maxBytes = 524288
         return false;
     }
     return '/uploads/' . $fileName;
+}
+
+function deleteValidatedUploadedImage($relativePath) {
+    $fileName = basename((string)$relativePath);
+    if (!preg_match('/^[a-z0-9_-]+\.(?:jpe?g|png|webp)$/i', $fileName)) return;
+    $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+    $candidates = [];
+    if ($documentRoot && is_dir($documentRoot)) $candidates[] = rtrim($documentRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $fileName;
+    $candidates[] = __DIR__ . '/../public/uploads/' . $fileName;
+    foreach (array_unique($candidates) as $candidate) {
+        if (is_file($candidate)) @unlink($candidate);
+    }
 }

@@ -30,7 +30,7 @@ function handleDeposits($action, $pdo, $body) {
 
         $finalTxnCode = !empty($txnId) ? $txnId : ("DEP-" . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8)));
         if (!preg_match('/^[A-Za-z0-9_-]{6,120}$/', $finalTxnCode)) {
-            @unlink(__DIR__ . '/../public' . $relativePath);
+            deleteValidatedUploadedImage($relativePath);
             sendJson(['message' => 'Enter a valid transaction reference (6–120 letters, numbers, dashes, or underscores).'], 400);
         }
 
@@ -43,7 +43,7 @@ function handleDeposits($action, $pdo, $body) {
             $pdo->commit();
         } catch (PDOException $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
-            @unlink(__DIR__ . '/../public' . $relativePath);
+            deleteValidatedUploadedImage($relativePath);
             if ((int)($e->errorInfo[1] ?? 0) === 1062) sendJson(['message' => 'This transaction reference was already submitted.'], 409);
             sendJson(['message' => 'Unable to submit the deposit.'], 500);
         }

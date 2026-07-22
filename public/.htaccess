@@ -26,5 +26,9 @@ RewriteRule ^ - [L]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# 4. Route all else through index.php
+# 4. Compatibility for uploads created before the IONOS document-root fix.
+# New files live in /uploads; older files remain in /public/uploads.
+RewriteRule ^uploads/([A-Za-z0-9_-]+\.(?:jpe?g|png|webp))$ /public/uploads/$1 [L,NC]
+
+# 5. Route all else through index.php
 RewriteRule ^(.*)$ /index.php [L,QSA]
