@@ -371,6 +371,7 @@ async function fetchAllDashboardData() {
 
         const transactions = await apiRequest('/transactions');
         renderAllTransactionsTable(transactions);
+        renderWithdrawalStatus(transactions);
 
         // Compute total deposits and withdrawals sums
         const totalDepositsSum = deposits
@@ -772,11 +773,32 @@ async function requestWithdrawal() {
         addressInput.value = '';
         amountInput.value = '';
         
-        showToast("Withdrawal request submitted! Processing...");
+        showToast("Withdrawal submitted — waiting for admin approval.");
         await fetchAllDashboardData();
     } catch (e) {
         alert(e.message || 'Failed to submit withdrawal request.');
     }
+}
+
+function renderWithdrawalStatus(transactions) {
+    const container = document.getElementById('withdrawal-status-list');
+    if (!container) return;
+    const withdrawals = (Array.isArray(transactions) ? transactions : [])
+        .filter(transaction => transaction.type === 'Withdrawal')
+        .slice(0, 10);
+    if (withdrawals.length === 0) {
+        container.innerHTML = '<div class="withdrawal-status-empty">No withdrawal requests yet.</div>';
+        return;
+    }
+    container.innerHTML = withdrawals.map(withdrawal => {
+        const pending = withdrawal.status === 'Pending';
+        const statusLabel = pending ? 'Waiting for admin approval' : (withdrawal.status === 'Confirmed' ? 'Approved & completed' : withdrawal.status);
+        return `<article class="withdrawal-status-item">
+            <span class="withdrawal-status-icon material-symbols-outlined">${pending ? 'schedule' : 'check_circle'}</span>
+            <span class="withdrawal-status-details"><strong>${formatUSD(withdrawal.amount)}</strong><small>${escapeUi(withdrawal.date || '')} · ${escapeUi(withdrawal.ref || '')}</small></span>
+            <span class="withdrawal-status-badge ${pending ? 'pending' : 'confirmed'}">${escapeUi(statusLabel)}</span>
+        </article>`;
+    }).join('');
 }
 // HTML Escape Helper
 function escapeHTML(str) {

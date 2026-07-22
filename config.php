@@ -380,6 +380,20 @@ function notifyAdmins($pdo, $subject, $contentHtml, $event = 'general') {
     return $sent;
 }
 
+function notifyAllUsers($pdo, $subject, $contentHtml, $event = 'general') {
+    $delivered = 0;
+    try {
+        $stmt = $pdo->query("SELECT id FROM users WHERE role = 'user' AND account_status = 'Active'");
+        foreach ($stmt->fetchAll() as $user) {
+            notifyUserById($pdo, (int)$user['id'], $subject, $contentHtml, $event);
+            $delivered++;
+        }
+    } catch (Throwable $e) {
+        error_log('Nova user broadcast failed: ' . $e->getMessage());
+    }
+    return $delivered;
+}
+
 // Very basic JWT Implementation in PHP to avoid external dependencies
 function generateJWT($payload) {
     $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);

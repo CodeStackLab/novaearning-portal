@@ -178,9 +178,14 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $planId = (int)($body['id'] ?? 0);
             if ($operation === 'delete') {
                 if ($planId < 1) sendJson(['message' => 'Valid plan ID required.'], 400);
+                $planStmt = $pdo->prepare('SELECT name FROM plans WHERE id = ? AND is_active = 1');
+                $planStmt->execute([$planId]);
+                $disabledPlan = $planStmt->fetch();
+                if (!$disabledPlan) sendJson(['message' => 'Plan not found or already disabled.'], 404);
                 $stmt = $pdo->prepare('UPDATE plans SET is_active = 0 WHERE id = ?');
                 $stmt->execute([$planId]);
                 auditAdminAction($pdo, $userId, 'plan.disabled', 'plan', $planId);
+                notifyAllUsers($pdo, 'Investment plan no longer available', '<p><strong>' . htmlspecialchars($disabledPlan['name']) . '</strong> has been removed from the investment catalogue.</p><p>Your existing active investments are not changed.</p>', 'investment');
                 sendJson(['message' => 'Plan removed from the catalogue.']);
             }
 
@@ -202,14 +207,26 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             try {
                 if ($operation === 'update' && $planId > 0) {
+                    $previousStmt = $pdo->prepare('SELECT name, price, daily_profit_pct, duration_days FROM plans WHERE id = ?');
+                    $previousStmt->execute([$planId]);
+                    $previousPlan = $previousStmt->fetch();
+                    if (!$previousPlan) sendJson(['message' => 'Plan not found.'], 404);
                     $stmt = $pdo->prepare('UPDATE plans SET name = ?, price = ?, daily_profit_pct = ?, duration_days = ?, image_url = ?, is_active = 1 WHERE id = ?');
                     $stmt->execute([$name, $price, $roi, $durationDays, $image, $planId]);
                     auditAdminAction($pdo, $userId, 'plan.updated', 'plan', $planId, ['name' => $name, 'price' => $price]);
+                    $planChanges = [];
+                    if ($previousPlan['name'] !== $name) $planChanges[] = 'Name: ' . htmlspecialchars($previousPlan['name']) . ' → ' . htmlspecialchars($name);
+                    if ((float)$previousPlan['price'] !== $price) $planChanges[] = 'Price: $' . number_format((float)$previousPlan['price'], 2) . ' → $' . number_format($price, 2);
+                    if ((float)$previousPlan['daily_profit_pct'] !== $roi) $planChanges[] = 'Daily return: ' . number_format((float)$previousPlan['daily_profit_pct'], 2) . '% → ' . number_format($roi, 2) . '%';
+                    if ((int)$previousPlan['duration_days'] !== $durationDays) $planChanges[] = 'Duration: ' . (int)$previousPlan['duration_days'] . ' → ' . $durationDays . ' day(s)';
+                    $changeHtml = $planChanges ? '<ul><li>' . implode('</li><li>', $planChanges) . '</li></ul>' : '<p>Catalogue details were refreshed.</p>';
+                    notifyAllUsers($pdo, 'Investment plan updated: ' . $name, '<p>Nova updated an investment plan in the catalogue.</p>' . $changeHtml . '<p>Changes apply to future purchases; existing active investments retain their recorded terms.</p>', 'investment');
                     sendJson(['message' => 'Plan updated and published.']);
                 }
                 $stmt = $pdo->prepare('INSERT INTO plans (name, price, daily_profit_pct, duration_days, image_url) VALUES (?, ?, ?, ?, ?)');
                 $stmt->execute([$name, $price, $roi, $durationDays, $image]);
                 auditAdminAction($pdo, $userId, 'plan.created', 'plan', $pdo->lastInsertId(), ['name' => $name, 'price' => $price]);
+                notifyAllUsers($pdo, 'New investment plan available: ' . $name, '<p>A new plan is now available in Nova.</p><p><strong>Price:</strong> $' . number_format($price, 2) . '<br><strong>Daily return:</strong> ' . number_format($roi, 2) . '%<br><strong>Duration:</strong> ' . $durationDays . ' day(s)</p><p>Open Investment Plans in your dashboard to review the complete terms.</p>', 'investment');
                 sendJson(['message' => 'Plan created and published.']);
             } catch (PDOException $e) {
                 if ((int)($e->errorInfo[1] ?? 0) === 1062) sendJson(['message' => 'A plan with this name already exists.'], 409);
@@ -341,6 +358,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 sendJson(['message' => 'Unable to update user balance.'], 500);
             }
             auditAdminAction($pdo, $userId, 'user.balance.updated', 'user', $targetUserId, ['newBalance' => (float)$newBalance]);
+            $balanceDirection = $normalizedBalance > $beforeBalance ? 'increased' : ($normalizedBalance < $beforeBalance ? 'decreased' : 'confirmed');
+            notifyUserById($pdo, $targetUserId, 'Account balance updated by administrator', '<p>Your available balance was <strong>' . $balanceDirection . '</strong> by an administrator.</p><p><strong>Previous balance:</strong> $' . number_format($beforeBalance, 2) . '<br><strong>New balance:</strong> $' . number_format($normalizedBalance, 2) . '</p><p>If you do not recognize this adjustment, contact Nova Support.</p>', 'account');
             sendJson(['message' => 'User balance updated successfully.']);
         }
 
@@ -355,6 +374,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $stmt->execute([$name, $email, $email, password_hash($password, PASSWORD_BCRYPT), $code]);
                 $newId = (int)$pdo->lastInsertId();
                 auditAdminAction($pdo, $userId, 'user.created', 'user', $newId, ['email' => $email]);
+                notifyUserById($pdo, $newId, 'Your Nova account was created', '<p>An administrator created your Nova account.</p><p><strong>Login email:</strong> ' . htmlspecialchars($email) . '<br><strong>Referral code:</strong> ' . htmlspecialchars($code) . '</p><p>Sign in using the temporary password supplied securely by the administrator, then update it from your account settings.</p>', 'account');
                 sendJson(['message' => 'User account created successfully.']);
             } catch (PDOException $e) {
                 if ((int)($e->errorInfo[1] ?? 0) === 1062) sendJson(['message' => 'Email or referral code already exists.'], 409);
@@ -375,7 +395,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             if (!in_array($status, ['Active', 'Suspended', 'Hold', 'Under Review'], true)) {
                 sendJson(['message' => 'Select a valid account status.'], 400);
             }
-            $stmt = $pdo->prepare('SELECT id, role FROM users WHERE id = ?');
+            $stmt = $pdo->prepare('SELECT id, role, name, email, account_status FROM users WHERE id = ?');
             $stmt->execute([$targetUserId]);
             $target = $stmt->fetch();
             if (!$target) sendJson(['message' => 'User not found.'], 404);
@@ -395,6 +415,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $stmt->execute([$name, $email, $email, $status, $targetUserId, 'user']);
             }
             auditAdminAction($pdo, $userId, 'user.profile.updated', 'user', $targetUserId, ['email' => $email, 'status' => $status]);
+            $profileChanges = [];
+            if ($target['name'] !== $name) $profileChanges[] = 'Profile name updated';
+            if (strcasecmp($target['email'], $email) !== 0) $profileChanges[] = 'Login email updated to ' . htmlspecialchars($email);
+            if (($target['account_status'] ?: 'Active') !== $status) $profileChanges[] = 'Account status changed from ' . htmlspecialchars($target['account_status'] ?: 'Active') . ' to ' . htmlspecialchars($status);
+            if ($newPassword !== '') $profileChanges[] = 'Login password reset by administrator';
+            if (!$profileChanges) $profileChanges[] = 'Profile details reviewed and saved';
+            notifyUserById($pdo, $targetUserId, 'Your Nova account was updated', '<p>An administrator updated your account:</p><ul><li>' . implode('</li><li>', $profileChanges) . '</li></ul><p>If you did not expect this change, contact Nova Support immediately.</p>', 'account');
             sendJson(['message' => 'User profile and login email updated successfully.']);
         }
 
@@ -416,7 +443,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         if ($action === 'users' && $subaction === 'delete') {
             $targetUserId = (int)($body['userId'] ?? 0);
             if ($targetUserId < 1) sendJson(['message' => 'Valid user ID required.'], 400);
-            $stmt = $pdo->prepare("SELECT id, email FROM users WHERE id = ? AND role = 'user'");
+            $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ? AND role = 'user'");
             $stmt->execute([$targetUserId]);
             $target = $stmt->fetch();
             if (!$target) sendJson(['message' => 'User not found or protected.'], 404);
@@ -437,6 +464,9 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 }
                 $pdo->commit();
                 auditAdminAction($pdo, $userId, 'user.deleted', 'user', $targetUserId, ['email' => $target['email']]);
+                if (filter_var($target['email'], FILTER_VALIDATE_EMAIL)) {
+                    sendSmtpEmail($target['email'], $target['name'] ?: 'Nova User', 'Your Nova account was closed', novaEmailBody('Your Nova account was closed', '<p>An administrator closed your Nova account and removed its associated records.</p><p>If you believe this was a mistake, contact Nova Support.</p>'), $pdo);
+                }
                 sendJson(['message' => 'User account and associated records deleted.']);
             } catch (Throwable $e) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
@@ -715,9 +745,16 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
                 $pdo->commit();
                 recordBalanceLedger($pdo, $targetUserId, $depCode, 'deposit_credit', $amount, $manualBalanceBefore, 'Manual confirmed deposit');
+                notifyUserById($pdo, $targetUserId, 'Deposit credited by administrator', '<p>An administrator credited a confirmed deposit of <strong>$' . number_format($amount, 2) . '</strong> to your account.</p><p><strong>Reference:</strong> ' . htmlspecialchars($depCode) . '</p>', 'deposit');
                 if (isset($manualInvestmentRef)) {
                     recordBalanceLedger($pdo, $targetUserId, $manualInvestmentRef, 'investment_purchase', -$amount, $manualBalanceBefore + $amount, 'Manual plan-linked deposit investment');
                     notifyUserById($pdo, $targetUserId, 'Investment activated', '<p>Your approved deposit was invested in <strong>' . htmlspecialchars($planName) . '</strong>.</p><p><strong>Amount:</strong> $' . number_format($amount, 2) . '</p>', 'investment');
+                }
+                if (isset($firstBonus)) {
+                    notifyUserById($pdo, $targetUserId, 'First deposit bonus credited', '<p>Your first-deposit bonus of <strong>$' . number_format($firstBonus, 2) . '</strong> was added to your account.</p>', 'referral');
+                }
+                if (isset($refBonus) && !empty($uInfo['referred_by'])) {
+                    notifyUserById($pdo, $uInfo['referred_by'], 'Referral commission credited', '<p>A referral commission of <strong>$' . number_format($refBonus, 2) . '</strong> was added to your balance.</p>', 'referral');
                 }
                 sendJson(['message' => 'Manual deposit of $' . number_format($amount, 2) . ' successfully credited!']);
             } catch (Exception $e) {
@@ -802,20 +839,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->prepare('INSERT INTO tickets (user_id, title, ticket_id, date, status, message, admin_reply, admin_image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
             $stmt->execute([$targetUserId, 'Support Reply', $ticketId, $dateStr, 'Open', '', $reply, $savedImagePath]);
 
-            // Notify User via Email
-            $uStmt = $pdo->prepare('SELECT name, email FROM users WHERE id = ?');
-            $uStmt->execute([$targetUserId]);
-            $targetUser = $uStmt->fetch();
-
-            if ($targetUser && !empty($targetUser['email'])) {
-                $emailSubject = "New Reply from Nova Support {$ticketId}";
-                $emailBody = "<h2>Support Reply from Nova</h2>" .
-                             "<p>Hi <strong>" . htmlspecialchars($targetUser['name']) . "</strong>,</p>" .
-                             "<p>You have received a reply from Nova Support team:</p>" .
-                             "<blockquote style='background:#f4f4f4; padding: 12px; border-left:4px solid #0070f3;'>" . nl2br(htmlspecialchars($reply)) . "</blockquote>" .
-                             "<p>Log in to your Nova Portal dashboard to view full chat history.</p>";
-                if (notificationEnabled($pdo, 'user', 'support')) sendSmtpEmail($targetUser['email'], $targetUser['name'], $emailSubject, $emailBody, $pdo);
-            }
+            $replyContent = $reply !== '' ? '<blockquote style="padding:12px;border-left:4px solid #3b82f6;background:rgba(59,130,246,.08)">' . nl2br(htmlspecialchars($reply)) . '</blockquote>' : '<p>Nova Support sent you a screenshot attachment.</p>';
+            notifyUserById($pdo, $targetUserId, "New reply from Nova Support {$ticketId}", '<p>You received a new support reply:</p>' . $replyContent . '<p>Open Support Center in your dashboard to view the full conversation.</p>', 'support');
 
             sendJson(['message' => 'Reply sent successfully.']);
         }
@@ -824,10 +849,11 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $targetUserId = $body['userId'] ?? null;
             $status = $body['status'] ?? null;
 
-            if (!$targetUserId || !$status) sendJson(['message' => 'User ID and status are required'], 400);
+            if (!$targetUserId || !in_array($status, ['Open', 'Closed'], true)) sendJson(['message' => 'Valid user ID and status are required'], 400);
 
             $stmt = $pdo->prepare('UPDATE tickets SET status = ? WHERE user_id = ?');
             $stmt->execute([$status, $targetUserId]);
+            notifyUserById($pdo, $targetUserId, 'Support conversation ' . strtolower($status), '<p>Your Nova Support conversation status is now <strong>' . htmlspecialchars($status) . '</strong>.</p><p>You can view or continue the conversation from Support Center.</p>', 'support');
             sendJson(['message' => "Support thread status set to $status."]);
         }
 

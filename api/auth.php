@@ -165,6 +165,13 @@ function handleAuth($action, $subaction, $pdo, $body) {
             notifyUserById($pdo, $referrerId, 'You have a new referral', '<p><strong>' . htmlspecialchars($name) . '</strong> joined Nova using your referral code.</p><p>You will receive referral commission when eligible activity is completed.</p>', 'referral');
         }
 
+        notifyAdmins(
+            $pdo,
+            'New verified user registered',
+            '<p>A new user completed email verification and registered successfully.</p><p><strong>Name:</strong> ' . htmlspecialchars($name) . '<br><strong>Email:</strong> ' . htmlspecialchars($email) . '<br><strong>User ID:</strong> #' . (int)$newUserId . '</p>',
+            'account'
+        );
+
         $token = generateJWT(['userId' => $newUserId]);
 
         $welcomeSubject = "Welcome to Nova Portal!";
