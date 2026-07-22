@@ -1853,8 +1853,9 @@ html, body,
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        padding: 0.6rem 0.85rem !important;
-        height: 58px !important;
+        padding: 0.5rem 0.85rem !important;
+        height: 56px !important;
+        box-sizing: border-box !important;
     }
 
     .admin-dashboard-body .dashboard-header-context,
@@ -1862,21 +1863,39 @@ html, body,
         display: none !important;
     }
 
+    .admin-dashboard-body .header-left-toggle,
+    .dashboard-header .header-left-toggle {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 38px !important;
+        height: 38px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        z-index: 20 !important;
+    }
+
     .admin-dashboard-body .mobile-header-logo,
     .dashboard-header .mobile-header-logo {
-        display: block !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         position: absolute !important;
         left: 50% !important;
         top: 50% !important;
         transform: translate(-50%, -50%) !important;
         margin: 0 !important;
+        z-index: 10 !important;
+        pointer-events: auto !important;
     }
 
     .admin-dashboard-body .mobile-header-logo img,
     .dashboard-header .mobile-header-logo img {
-        height: 24px !important;
+        height: 22px !important;
+        max-height: 22px !important;
         width: auto !important;
         display: block !important;
+        margin: 0 auto !important;
     }
 
     .admin-dashboard-body .header-right-user,
@@ -1884,10 +1903,40 @@ html, body,
         margin-left: auto !important;
         display: flex !important;
         align-items: center !important;
+        justify-content: flex-end !important;
+        z-index: 20 !important;
     }
 
-    .user-name-label {
-        font-size: 0.78rem !important;
+    .admin-dashboard-body .user-card-info,
+    .dashboard-header .user-card-info {
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
+        box-shadow: none !important;
+    }
+
+    .admin-dashboard-body .user-text-details,
+    .dashboard-header .user-text-details {
+        display: none !important;
+    }
+
+    .admin-dashboard-body .user-avatar-circle,
+    .dashboard-header .user-avatar-circle {
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+    }
+
+    .admin-dashboard-body .profile-dropdown-menu,
+    .dashboard-header .profile-dropdown-menu {
+        top: 48px !important;
+        right: 0 !important;
+        width: 150px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        z-index: 99999 !important;
     }
 
     #panel-users {
