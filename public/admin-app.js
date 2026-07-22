@@ -1325,6 +1325,12 @@ function openTronAddressModal() {
 
     modal.setAttribute('aria-hidden', 'false');
     modal.classList.add('active');
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100dvh';
+    modal.style.minWidth = '100vw';
+    modal.style.minHeight = '100vh';
     modal.style.display = 'flex';
     modal.style.alignItems = 'center';
     modal.style.justifyContent = 'center';
@@ -1340,6 +1346,12 @@ function closeTronAddressModal() {
     if (!modal) return;
     modal.classList.remove('active');
     modal.style.display = 'none';
+    modal.style.position = '';
+    modal.style.inset = '';
+    modal.style.width = '';
+    modal.style.height = '';
+    modal.style.minWidth = '';
+    modal.style.minHeight = '';
     modal.style.alignItems = '';
     modal.style.justifyContent = '';
     modal.style.opacity = '';

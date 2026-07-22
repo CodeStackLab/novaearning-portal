@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="style.css?v=6.1">
     <link rel="stylesheet" href="nova-ui.css?v=9.2">
     <style>
-        #tron-address-modal:target { display:flex !important; align-items:center; justify-content:center; opacity:1 !important; visibility:visible !important; z-index:999999 !important; }
+        #tron-address-modal:target { position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; min-width:100vw !important; min-height:100vh !important; display:flex !important; align-items:center; justify-content:center; box-sizing:border-box; opacity:1 !important; visibility:visible !important; z-index:999999 !important; }
     </style>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
@@ -860,6 +860,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=4.8"></script>
+    <script src="admin-app.js?v=4.9"></script>
 </body>
 </html>
