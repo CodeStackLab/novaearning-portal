@@ -2286,5 +2286,106 @@ html, body,
         font-size: 0.78rem !important;
         line-height: 1.45 !important;
     }
+
+    /* ── Mobile User Cards Transformation (Zero Horizontal Scroll Needed!) ── */
+    #panel-users table.deposits-table-list thead {
+        display: none !important;
+    }
+
+    #panel-users table.deposits-table-list,
+    #panel-users table.deposits-table-list tbody {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #panel-users tbody tr {
+        display: flex !important;
+        flex-direction: column !important;
+        background-color: #0c101b !important;
+        border: 1px solid #1e2538 !important;
+        border-radius: 12px !important;
+        padding: 0.85rem !important;
+        margin-bottom: 0.75rem !important;
+        gap: 0.45rem !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    #panel-users tbody tr td {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 0.35rem 0 !important;
+        border: none !important;
+        background: none !important;
+        font-size: 0.78rem !important;
+        white-space: normal !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    /* 1. User Info Header Row */
+    #panel-users tbody tr td:nth-child(1) {
+        padding-bottom: 0.5rem !important;
+        border-bottom: 1px dashed #1e2538 !important;
+    }
+
+    #panel-users tbody tr td:nth-child(1) > div {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    /* 2. Balance Row */
+    #panel-users tbody tr td:nth-child(2)::before {
+        content: "Balance";
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    /* 3. Referrals Row */
+    #panel-users tbody tr td:nth-child(3)::before {
+        content: "Referrals";
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    /* 4. Status Row */
+    #panel-users tbody tr td:nth-child(4)::before {
+        content: "Account Status";
+        font-size: 0.72rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    /* 5. Action Buttons Row */
+    #panel-users tbody tr td:nth-child(5) {
+        padding-top: 0.5rem !important;
+        border-top: 1px dashed #1e2538 !important;
+        margin-top: 0.25rem !important;
+    }
+
+    #panel-users tbody tr td:nth-child(5) > div {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+    }
+
+    #panel-users tbody tr td:nth-child(5) button {
+        width: 100% !important;
+        height: 36px !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-users tbody tr td:nth-child(5) button .material-symbols-outlined {
+        font-size: 1.1rem !important;
+    }
 }
 
