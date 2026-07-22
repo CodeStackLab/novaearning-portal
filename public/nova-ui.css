@@ -338,14 +338,29 @@ html, body {
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: .9rem !important; 
+        gap: .85rem !important; 
         min-height: auto !important;
-        padding-bottom: .25rem !important;
+        position: relative !important;
+        padding-bottom: .5rem !important;
     }
     .reference-panel-heading > div { min-width: 0; width: 100%; }
-    .reference-panel-heading .panel-title { font-size: clamp(1.8rem, 8vw, 2.4rem) !important; line-height: 1.1; }
-    .reference-panel-heading .panel-desc { max-width: 100%; font-size: .84rem !important; line-height: 1.5; }
-    .statement-download-btn { align-self: stretch !important; justify-content: center !important; width: 100% !important; min-height: 44px; padding: .65rem 1rem !important; white-space: nowrap; }
+    .reference-panel-heading .panel-title { font-size: clamp(1.8rem, 8vw, 2.4rem) !important; line-height: 1.1; margin-bottom: .35rem !important; }
+    .reference-panel-heading .panel-desc { max-width: 100% !important; font-size: .84rem !important; line-height: 1.5; margin-bottom: .25rem !important; }
+    .statement-download-btn { 
+        position: relative !important; 
+        top: auto !important; 
+        bottom: auto !important; 
+        left: auto !important; 
+        right: auto !important; 
+        align-self: stretch !important; 
+        justify-content: center !important; 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        min-height: 44px !important; 
+        padding: .65rem 1rem !important; 
+        white-space: nowrap !important;
+        margin-left: 0 !important;
+    }
     
     .transactions-card { 
         min-height: 220px !important; 
@@ -410,7 +425,6 @@ html, body {
 @media (max-width:600px) {
     .header-notification-btn { width:38px;height:38px;flex-basis:38px;border-radius:10px; }
     .notification-inbox-heading { align-items:flex-start; }.notification-inbox-heading p{max-width:190px}.notification-inbox-card{padding:.8rem;border-radius:14px}.notification-inbox-item{padding:.7rem;grid-template-columns:34px minmax(0,1fr)}.notification-category-icon{width:34px;height:34px}
-    .statement-download-btn { position:absolute; right:0; bottom:.65rem; padding:.55rem .7rem; font-size:.7rem; }
     .audit-toolbar{flex-direction:column}.audit-toolbar button{justify-content:center;min-height:44px}.audit-log-item{padding:.75rem;grid-template-columns:34px minmax(0,1fr)}
 }
 @media (max-width:430px) { .user-dashboard-body .user-text-details { display:none !important; } .user-dashboard-body .user-card-info { max-width:48px !important; } }
@@ -482,7 +496,6 @@ img, svg, video, canvas { max-width:100%; }
     .dashboard-footer p { margin:0; font-size:.65rem; }
     .profile-dropdown-menu { right:0 !important; left:auto !important; }
     .panel-title { overflow-wrap:anywhere; }
-    .statement-download-btn { max-width:110px; }
 }
 
 /* Nova 7.0 — calm, layered workspace inspired by modern editorial SaaS UI */
