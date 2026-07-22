@@ -70,9 +70,13 @@ jobs:
           -mkdir $TARGET_DIR
           cd $TARGET_DIR
           put -r dist/* .
+          # Explicitly replace the main entry files. Some shared-hosting SFTP
+          # servers can retain an older root HTML file after a recursive put.
+          put dist/dashboard.html dashboard.html
+          put dist/admin.html admin.html
+          put dist/nova-ui.css nova-ui.css
           quit
           EOF
 
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
-
