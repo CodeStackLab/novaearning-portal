@@ -618,8 +618,8 @@ function renderDepositsTable(deposits) {
         return `
             <tr>
                 <td>${dep.date}</td>
-                <td style="font-weight:600; color:#f1f5f9;">${dep.user_name}</td>
-                <td style="font-weight:700; color:#3b82f6;">$${dep.amount.toFixed(2)}</td>
+                <td style="font-weight:600; color:#f1f5f9;">${escapeUi(dep.user_name || 'User #' + dep.user_id)}</td>
+                <td style="font-weight:700; color:#3b82f6;">$${Number(dep.amount || 0).toFixed(2)}</td>
                 <td style="font-family: monospace; white-space: nowrap;">
                     <span>${dep.txn_id || 'N/A'}</span>
                     <button onclick="copyToClipboard('${dep.txn_id || ''}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Transaction ID">
@@ -663,14 +663,14 @@ function renderPayoutsTable(payouts) {
         return `
             <tr>
                 <td>${po.date}</td>
-                <td style="font-weight:600; color:#f1f5f9;">${po.user_name}</td>
+                <td style="font-weight:600; color:#f1f5f9;">${escapeUi(po.user_name || 'User #' + po.user_id)}</td>
                 <td>
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.15rem;">
                         <span style="font-size:0.8rem; color:#cbd5e1; font-family:monospace; word-break:break-all;">${walletAddress}</span>
                         ${copyButton}
                     </div>
                 </td>
-                <td style="font-weight:700; color:#ef4444;">$${po.amount.toFixed(2)}</td>
+                <td style="font-weight:700; color:#ef4444;">$${Number(po.amount || 0).toFixed(2)}</td>
                 <td class="deposit-tx-hash" title="${po.ref}">${po.ref.substring(0, 16)}...</td>
                 <td><span class="status-badge-lbl ${po.status.toLowerCase()}">${po.status}</span></td>
                 <td>${actionCell}</td>

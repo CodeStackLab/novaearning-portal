@@ -1272,8 +1272,15 @@ function handleFileSelect(input) {
     if (statusText) {
         if (input.files && input.files[0]) {
             const fileName = input.files[0].name;
-            statusText.textContent = `Selected: ${fileName}`;
-            statusText.style.color = '#10b981'; // Green color for successful select
+            statusText.textContent = `Uploading image...`;
+            statusText.style.color = '#3b82f6';
+            if (typeof showToast === 'function') showToast('Uploading payment screenshot...', 'info');
+
+            setTimeout(() => {
+                statusText.innerHTML = `✓ Image Uploaded Successfully:<br><strong style="color: #10b981;">${escapeUi(fileName)}</strong>`;
+                statusText.style.color = '#10b981';
+                if (typeof showToast === 'function') showToast(`Your payment screenshot has been uploaded successfully!`);
+            }, 400);
         } else {
             statusText.textContent = 'Drag & drop screenshot here, or click to browse';
             statusText.style.color = '#cbd5e1';

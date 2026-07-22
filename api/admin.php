@@ -47,7 +47,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'deposits') {
-            $stmt = $pdo->query('SELECT deposits.*, users.name as user_name, users.email as user_email FROM deposits JOIN users ON deposits.user_id = users.id ORDER BY deposits.id DESC');
+            $stmt = $pdo->query('SELECT deposits.*, users.name as user_name, users.email as user_email FROM deposits LEFT JOIN users ON deposits.user_id = users.id ORDER BY deposits.id DESC');
             sendJson($stmt->fetchAll());
         }
 
