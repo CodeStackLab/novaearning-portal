@@ -412,11 +412,18 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $stmt->execute([$newStatus, $deposit['txn_id']]);
 
                 if ($act === 'Approve') {
-                    // Always credit the user's balance
+                    $stmt = $pdo->prepare('SELECT balance, referred_by FROM users WHERE id = ? FOR UPDATE');
+                    $stmt->execute([$deposit['user_id']]);
+                    $user = $stmt->fetch();
+                    if (!$user) throw new Exception('Deposit user was not found');
+                    $balanceBeforeDeposit = (float)$user['balance'];
+
+                    // Credit the verified deposit first.
                     $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                     $stmt->execute([$deposit['amount'], $deposit['user_id']]);
 
-                    // If a plan was selected with the deposit, create an active investment
+                    // A plan-linked deposit is immediately invested, so the same funds
+                    // must not remain available for a second purchase.
                     if ($deposit['plan_name']) {
                         $dateStr = date('M j, Y h:i A');
                         $nowMs = time() * 1000;
@@ -428,13 +435,15 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
                         $stmt = $pdo->prepare('INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
                         $stmt->execute([$deposit['user_id'], $deposit['plan_name'], $deposit['amount'], $roiVal, $durVal, 'Active', $dateStr, $nowMs]);
+                        $stmt = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
+                        $stmt->execute([$deposit['amount'], $deposit['user_id'], $deposit['amount']]);
+                        if ($stmt->rowCount() !== 1) throw new Exception('Unable to reserve plan-linked deposit funds');
+                        $planInvestmentRef = 'INV-DEP-' . (int)$depositId;
+                        $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+                        $stmt->execute([$deposit['user_id'], $dateStr, 'Investment', $deposit['amount'], $planInvestmentRef, 'Confirmed']);
                     }
 
                     // Configurable first-deposit reward and referrer commission.
-                    $stmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
-                    $stmt->execute([$deposit['user_id']]);
-                    $user = $stmt->fetch();
-
                     $firstDepositBonusPct = getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100);
                     $depositCommissionPct = getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100);
                     if ($user && $user['referred_by'] && $firstDepositBonusPct > 0) {
@@ -467,8 +476,11 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $pdo->commit();
                 auditAdminAction($pdo, $userId, 'deposit.' . strtolower($newStatus), 'deposit', $depositId, ['amount' => (float)$deposit['amount'], 'userId' => $deposit['user_id']]);
                 if ($act === 'Approve') {
-                    $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$deposit['user_id']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
-                    recordBalanceLedger($pdo, $deposit['user_id'], $deposit['txn_id'], 'deposit_credit', (float)$deposit['amount'], $current - (float)$deposit['amount'], 'Confirmed deposit');
+                    recordBalanceLedger($pdo, $deposit['user_id'], $deposit['txn_id'], 'deposit_credit', (float)$deposit['amount'], $balanceBeforeDeposit, 'Confirmed deposit');
+                    if (isset($planInvestmentRef)) {
+                        recordBalanceLedger($pdo, $deposit['user_id'], $planInvestmentRef, 'investment_purchase', -(float)$deposit['amount'], $balanceBeforeDeposit + (float)$deposit['amount'], 'Plan-linked deposit investment');
+                        notifyUserById($pdo, $deposit['user_id'], 'Investment activated', '<p>Your approved deposit was invested in <strong>' . htmlspecialchars($deposit['plan_name']) . '</strong>.</p><p><strong>Amount:</strong> $' . number_format((float)$deposit['amount'], 2) . '</p>', 'investment');
+                    }
                 }
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt, $refCode)) {
                     $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$user['referred_by']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
@@ -517,6 +529,12 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             $pdo->beginTransaction();
             try {
+                $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ? FOR UPDATE');
+                $balanceStmt->execute([$targetUserId]);
+                $targetUser = $balanceStmt->fetch();
+                if (!$targetUser) throw new Exception('User not found');
+                $manualBalanceBefore = (float)$targetUser['balance'];
+
                 // 1. Insert deposit record
                 $stmt = $pdo->prepare('INSERT INTO deposits (user_id, date, amount, txn_id, plan_name, status) VALUES (?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$targetUserId, $dateStr, $amount, $depCode, $planName, 'Confirmed']);
@@ -536,11 +554,18 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
                     $stmt = $pdo->prepare('INSERT INTO investments (user_id, name, amount, daily_profit_pct, duration_days, status, start_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
                     $stmt->execute([$targetUserId, $planName, $amount, $roiVal, $durVal, 'Active', $dateStr, $nowMs]);
+                    $stmt = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
+                    $stmt->execute([$amount, $targetUserId, $amount]);
+                    if ($stmt->rowCount() !== 1) throw new Exception('Unable to reserve manual plan deposit funds');
                 }
 
                 // 4. Log transaction
                 $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$targetUserId, $dateStr, 'Deposit', $amount, $depCode, 'Confirmed']);
+                if ($planName) {
+                    $manualInvestmentRef = 'INV-' . $depCode;
+                    $stmt->execute([$targetUserId, $dateStr, 'Investment', $amount, $manualInvestmentRef, 'Confirmed']);
+                }
 
                 // 5. Configurable first-deposit reward and referral commission
                 $rStmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
@@ -573,6 +598,11 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 }
 
                 $pdo->commit();
+                recordBalanceLedger($pdo, $targetUserId, $depCode, 'deposit_credit', $amount, $manualBalanceBefore, 'Manual confirmed deposit');
+                if (isset($manualInvestmentRef)) {
+                    recordBalanceLedger($pdo, $targetUserId, $manualInvestmentRef, 'investment_purchase', -$amount, $manualBalanceBefore + $amount, 'Manual plan-linked deposit investment');
+                    notifyUserById($pdo, $targetUserId, 'Investment activated', '<p>Your approved deposit was invested in <strong>' . htmlspecialchars($planName) . '</strong>.</p><p><strong>Amount:</strong> $' . number_format($amount, 2) . '</p>', 'investment');
+                }
                 sendJson(['message' => 'Manual deposit of $' . number_format($amount, 2) . ' successfully credited!']);
             } catch (Exception $e) {
                 $pdo->rollBack();
