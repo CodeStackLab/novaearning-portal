@@ -1089,7 +1089,7 @@ function openEditPlanModal(id, name, price, roi, currentImg) {
     if (origInput) origInput.value = id;
     if (nameInput) nameInput.value = name;
     if (priceInput) priceInput.value = price;
-    if (roiInput) roiInput.value = roi || '2.5% Flat';
+    if (roiInput) roiInput.value = roi || 2.5;
     _editPlanImageBase64 = null;
     document.getElementById('edit-plan-image-file').value = '';
 
@@ -1137,6 +1137,7 @@ async function saveEditPlan() {
 async function adminCreatePlan() {
     const nameEl = document.getElementById('admin-plan-name');
     const priceEl = document.getElementById('admin-plan-price');
+    const roiEl = document.getElementById('admin-plan-roi');
     const imgUrlEl = document.getElementById('admin-plan-image-url');
     
     if (!nameEl || !priceEl || !nameEl.value.trim() || !priceEl.value.trim()) {
@@ -1144,22 +1145,24 @@ async function adminCreatePlan() {
         return;
     }
 
+    const roiVal = roiEl && roiEl.value.trim() !== '' ? parseFloat(roiEl.value) : 2.5;
     const imgVal = _createPlanImageBase64 || (imgUrlEl ? imgUrlEl.value.trim() : '');
     
-    const newPlan = { operation:'create', name:nameEl.value.trim(), price:parseFloat(priceEl.value), image:imgVal, roi:2.5, durationDays:1 };
+    const newPlan = { operation:'create', name:nameEl.value.trim(), price:parseFloat(priceEl.value), image:imgVal, roi:roiVal, durationDays:1 };
     try { await adminRequest('/admin/plans', { method:'POST', body:JSON.stringify(newPlan) }); }
     catch (error) { alert(error.message); return; }
     
     // Reset form
     nameEl.value = '';
     priceEl.value = '';
+    if (roiEl) roiEl.value = '2.5';
     if (imgUrlEl) imgUrlEl.value = '';
     _createPlanImageBase64 = null;
     document.getElementById('admin-plan-image-file').value = '';
     document.getElementById('create-plan-img-preview-wrap').style.display = 'none';
     
     await renderAdminPlans();
-    showToast(`Created plan: ${newPlan.name} ($${newPlan.price})`);
+    showToast(`Created plan: ${newPlan.name} ($${newPlan.price}, ${newPlan.roi}% daily)`);
 }
 
 async function adminDeletePlan(id, name) {
