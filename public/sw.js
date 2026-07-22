@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-pwa-cache-v3';
+const CACHE_NAME = 'nova-pwa-cache-v4';
 const urlsToCache = [
   '/login',
   '/login.html',
