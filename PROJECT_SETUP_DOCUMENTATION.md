@@ -27,7 +27,7 @@
   - `IONOS_SFTP_PORT`: `22`
   - `IONOS_SFTP_USER`: configured
   - `IONOS_SFTP_PASSWORD`: configured as an encrypted repository secret
-  - `IONOS_REMOTE_PATH`: production web root (for the current shared-hosting setup this is `/novaearning/`; the workflow safely uses `/novaearning/` when omitted)
+  - `IONOS_REMOTE_PATH`: legacy optional secret; production deployment is intentionally locked to the connected-domain root `/novaearning/`
 
 ---
 
@@ -98,7 +98,7 @@ Open GitHub repository → **Settings → Secrets and variables → Actions** an
 2. `IONOS_SFTP_PORT` = `22`
 3. `IONOS_SFTP_USER` = the IONOS SFTP account username
 4. `IONOS_SFTP_PASSWORD` = the IONOS SFTP account password
-5. `IONOS_REMOTE_PATH` = `/novaearning/` (confirm the connected-domain folder in IONOS before changing this)
+5. `IONOS_REMOTE_PATH` is no longer read by the production workflow; `/novaearning/` is explicit to prevent false-success uploads to the SFTP account root.
 
 Then open **Actions**, enable workflows if GitHub asks, and manually run **Deploy production to IONOS** once. After it succeeds, every push to `main` deploys automatically. Verify each deployment from the workflow run summary and `https://novaearning.com/admin.html`.
 

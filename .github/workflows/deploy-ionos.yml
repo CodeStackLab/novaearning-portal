@@ -77,8 +77,10 @@ jobs:
           SSHPASS: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
-          TARGET_DIR="${{ secrets.IONOS_REMOTE_PATH }}"
-          [ -z "$TARGET_DIR" ] && TARGET_DIR="/novaearning/"
+          # The novaearning.com connected-domain document root in IONOS.
+          # Keep this explicit so a stale repository secret cannot deploy to
+          # the SFTP account root while reporting a false-success workflow.
+          TARGET_DIR="/novaearning/"
           echo "Connecting to IONOS SFTP server and uploading to $TARGET_DIR..."
           sshpass -e sftp -o StrictHostKeyChecking=no -P ${{ secrets.IONOS_SFTP_PORT }} ${{ secrets.IONOS_SFTP_USER }}@${{ secrets.IONOS_SFTP_HOST }} <<EOF
           -mkdir $TARGET_DIR
