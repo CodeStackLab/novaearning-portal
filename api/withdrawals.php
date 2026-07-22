@@ -9,9 +9,10 @@ function handleWithdrawals($action, $pdo, $body) {
         $address = $body['address'] ?? '';
         $amount = $body['amount'] ?? 0;
         $withdrawAmt = (float)$amount;
+        $minimumWithdrawal = getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000);
 
-        if (!$address || $withdrawAmt < 20) {
-            sendJson(['message' => 'Valid address and amount (minimum $20) are required'], 400);
+        if (!$address || $withdrawAmt < $minimumWithdrawal) {
+            sendJson(['message' => 'Valid address and amount (minimum $' . number_format($minimumWithdrawal, 2) . ') are required'], 400);
         }
 
         if ($withdrawAmt > 1000000) sendJson(['message' => 'Withdrawal amount exceeds the allowed limit.'], 400);

@@ -98,6 +98,12 @@ switch ($endpoint) {
                 'dailyCommissionPct' => getNumericSetting($pdo, 'referral_daily_commission_pct', 10, 0, 100)
             ]);
         }
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'transaction-limits') {
+            sendJson([
+                'minimumDeposit' => getNumericSetting($pdo, 'minimum_deposit_usd', 100, 1, 1000000),
+                'minimumWithdrawal' => getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000)
+            ]);
+        }
         break;
     case 'admin':
         require_once 'admin.php';

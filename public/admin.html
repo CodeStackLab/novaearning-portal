@@ -67,8 +67,8 @@
             </li>
             <li>
                 <a href="#commissions" class="sidebar-item-link" data-tab="commissions">
-                    <span class="material-symbols-outlined sidebar-icon">diversity_3</span>
-                    <span>Referral Commissions</span>
+                    <span class="material-symbols-outlined sidebar-icon">tune</span>
+                    <span>Financial Settings</span>
                 </a>
             </li>
             <li>
@@ -452,10 +452,26 @@
             <section id="panel-commissions" class="dashboard-panel-view">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
                     <div>
-                        <h1 class="panel-title font-display" style="margin:0;">Referral Commissions</h1>
-                        <p class="panel-desc" style="margin:0.25rem 0 0 0;">Configure referral percentages and manage credited commissions.</p>
+                        <h1 class="panel-title font-display" style="margin:0;">Financial Settings</h1>
+                        <p class="panel-desc" style="margin:0.25rem 0 0 0;">Configure transaction limits, referral percentages, and credited commissions.</p>
                     </div>
                 </div>
+
+                <form id="transaction-limits-form" class="deposit-step-box" onsubmit="saveTransactionLimits(event)" style="margin-bottom:1rem;">
+                    <h2 class="recent-deposits-title font-display" style="margin-bottom:.35rem;">Transaction Limits</h2>
+                    <p class="panel-desc" style="margin-bottom:1rem;">Set the minimum amount users can submit for deposits and withdrawals.</p>
+                    <div class="smtp-form-grid">
+                        <div class="form-group-db">
+                            <label class="form-label-db" for="minimum-deposit-setting">Minimum deposit (USD)</label>
+                            <input class="form-input-db" id="minimum-deposit-setting" type="number" min="1" max="1000000" step="0.01" value="100" required>
+                        </div>
+                        <div class="form-group-db">
+                            <label class="form-label-db" for="minimum-withdrawal-setting">Minimum withdrawal (USD)</label>
+                            <input class="form-input-db" id="minimum-withdrawal-setting" type="number" min="1" max="1000000" step="0.01" value="50" required>
+                        </div>
+                    </div>
+                    <div class="smtp-actions"><button type="submit" class="form-btn-db" id="transaction-limits-save-btn"><span class="material-symbols-outlined">tune</span> Save Transaction Limits</button></div>
+                </form>
 
                 <form id="referral-percentage-form" class="deposit-step-box" onsubmit="saveReferralPercentages(event)" style="margin-bottom:1rem;">
                     <h2 class="recent-deposits-title font-display" style="margin-bottom:.35rem;">Referral Percentage Settings</h2>
@@ -965,6 +981,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=75.3"></script>
+    <script src="admin-app.js?v=75.4"></script>
 </body>
 </html>

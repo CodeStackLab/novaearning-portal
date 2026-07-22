@@ -117,6 +117,7 @@ async function fetchActiveTabDetails(tabId) {
         } else if (tabId === 'commissions') {
             const commissions = await adminRequest('/admin/commissions');
             renderCommissionsTable(commissions);
+            await loadTransactionLimits();
             await loadReferralPercentages();
         } else if (tabId === 'smtp') {
             await loadSmtpSettings();
@@ -590,6 +591,38 @@ function renderUsersTable(serverUsers) {
 
 function triggerUsersFilter() {
     renderUsersTable(globalUsersList);
+}
+
+async function loadTransactionLimits() {
+    try {
+        const limits = await adminRequest('/admin/settings/transaction-limits');
+        document.getElementById('minimum-deposit-setting').value = Number(limits.minimumDeposit || 100);
+        document.getElementById('minimum-withdrawal-setting').value = Number(limits.minimumWithdrawal || 50);
+    } catch (error) {
+        showToast(error.message || 'Unable to load transaction limits.');
+    }
+}
+
+async function saveTransactionLimits(event) {
+    event.preventDefault();
+    const button = document.getElementById('transaction-limits-save-btn');
+    const payload = {
+        minimumDeposit: Number(document.getElementById('minimum-deposit-setting').value),
+        minimumWithdrawal: Number(document.getElementById('minimum-withdrawal-setting').value)
+    };
+    if (Object.values(payload).some(value => !Number.isFinite(value) || value < 1 || value > 1000000)) {
+        showToast('Enter transaction minimums between $1 and $1,000,000.');
+        return;
+    }
+    if (button) button.disabled = true;
+    try {
+        const result = await adminRequest('/admin/settings/transaction-limits', { method:'POST', body:JSON.stringify(payload) });
+        showToast(result.message || 'Transaction limits saved.');
+    } catch (error) {
+        showToast(error.message || 'Unable to save transaction limits.');
+    } finally {
+        if (button) button.disabled = false;
+    }
 }
 
 async function loadReferralPercentages() {

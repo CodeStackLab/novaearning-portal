@@ -1,7 +1,8 @@
 // Client-side Application Logic for CineInvest & TRONINVEST connecting to Node.js Express APIs
 
 const API_BASE = '/api';
-let selectedDepositAmount = 50.00;
+let selectedDepositAmount = 100.00;
+let transactionLimits = { minimumDeposit: 100, minimumWithdrawal: 50 };
 
 // Copy to Clipboard Utility
 function copyToClipboard(text, message = "Copied to clipboard!") {
@@ -47,6 +48,29 @@ function updateWithdrawalPreview() {
     const totalEl = document.getElementById('withdraw-total-preview');
     if (feeEl) feeEl.textContent = amount ? `- ${formatUSD(fee)}` : '—';
     if (totalEl) totalEl.textContent = amount ? formatUSD(amount - fee) : '—';
+}
+
+async function loadTransactionLimits() {
+    try {
+        const limits = await apiRequest('/settings/transaction-limits');
+        transactionLimits.minimumDeposit = Number(limits.minimumDeposit) || 100;
+        transactionLimits.minimumWithdrawal = Number(limits.minimumWithdrawal) || 50;
+        const depositInput = document.getElementById('custom-deposit-amount');
+        if (depositInput) {
+            depositInput.min = String(transactionLimits.minimumDeposit);
+            if ((parseFloat(depositInput.value) || 0) < transactionLimits.minimumDeposit) depositInput.value = String(transactionLimits.minimumDeposit);
+            currentSelectedDepositAmount = parseFloat(depositInput.value);
+        }
+        const depositHelp = document.getElementById('deposit-minimum-help');
+        if (depositHelp) depositHelp.textContent = `Minimum deposit: ${formatUSD(transactionLimits.minimumDeposit)} USDT.`;
+        const withdrawalInput = document.getElementById('withdraw-amount-val');
+        if (withdrawalInput) {
+            withdrawalInput.min = String(transactionLimits.minimumWithdrawal);
+            withdrawalInput.placeholder = `Min. ${formatUSD(transactionLimits.minimumWithdrawal)} (2% Fee applies)`;
+        }
+    } catch (error) {
+        console.error('Unable to load transaction limits:', error.message);
+    }
 }
 
 // Fetch helper with token injection
@@ -385,6 +409,7 @@ async function fetchAllDashboardData() {
 // Initialize Application Routing & Listeners
 document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('withdraw-amount-val')?.addEventListener('input', updateWithdrawalPreview);
+    await loadTransactionLimits();
     // 1. Session Auth check
     const token = localStorage.getItem('nova_token');
     const role = localStorage.getItem('nova_role');
@@ -636,8 +661,8 @@ function applyCustomAmount() {
     const customInput = document.getElementById('custom-amount-val');
     if (customInput) {
         const amount = parseFloat(customInput.value);
-        if (isNaN(amount) || amount < 10) {
-            alert("Please enter a valid deposit amount of $10.00 or more.");
+        if (isNaN(amount) || amount < transactionLimits.minimumDeposit) {
+            alert(`Please enter a valid deposit amount of ${formatUSD(transactionLimits.minimumDeposit)} or more.`);
             return;
         }
         
@@ -730,8 +755,8 @@ async function requestWithdrawal() {
         return;
     }
 
-    if (isNaN(amount) || amount < 20) {
-        alert("Minimum withdrawal limit is $20.00.");
+    if (isNaN(amount) || amount < transactionLimits.minimumWithdrawal) {
+        alert(`Minimum withdrawal limit is ${formatUSD(transactionLimits.minimumWithdrawal)}.`);
         return;
     }
 
@@ -1121,7 +1146,7 @@ function claimDailyCheckin() {
 // =========================================================
 // DEPOSIT PANEL INTERACTIVE LOGIC (EXACT SCREENSHOT MATCH)
 // =========================================================
-let currentSelectedDepositAmount = 50;
+let currentSelectedDepositAmount = 100;
 
 function selectDepositAmountCard(cardEl, amount) {
     currentSelectedDepositAmount = amount;
@@ -1172,8 +1197,8 @@ function applyCustomAmount() {
     const input = document.getElementById('custom-amount-input');
     if (!input) return;
     const parsed = parseFloat(input.value);
-    if (isNaN(parsed) || parsed < 10) {
-        showToast("Please enter a valid amount of $10 or more.", "error");
+    if (isNaN(parsed) || parsed < transactionLimits.minimumDeposit) {
+        showToast(`Please enter a valid amount of ${formatUSD(transactionLimits.minimumDeposit)} or more.`, "error");
         return;
     }
     
@@ -1214,6 +1239,11 @@ async function submitNewDeposit() {
         if (!isNaN(parsedAmt) && parsedAmt > 0) {
             currentSelectedDepositAmount = parsedAmt;
         }
+    }
+
+    if (!Number.isFinite(currentSelectedDepositAmount) || currentSelectedDepositAmount < transactionLimits.minimumDeposit) {
+        showToast(`Minimum deposit is ${formatUSD(transactionLimits.minimumDeposit)}.`, 'error');
+        return;
     }
 
     const screenshotEl = document.getElementById('deposit-screenshot-input');

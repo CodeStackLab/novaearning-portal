@@ -320,8 +320,8 @@
                     <h2 class="step-title-number font-display" style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 1.25rem;">1. Enter Deposit Amount</h2>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;">
                         <label style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Custom Amount (USDT)</label>
-                        <input type="number" id="custom-deposit-amount" placeholder="Enter amount" min="1" value="100" oninput="updateDepositAmount(this.value)" style="background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 1rem; outline: none;">
-                        <span style="font-size: 0.75rem; color: #64748b;">Enter the exact amount you wish to deposit.</span>
+                        <input type="number" id="custom-deposit-amount" placeholder="Enter amount" min="100" value="100" oninput="updateDepositAmount(this.value)" style="background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 1rem; outline: none;">
+                        <span id="deposit-minimum-help" style="font-size: 0.75rem; color: #64748b;">Minimum deposit: $100.00 USDT.</span>
                     </div>
                 </div>
                 
@@ -476,7 +476,7 @@
                     
                     <div class="form-group-db" style="margin-top: 1rem;">
                         <label class="form-label-db">Amount to Withdraw (USD)</label>
-                        <input type="number" id="withdraw-amount-val" placeholder="Min. $20.00 (2% Fee applies)" class="form-input-db">
+                        <input type="number" id="withdraw-amount-val" min="50" placeholder="Min. $50.00 (2% Fee applies)" class="form-input-db">
                     </div>
 
                     <div class="withdraw-summary" aria-live="polite">
@@ -687,10 +687,10 @@
                 <button onclick="closeCustomAmountModal()" style="background:none; border:none; color:#94a3b8; cursor:pointer;"><span class="material-symbols-outlined">close</span></button>
             </div>
             <div class="modal-body" style="margin-bottom:1.5rem;">
-                <label style="display:block; font-size:0.85rem; color:#cbd5e1; margin-bottom:0.5rem;">Enter custom deposit amount in USDT ($10 - $50,000):</label>
+                <label style="display:block; font-size:0.85rem; color:#cbd5e1; margin-bottom:0.5rem;">Enter custom deposit amount in USDT (minimum $100):</label>
                 <div style="display:flex; align-items:center; background:#111622; border:1px solid #1e2538; border-radius:6px; padding:0.5rem 1rem;">
                     <span style="color:#10b981; font-weight:bold; font-size:1.1rem; margin-right:0.5rem;">$</span>
-                    <input type="number" id="custom-amount-input" value="150" min="10" max="50000" style="background:none; border:none; color:#f8fafc; font-size:1.1rem; font-weight:600; outline:none; width:100%;">
+                    <input type="number" id="custom-amount-input" value="150" min="100" max="50000" style="background:none; border:none; color:#f8fafc; font-size:1.1rem; font-weight:600; outline:none; width:100%;">
                 </div>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:0.75rem;">
@@ -832,6 +832,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=70.2"></script>
+    <script src="/app.js?v=70.3"></script>
 </body>
 </html>

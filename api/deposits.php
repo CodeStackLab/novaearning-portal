@@ -16,9 +16,10 @@ function handleDeposits($action, $pdo, $body) {
         $screenshotBase64 = $body['screenshotBase64'] ?? '';
         $txnId = $body['txnId'] ?? '';
         $planName = $body['planName'] ?? null;
+        $minimumDeposit = getNumericSetting($pdo, 'minimum_deposit_usd', 100, 1, 1000000);
 
-        if (!is_numeric($amount) || $amount <= 0 || empty($screenshotBase64)) {
-            sendJson(['message' => 'Valid amount and screenshot file are required'], 400);
+        if (!is_numeric($amount) || (float)$amount < $minimumDeposit || empty($screenshotBase64)) {
+            sendJson(['message' => 'Valid amount (minimum $' . number_format($minimumDeposit, 2) . ') and screenshot file are required'], 400);
         }
 
         $dateStr = date('M j, Y h:i A');

@@ -69,6 +69,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             ]);
         }
 
+        if ($action === 'settings' && $subaction === 'transaction-limits') {
+            sendJson([
+                'minimumDeposit' => getNumericSetting($pdo, 'minimum_deposit_usd', 100, 1, 1000000),
+                'minimumWithdrawal' => getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000)
+            ]);
+        }
+
         if ($action === 'tickets') {
             $stmt = $pdo->query('SELECT tickets.*, users.name as user_name, users.email as user_email FROM tickets JOIN users ON tickets.user_id = users.id ORDER BY tickets.id DESC');
             sendJson($stmt->fetchAll());
@@ -119,6 +126,29 @@ function handleAdmin($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($action === 'settings' && $subaction === 'transaction-limits') {
+            $minimumDeposit = $body['minimumDeposit'] ?? null;
+            $minimumWithdrawal = $body['minimumWithdrawal'] ?? null;
+            if (!is_numeric($minimumDeposit) || !is_numeric($minimumWithdrawal) || (float)$minimumDeposit < 1 || (float)$minimumWithdrawal < 1 || (float)$minimumDeposit > 1000000 || (float)$minimumWithdrawal > 1000000) {
+                sendJson(['message' => 'Deposit and withdrawal minimums must be between $1 and $1,000,000.'], 400);
+            }
+            $values = [
+                'minimum_deposit_usd' => number_format((float)$minimumDeposit, 2, '.', ''),
+                'minimum_withdrawal_usd' => number_format((float)$minimumWithdrawal, 2, '.', '')
+            ];
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare('INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)');
+                foreach ($values as $key => $value) $stmt->execute([$key, $value]);
+                $pdo->commit();
+                auditAdminAction($pdo, $userId, 'transaction.limits.updated', 'settings', 'transaction-limits', $values);
+                sendJson(['message' => 'Transaction limits updated successfully.']);
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to update transaction limits.'], 500);
+            }
+        }
+
         if ($action === 'settings' && $subaction === 'referrals') {
             $values = [
                 'referral_first_deposit_bonus_pct' => $body['firstDepositBonusPct'] ?? null,
