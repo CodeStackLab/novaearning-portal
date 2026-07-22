@@ -81,6 +81,12 @@
                 </a>
             </li>
             <li>
+                <a href="#email-preferences" class="sidebar-item-link" data-tab="email-preferences">
+                    <span class="material-symbols-outlined sidebar-icon">mail</span>
+                    <span>Email Preferences</span>
+                </a>
+            </li>
+            <li>
                 <a href="#support" class="sidebar-item-link" data-tab="support">
                     <span class="material-symbols-outlined sidebar-icon">help_outline</span>
                     <span>Support</span>
@@ -606,11 +612,16 @@
 
             <section id="panel-notifications" class="dashboard-panel-view">
                 <h1 class="panel-title font-display">My Notifications</h1>
-                <p class="panel-desc">Choose which personal account emails you want to receive. Security and essential platform messages may still be delivered.</p>
+                <p class="panel-desc">Review account activity and important status updates in one place.</p>
                 <div class="notification-inbox-card">
                     <div class="notification-inbox-heading"><div><h2 class="font-display">Recent alerts</h2><p>Account activity and important status updates.</p></div><button type="button" onclick="markAllNotificationsRead()">Mark all read</button></div>
                     <div id="notification-inbox-list" class="notification-inbox-list"><div class="notification-inbox-empty">Loading notifications…</div></div>
                 </div>
+            </section>
+
+            <section id="panel-email-preferences" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Email Preferences</h1>
+                <p class="panel-desc">Choose which personal account emails you want to receive. Security and essential platform messages may still be delivered.</p>
                 <form id="user-notification-form" class="smtp-settings-card" onsubmit="saveUserNotificationSettings(event)">
                     <div class="smtp-card-heading">
                         <div class="smtp-heading-icon"><span class="material-symbols-outlined">tune</span></div>
@@ -622,7 +633,7 @@
                         <label class="notification-setting"><span><strong>Investment activity</strong><small>Activation and completion</small></span><input type="checkbox" id="user-notify-investment"><i></i></label>
                         <label class="notification-setting"><span><strong>Daily profit</strong><small>24-hour commission credited</small></span><input type="checkbox" id="user-notify-commission"><i></i></label>
                         <label class="notification-setting"><span><strong>Referral activity</strong><small>New referral and referral commission</small></span><input type="checkbox" id="user-notify-referral"><i></i></label>
-                        <label class="notification-setting"><span><strong>Profit reminders</strong><small>5-hour and 2-hour countdowns</small></span><input type="checkbox" id="user-notify-reminder"><i></i></label>
+                        <label class="notification-setting"><span><strong>Profit reminders</strong><small>3-hour, 30-minute and 10-minute countdowns</small></span><input type="checkbox" id="user-notify-reminder"><i></i></label>
                         <label class="notification-setting"><span><strong>Support replies</strong><small>Messages from Nova Support</small></span><input type="checkbox" id="user-notify-support"><i></i></label>
                     </div>
                     <div class="notification-privacy-note"><span class="material-symbols-outlined">admin_panel_settings</span><span>Your choices never disable operational alerts sent to Nova administrators.</span></div>

@@ -263,7 +263,7 @@ html, body {
 }
 
 /* Dashboard polish — clear hierarchy, touch-friendly controls and mobile rhythm */
-#panel-notifications, #panel-smtp { width: 100%; max-width: 900px; margin-inline: auto; }
+#panel-notifications, #panel-email-preferences, #panel-smtp { width: 100%; max-width: 900px; margin-inline: auto; }
 .dashboard-panel-view > .panel-title { margin-bottom: .4rem; letter-spacing: -.025em; }
 .dashboard-panel-view > .panel-desc { max-width: 720px; line-height: 1.55; }
 .notification-settings-grid { gap: .8rem !important; }

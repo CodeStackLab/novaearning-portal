@@ -166,7 +166,8 @@ function switchTab(tabId) {
             }
         });
 
-        if (tabId === 'notifications') { loadUserNotificationSettings(); loadNotificationCenter(); }
+        if (tabId === 'notifications') loadNotificationCenter();
+        if (tabId === 'email-preferences') loadUserNotificationSettings();
         if (tabId === 'referrals') loadReferralProgramSettings();
 
         // Set hash link URL quietly
