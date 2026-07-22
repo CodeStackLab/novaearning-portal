@@ -1196,17 +1196,9 @@ async function submitNewDeposit() {
         }
     }
 
-    const txIdInput = document.getElementById('deposit-txid-input');
-    const txnId = txIdInput ? txIdInput.value.trim() : '';
-
-    if (!txnId) {
-        alert("Please enter your Transaction ID or Hash.");
-        return;
-    }
-
     const screenshotEl = document.getElementById('deposit-screenshot-input');
     if (!screenshotEl || !screenshotEl.files || screenshotEl.files.length === 0) {
-        alert("Please upload a screenshot of your payment.");
+        showToast("Please upload a screenshot of your payment to proceed.", "error");
         return;
     }
 
@@ -1234,7 +1226,6 @@ async function submitNewDeposit() {
                 method: 'POST',
                 body: JSON.stringify({
                     amount: currentSelectedDepositAmount,
-                    txnId: txnId,
                     screenshotBase64: base64Image,
                     planName: planName || null
                 })
@@ -1244,7 +1235,6 @@ async function submitNewDeposit() {
             if (successModal) {
                 successModal.style.display = 'flex';
             }
-            if (txIdInput) txIdInput.value = "";
             screenshotEl.value = "";
             const statusText = document.getElementById('upload-status-text');
             if (statusText) {

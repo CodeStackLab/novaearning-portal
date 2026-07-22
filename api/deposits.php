@@ -27,7 +27,7 @@ function handleDeposits($action, $pdo, $body) {
         $relativePath = saveValidatedBase64Image($screenshotBase64, 'receipt', $uploadError);
         if (!$relativePath) sendJson(['message' => $uploadError], 400);
 
-        $finalTxnCode = $txnId ?: ("TX" . substr(time(), -6) . strtoupper(substr(md5(uniqid()), 0, 4)));
+        $finalTxnCode = !empty($txnId) ? $txnId : ("DEP-" . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8)));
         if (!preg_match('/^[A-Za-z0-9_-]{6,120}$/', $finalTxnCode)) {
             @unlink(__DIR__ . '/../public' . $relativePath);
             sendJson(['message' => 'Enter a valid transaction reference (6–120 letters, numbers, dashes, or underscores).'], 400);
