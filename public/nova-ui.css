@@ -2150,5 +2150,92 @@ html, body,
         padding: 0.75rem !important;
         border-radius: 12px !important;
     }
+
+    /* ── System Overview 2x2 Grid & Compact Card Mobile Responsive Rules (386x870 & Mobile Screens) ── */
+    .admin-dashboard-body .dashboard-metrics-row {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.65rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .admin-dashboard-body .metric-card-box {
+        padding: 0.75rem 0.85rem !important;
+        border-radius: 12px !important;
+        min-height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+    }
+
+    .admin-dashboard-body .metric-card-label {
+        font-size: 0.72rem !important;
+        margin-bottom: 0.35rem !important;
+        line-height: 1.25 !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+    }
+
+    .admin-dashboard-body .metric-card-value-txt {
+        font-size: 1.25rem !important;
+        font-weight: 800 !important;
+    }
+
+    .admin-dashboard-body .metric-card-icon-box {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 8px !important;
+    }
+
+    .admin-dashboard-body .metric-card-icon-box .material-symbols-outlined {
+        font-size: 1.15rem !important;
+    }
+
+    .admin-dashboard-body #panel-overview > div:last-child {
+        padding: 0.85rem !important;
+        border-radius: 12px !important;
+        margin-top: 1rem !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+    }
+
+    .admin-dashboard-body #panel-overview #admin-tron-address-preview {
+        font-size: 0.72rem !important;
+        word-break: break-all !important;
+        white-space: normal !important;
+    }
+
+    .admin-dashboard-body #panel-overview > div:last-child > div:last-child {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    .admin-dashboard-body #panel-overview > div:last-child button,
+    .admin-dashboard-body #panel-overview > div:last-child a {
+        width: 100% !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        padding: 0.55rem 0.5rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .admin-dashboard-body #panel-overview .recent-deposits-section {
+        padding: 0.85rem !important;
+        border-radius: 12px !important;
+        margin-top: 1rem !important;
+    }
+
+    .admin-dashboard-body #panel-overview .recent-deposits-title {
+        font-size: 1rem !important;
+        margin-bottom: 0.4rem !important;
+    }
+
+    .admin-dashboard-body #panel-overview .recent-deposits-section p {
+        font-size: 0.78rem !important;
+        line-height: 1.45 !important;
+    }
 }
 
