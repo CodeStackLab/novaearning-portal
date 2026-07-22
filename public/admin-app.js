@@ -334,7 +334,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 2. Setup hash router or query param router
     const hash = window.location.hash.substring(1);
-    const activeTab = hash === 'tron-address-modal' ? 'overview' : (hash || 'overview');
+    const shouldOpenTronModal = hash === 'tron-address-modal';
+    const activeTab = shouldOpenTronModal ? 'overview' : (hash || 'overview');
     switchTab(activeTab);
     fetchAdminTronAddress();
 
@@ -356,6 +357,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && tronAddressModal?.classList.contains('active')) closeTronAddressModal();
     });
+    if (shouldOpenTronModal) {
+        openTronAddressModal();
+        window.history.replaceState(null, '', '/admin/#tron-address-modal');
+    }
 
     // 3. Attach sidebar click events
     const sidebarLinks = document.querySelectorAll('.sidebar-item-link[data-tab]');

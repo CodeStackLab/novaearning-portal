@@ -16,6 +16,9 @@
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css?v=6.1">
     <link rel="stylesheet" href="nova-ui.css?v=9.2">
+    <style>
+        #tron-address-modal:target { display:flex !important; align-items:center; justify-content:center; opacity:1 !important; visibility:visible !important; z-index:999999 !important; }
+    </style>
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -208,7 +211,7 @@
                         <button onclick="copyTronAddress()" style="background-color: #1e2538; border: 1px solid #2e384e; color: #94a3b8; padding: 0.5rem 0.85rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem;">
                             <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span> Copy
                         </button>
-                        <a href="/admin/#tron-address-modal" id="change-tron-address-btn" aria-controls="tron-address-modal" style="background: linear-gradient(135deg, #e05252, #b91c1c); border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; text-decoration: none;">
+                        <a href="/admin/#tron-address-modal" id="change-tron-address-btn" onclick="if (typeof openTronAddressModal === 'function') { openTronAddressModal(); return false; }" aria-controls="tron-address-modal" style="background: linear-gradient(135deg, #e05252, #b91c1c); border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.35rem; text-decoration: none;">
                             <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Change Address
                         </a>
                     </div>
@@ -857,6 +860,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=4.7"></script>
+    <script src="admin-app.js?v=4.8"></script>
 </body>
 </html>
