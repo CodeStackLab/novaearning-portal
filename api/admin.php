@@ -56,6 +56,19 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             sendJson($stmt->fetchAll());
         }
 
+        if ($action === 'commissions') {
+            $stmt = $pdo->query("SELECT transactions.*, users.name as user_name, users.email as user_email FROM transactions JOIN users ON transactions.user_id = users.id WHERE transactions.type = 'Referral Bonus' ORDER BY transactions.id DESC");
+            sendJson($stmt->fetchAll());
+        }
+
+        if ($action === 'settings' && $subaction === 'referrals') {
+            sendJson([
+                'firstDepositBonusPct' => getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100),
+                'depositCommissionPct' => getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100),
+                'dailyCommissionPct' => getNumericSetting($pdo, 'referral_daily_commission_pct', 10, 0, 100)
+            ]);
+        }
+
         if ($action === 'tickets') {
             $stmt = $pdo->query('SELECT tickets.*, users.name as user_name, users.email as user_email FROM tickets JOIN users ON tickets.user_id = users.id ORDER BY tickets.id DESC');
             sendJson($stmt->fetchAll());
@@ -106,6 +119,30 @@ function handleAdmin($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($action === 'settings' && $subaction === 'referrals') {
+            $values = [
+                'referral_first_deposit_bonus_pct' => $body['firstDepositBonusPct'] ?? null,
+                'referral_deposit_commission_pct' => $body['depositCommissionPct'] ?? null,
+                'referral_daily_commission_pct' => $body['dailyCommissionPct'] ?? null
+            ];
+            foreach ($values as $value) {
+                if (!is_numeric($value) || (float)$value < 0 || (float)$value > 100) {
+                    sendJson(['message' => 'Each referral percentage must be between 0 and 100.'], 400);
+                }
+            }
+            $stmt = $pdo->prepare('INSERT INTO settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value)');
+            $pdo->beginTransaction();
+            try {
+                foreach ($values as $key => $value) $stmt->execute([$key, number_format((float)$value, 2, '.', '')]);
+                $pdo->commit();
+                auditAdminAction($pdo, $userId, 'referral.percentages.updated', 'settings', 'referrals', $values);
+                sendJson(['message' => 'Referral percentages updated successfully.']);
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to update referral percentages.'], 500);
+            }
+        }
+
         if ($action === 'plans') {
             $operation = strtolower(trim($body['operation'] ?? ''));
             $planId = (int)($body['id'] ?? 0);
@@ -393,13 +430,28 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         $stmt->execute([$deposit['user_id'], $deposit['plan_name'], $deposit['amount'], $roiVal, $durVal, 'Active', $dateStr, $nowMs]);
                     }
 
-                    // 5% Referral Commission on Deposit/Investment
+                    // Configurable first-deposit reward and referrer commission.
                     $stmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
                     $stmt->execute([$deposit['user_id']]);
                     $user = $stmt->fetch();
 
-                    if ($user && $user['referred_by']) {
-                        $referralBonusAmt = $deposit['amount'] * 0.05; // 5% commission
+                    $firstDepositBonusPct = getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100);
+                    $depositCommissionPct = getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100);
+                    if ($user && $user['referred_by'] && $firstDepositBonusPct > 0) {
+                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+                        $stmt->execute([$deposit['user_id']]);
+                        if ((int)$stmt->fetchColumn() === 1) {
+                            $firstDepositBonusAmt = (float)$deposit['amount'] * ($firstDepositBonusPct / 100);
+                            $firstBonusRef = 'FIRST-BONUS-' . (int)$depositId;
+                            $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
+                            $stmt->execute([$firstDepositBonusAmt, $deposit['user_id']]);
+                            $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+                            $stmt->execute([$deposit['user_id'], date('M j, Y h:i A'), 'First Deposit Bonus', $firstDepositBonusAmt, $firstBonusRef, 'Confirmed']);
+                        }
+                    }
+
+                    if ($user && $user['referred_by'] && $depositCommissionPct > 0) {
+                        $referralBonusAmt = $deposit['amount'] * ($depositCommissionPct / 100);
                         $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                         $stmt->execute([$referralBonusAmt, $user['referred_by']]);
 
@@ -409,7 +461,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         $stmt->execute([$user['referred_by'], $dateStr, 'Referral Bonus', $referralBonusAmt, $refCode, 'Confirmed']);
 
                         $bonusText = number_format($referralBonusAmt, 2);
-                        notifyAdmins($pdo, '5% Referral Commission Credited', "<p>A 5% referral commission of <strong>\${$bonusText}</strong> was automatically credited to Referrer User ID #{$user['referred_by']}.</p>", 'commission');
+                        notifyAdmins($pdo, $depositCommissionPct . '% Referral Commission Credited', "<p>A {$depositCommissionPct}% referral commission of <strong>\${$bonusText}</strong> was automatically credited to Referrer User ID #{$user['referred_by']}.</p>", 'commission');
                     }
                 }
                 $pdo->commit();
@@ -420,14 +472,21 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 }
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt, $refCode)) {
                     $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$user['referred_by']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
-                    recordBalanceLedger($pdo, $user['referred_by'], $refCode, 'referral_bonus', $referralBonusAmt, $current - $referralBonusAmt, 'Deposit 5% referral bonus');
+                    recordBalanceLedger($pdo, $user['referred_by'], $refCode, 'referral_bonus', $referralBonusAmt, $current - $referralBonusAmt, 'Deposit referral bonus');
+                }
+                if ($act === 'Approve' && isset($firstDepositBonusAmt, $firstBonusRef)) {
+                    $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$deposit['user_id']]); $current = (float)($stmt->fetch()['balance'] ?? 0);
+                    recordBalanceLedger($pdo, $deposit['user_id'], $firstBonusRef, 'first_deposit_bonus', $firstDepositBonusAmt, $current - $firstDepositBonusAmt, 'Referral code bonus after first deposit');
                 }
                 $amountText = number_format((float)$deposit['amount'], 2);
                 $safeRef = htmlspecialchars($deposit['txn_id']);
                 notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
                     $bonusText = number_format($referralBonusAmt, 2);
-                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A 5% referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
+                    notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A {$depositCommissionPct}% referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
+                }
+                if ($act === 'Approve' && isset($firstDepositBonusAmt, $firstDepositBonusPct)) {
+                    notifyUserById($pdo, $deposit['user_id'], 'First deposit bonus credited', '<p>Your ' . $firstDepositBonusPct . '% referral-code bonus of <strong>$' . number_format($firstDepositBonusAmt, 2) . '</strong> was added after your first approved deposit.</p>', 'referral');
                 }
                 $response = ['message' => "Deposit successfully " . strtolower($act) . "d."];
                 if ($act === 'Approve') {
@@ -483,12 +542,25 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$targetUserId, $dateStr, 'Deposit', $amount, $depCode, 'Confirmed']);
 
-                // 5. 5% Referral Commission
+                // 5. Configurable first-deposit reward and referral commission
                 $rStmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
                 $rStmt->execute([$targetUserId]);
                 $uInfo = $rStmt->fetch();
-                if ($uInfo && $uInfo['referred_by']) {
-                    $refBonus = $amount * 0.05;
+                $firstDepositBonusPct = getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100);
+                $depositCommissionPct = getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100);
+                if ($uInfo && $uInfo['referred_by'] && $firstDepositBonusPct > 0) {
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+                    $stmt->execute([$targetUserId]);
+                    if ((int)$stmt->fetchColumn() === 1) {
+                        $firstBonus = $amount * ($firstDepositBonusPct / 100);
+                        $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
+                        $stmt->execute([$firstBonus, $targetUserId]);
+                        $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
+                        $stmt->execute([$targetUserId, $dateStr, 'First Deposit Bonus', $firstBonus, 'FIRST-BONUS-' . $depCode, 'Confirmed']);
+                    }
+                }
+                if ($uInfo && $uInfo['referred_by'] && $depositCommissionPct > 0) {
+                    $refBonus = $amount * ($depositCommissionPct / 100);
                     $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                     $stmt->execute([$refBonus, $uInfo['referred_by']]);
 
@@ -497,7 +569,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     $stmt->execute([$uInfo['referred_by'], $dateStr, 'Referral Bonus', $refBonus, $refCode, 'Confirmed']);
 
                     $bonusText = number_format($refBonus, 2);
-                    notifyAdmins($pdo, '5% Referral Commission Credited', "<p>A 5% commission of <strong>\${$bonusText}</strong> was credited to Referrer User ID #{$uInfo['referred_by']}.</p>", 'commission');
+                    notifyAdmins($pdo, $depositCommissionPct . '% Referral Commission Credited', "<p>A {$depositCommissionPct}% commission of <strong>\${$bonusText}</strong> was credited to Referrer User ID #{$uInfo['referred_by']}.</p>", 'commission');
                 }
 
                 $pdo->commit();
@@ -505,6 +577,40 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             } catch (Exception $e) {
                 $pdo->rollBack();
                 sendJson(['message' => 'Failed to create manual deposit.'], 500);
+            }
+        }
+
+        if ($action === 'commissions' && $subaction === 'revoke') {
+            $transactionId = $body['transactionId'] ?? null;
+            if (!$transactionId) sendJson(['message' => 'Valid transaction ID required'], 400);
+
+            $stmt = $pdo->prepare('SELECT * FROM transactions WHERE id = ? AND type = ?');
+            $stmt->execute([$transactionId, 'Referral Bonus']);
+            $tx = $stmt->fetch();
+
+            if (!$tx) sendJson(['message' => 'Commission not found'], 404);
+            if ($tx['status'] !== 'Confirmed') sendJson(['message' => 'Only confirmed commissions can be revoked'], 400);
+
+            $pdo->beginTransaction();
+            try {
+                // Update transaction status
+                $stmt = $pdo->prepare("UPDATE transactions SET status = 'Revoked' WHERE id = ? AND status = 'Confirmed'");
+                $stmt->execute([$transactionId]);
+                if ($stmt->rowCount() !== 1) throw new Exception('Commission was already processed');
+
+                // Deduct from user balance (greastest of 0 or balance - amount)
+                $stmt = $pdo->prepare('UPDATE users SET balance = GREATEST(0, balance - ?) WHERE id = ?');
+                $stmt->execute([$tx['amount'], $tx['user_id']]);
+
+                $pdo->commit();
+                auditAdminAction($pdo, $userId, 'commission.revoked', 'transaction', $transactionId, ['amount' => (float)$tx['amount'], 'userId' => $tx['user_id']]);
+
+                notifyUserById($pdo, $tx['user_id'], 'Commission Revoked', "<p>A referral commission of <strong>\$" . number_format($tx['amount'], 2) . "</strong> has been revoked from your account.</p>", 'referral');
+
+                sendJson(['message' => 'Commission successfully revoked and deducted from user balance.']);
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                sendJson(['message' => 'Server error'], 500);
             }
         }
 

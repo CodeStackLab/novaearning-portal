@@ -91,6 +91,13 @@ switch ($endpoint) {
             $row = $stmt->fetch();
             sendJson(['address' => $row ? $row['value'] : 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX']);
         }
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'referral-program') {
+            sendJson([
+                'firstDepositBonusPct' => getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100),
+                'depositCommissionPct' => getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100),
+                'dailyCommissionPct' => getNumericSetting($pdo, 'referral_daily_commission_pct', 10, 0, 100)
+            ]);
+        }
         break;
     case 'test-users':
         $stmt = $pdo->query("SELECT id, name, email, username, role FROM users");

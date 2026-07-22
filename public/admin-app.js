@@ -114,6 +114,10 @@ async function fetchActiveTabDetails(tabId) {
         } else if (tabId === 'tickets') {
             const tickets = await adminRequest('/admin/tickets');
             renderTicketsTable(tickets);
+        } else if (tabId === 'commissions') {
+            const commissions = await adminRequest('/admin/commissions');
+            renderCommissionsTable(commissions);
+            await loadReferralPercentages();
         } else if (tabId === 'smtp') {
             await loadSmtpSettings();
         } else if (tabId === 'notifications') {
@@ -586,6 +590,73 @@ function renderUsersTable(serverUsers) {
 
 function triggerUsersFilter() {
     renderUsersTable(globalUsersList);
+}
+
+async function loadReferralPercentages() {
+    try {
+        const settings = await adminRequest('/admin/settings/referrals');
+        document.getElementById('ref-first-deposit-pct').value = settings.firstDepositBonusPct;
+        document.getElementById('ref-deposit-pct').value = settings.depositCommissionPct;
+        document.getElementById('ref-daily-pct').value = settings.dailyCommissionPct;
+    } catch (error) {
+        showToast(error.message || 'Unable to load referral percentages.');
+    }
+}
+
+async function saveReferralPercentages(event) {
+    event.preventDefault();
+    const button = document.getElementById('referral-percentage-save-btn');
+    const payload = {
+        firstDepositBonusPct: Number(document.getElementById('ref-first-deposit-pct').value),
+        depositCommissionPct: Number(document.getElementById('ref-deposit-pct').value),
+        dailyCommissionPct: Number(document.getElementById('ref-daily-pct').value)
+    };
+    if (Object.values(payload).some(value => !Number.isFinite(value) || value < 0 || value > 100)) {
+        showToast('Enter percentages between 0 and 100.');
+        return;
+    }
+    if (button) button.disabled = true;
+    try {
+        const result = await adminRequest('/admin/settings/referrals', { method:'POST', body:JSON.stringify(payload) });
+        showToast(result.message || 'Referral percentages saved.');
+    } catch (error) {
+        showToast(error.message || 'Unable to save referral percentages.');
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+function renderCommissionsTable(commissions) {
+    const tbody = document.getElementById('admin-commissions-table-body');
+    if (!tbody) return;
+    if (!Array.isArray(commissions) || commissions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#64748b;">No referral commissions recorded yet.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = commissions.map(item => {
+        const confirmed = item.status === 'Confirmed';
+        return `<tr>
+            <td>${escapeAdminUi(item.date || '')}</td>
+            <td><strong>${escapeAdminUi(item.user_name || 'User')}</strong><small style="display:block;color:#94a3b8;">${escapeAdminUi(item.user_email || '')}</small></td>
+            <td>${formatUSD(item.amount)}</td>
+            <td>${escapeAdminUi(item.ref || '')}</td>
+            <td>${escapeAdminUi(item.status || '')}</td>
+            <td>${confirmed ? `<button type="button" class="smtp-test-btn" onclick="revokeReferralCommission(${Number(item.id)}, this)">Revoke</button>` : '<span style="color:#94a3b8;">Processed</span>'}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function revokeReferralCommission(transactionId, button) {
+    if (!confirm('Revoke this referral commission and deduct it from the available balance?')) return;
+    if (button) button.disabled = true;
+    try {
+        const result = await adminRequest('/admin/commissions/revoke', { method:'POST', body:JSON.stringify({ transactionId }) });
+        showToast(result.message || 'Commission revoked.');
+        await fetchActiveTabDetails('commissions');
+    } catch (error) {
+        showToast(error.message || 'Unable to revoke commission.');
+        if (button) button.disabled = false;
+    }
 }
 
 function renderDepositsTable(deposits) {

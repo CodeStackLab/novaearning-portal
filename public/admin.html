@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css?v=45.0">
-    <link rel="stylesheet" href="nova-ui.css?v=45.1">
+    <link rel="stylesheet" href="nova-ui.css?v=45.2">
     <style>
         #tron-address-modal:target { position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; min-width:100vw !important; min-height:100vh !important; display:flex !important; align-items:center; justify-content:center; box-sizing:border-box; opacity:1 !important; visibility:visible !important; z-index:999999 !important; }
     </style>
@@ -69,6 +69,12 @@
                 <a href="#tickets" class="sidebar-item-link" data-tab="tickets">
                     <span class="material-symbols-outlined sidebar-icon">question_answer</span>
                     <span>Support Tickets</span>
+                </a>
+            </li>
+            <li>
+                <a href="#commissions" class="sidebar-item-link" data-tab="commissions">
+                    <span class="material-symbols-outlined sidebar-icon">diversity_3</span>
+                    <span>Referral Commissions</span>
                 </a>
             </li>
             <li>
@@ -152,7 +158,7 @@
             <section id="panel-overview" class="dashboard-panel-view active">
                 <h1 class="panel-title font-display">System Overview</h1>
                 <p class="panel-desc">Operational statistics and metrics of the Nova portal.</p>
-                
+
                 <div class="dashboard-metrics-row">
                     <div class="metric-card-box">
                         <div class="metric-card-label">Total Users</div>
@@ -436,6 +442,57 @@
                                         <button onclick="adminDeletePlan('Apple Gift Card Plan')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
                                     </td>
                                 </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL: REFERRAL COMMISSIONS -->
+            <section id="panel-commissions" class="dashboard-panel-view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h1 class="panel-title font-display" style="margin:0;">Referral Commissions</h1>
+                        <p class="panel-desc" style="margin:0.25rem 0 0 0;">Configure referral percentages and manage credited commissions.</p>
+                    </div>
+                </div>
+
+                <form id="referral-percentage-form" class="deposit-step-box" onsubmit="saveReferralPercentages(event)" style="margin-bottom:1rem;">
+                    <h2 class="recent-deposits-title font-display" style="margin-bottom:.35rem;">Referral Percentage Settings</h2>
+                    <p class="panel-desc" style="margin-bottom:1rem;">These percentages apply to future approved deposits and completed daily earning cycles.</p>
+                    <div class="smtp-form-grid">
+                        <div class="form-group-db">
+                            <label class="form-label-db" for="ref-first-deposit-pct">New member bonus after first deposit (%)</label>
+                            <input class="form-input-db" id="ref-first-deposit-pct" type="number" min="0" max="100" step="0.01" required>
+                        </div>
+                        <div class="form-group-db">
+                            <label class="form-label-db" for="ref-deposit-pct">Referrer deposit commission (%)</label>
+                            <input class="form-input-db" id="ref-deposit-pct" type="number" min="0" max="100" step="0.01" required>
+                        </div>
+                        <div class="form-group-db">
+                            <label class="form-label-db" for="ref-daily-pct">Referrer daily-profit commission (%)</label>
+                            <input class="form-input-db" id="ref-daily-pct" type="number" min="0" max="100" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="smtp-actions"><button type="submit" class="form-btn-db" id="referral-percentage-save-btn"><span class="material-symbols-outlined">percent</span> Save Percentages</button></div>
+                </form>
+
+                <div class="recent-deposits-section">
+                    <div class="table-responsive-box">
+                        <table class="deposits-table-list">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Referrer (Receiver)</th>
+                                    <th>Commission Amount</th>
+                                    <th>Ref ID</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-commissions-table-body">
+                                <!-- Populated dynamically -->
+                                <tr><td colspan="6" style="text-align:center; padding: 2rem; color:#64748b;">Loading commissions...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -908,6 +965,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=75.1"></script>
+    <script src="admin-app.js?v=75.2"></script>
 </body>
 </html>

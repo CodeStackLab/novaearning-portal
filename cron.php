@@ -66,8 +66,9 @@ foreach ($activeInvestments as $inv) {
             $stmt->execute([$inv['user_id']]);
             $user = $stmt->fetch();
             $referrerId = $user['referred_by'] ?? null;
-            $referralCommission = $commission * 0.10;
-            if ($referrerId) {
+            $dailyReferralPct = getNumericSetting($pdo, 'referral_daily_commission_pct', 10, 0, 100);
+            $referralCommission = $commission * ($dailyReferralPct / 100);
+            if ($referrerId && $referralCommission > 0) {
                 $stmt = $pdo->prepare('UPDATE users SET balance = balance + ?, earnings = earnings + ? WHERE id = ?');
                 $stmt->execute([$referralCommission, $referralCommission, $referrerId]);
                 $stmt = $pdo->prepare('INSERT IGNORE INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');

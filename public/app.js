@@ -114,6 +114,7 @@ function logout() {
 
 // Switch tabs inside dashboard
 function switchTab(tabId) {
+    if (!document.getElementById(`panel-${tabId}`)) tabId = 'dashboard';
     const panels = document.querySelectorAll('.dashboard-panel-view');
     panels.forEach(panel => panel.classList.remove('active'));
 
@@ -142,7 +143,7 @@ function switchTab(tabId) {
         });
 
         if (tabId === 'notifications') { loadUserNotificationSettings(); loadNotificationCenter(); }
-        if (tabId === 'security') loadLoginActivity();
+        if (tabId === 'referrals') loadReferralProgramSettings();
 
         // Set hash link URL quietly
         window.history.pushState(null, null, `#${tabId}`);
@@ -155,6 +156,25 @@ function switchTab(tabId) {
         if (tabId === 'myinvestments' && typeof renderDummyMyInvestments === 'function') {
             renderDummyMyInvestments();
         }
+    }
+}
+
+async function loadReferralProgramSettings() {
+    try {
+        const response = await fetch('/api/settings/referral-program', { cache: 'no-store' });
+        if (!response.ok) return;
+        const settings = await response.json();
+        const values = {
+            'ref-first-bonus-pct': settings.firstDepositBonusPct,
+            'ref-deposit-commission-pct': settings.depositCommissionPct,
+            'ref-daily-commission-pct': settings.dailyCommissionPct
+        };
+        Object.entries(values).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element && Number.isFinite(Number(value))) element.textContent = Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        });
+    } catch (error) {
+        console.error('Unable to load referral percentages:', error.message);
     }
 }
 

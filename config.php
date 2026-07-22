@@ -282,6 +282,20 @@ function createInAppNotification($pdo, $userId, $category, $title, $message, $ac
     } catch (Exception $e) { error_log('In-app notification failed: ' . $e->getMessage()); }
 }
 
+function getNumericSetting($pdo, $key, $default, $minimum = 0, $maximum = 100) {
+    try {
+        $stmt = $pdo->prepare('SELECT value FROM settings WHERE `key` = ? LIMIT 1');
+        $stmt->execute([$key]);
+        $value = $stmt->fetchColumn();
+        if ($value !== false && is_numeric($value)) {
+            return max($minimum, min($maximum, (float)$value));
+        }
+    } catch (Throwable $e) {
+        error_log('Unable to read numeric setting ' . $key . ': ' . $e->getMessage());
+    }
+    return (float)$default;
+}
+
 function auditAdminAction($pdo, $adminId, $action, $targetType = null, $targetId = null, $details = null) {
     try {
         ensurePlatformFeatureTables($pdo);

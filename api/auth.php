@@ -147,7 +147,6 @@ function handleAuth($action, $subaction, $pdo, $body) {
             $referrer = $stmt->fetch();
             if ($referrer) {
                 $referrerId = $referrer['id'];
-                $startBalance = 5.00;
             } else {
                 sendJson(['message' => 'Invalid referral code'], 400);
             }
@@ -161,13 +160,6 @@ function handleAuth($action, $subaction, $pdo, $body) {
         $stmt = $pdo->prepare('INSERT INTO users (name, email, username, password, balance, earnings, active_investments, role, referred_by, referral_code) VALUES (?, ?, ?, ?, ?, 0.0, 0.0, ?, ?, ?)');
         $stmt->execute([$name, $email, $email, $hashedPassword, $startBalance, 'user', $referrerId, $myReferralCode]);
         $newUserId = $pdo->lastInsertId();
-
-        if ($startBalance > 0) {
-            $dateStr = date('M j, Y h:i A');
-            $refStr = 'REF-BONUS-' . strtoupper(substr(md5(uniqid()), 0, 6));
-            $stmt = $pdo->prepare('INSERT INTO transactions (user_id, date, type, amount, ref, status) VALUES (?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$newUserId, $dateStr, 'Referral Bonus', 5.00, $refStr, 'Confirmed']);
-        }
 
         if ($referrerId) {
             notifyUserById($pdo, $referrerId, 'You have a new referral', '<p><strong>' . htmlspecialchars($name) . '</strong> joined Nova using your referral code.</p><p>You will receive referral commission when eligible activity is completed.</p>', 'referral');

@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="/style.css?v=50.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=50.1">
+    <link rel="stylesheet" href="/nova-ui.css?v=50.2">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -80,8 +80,6 @@
                     <span>Notifications</span>
                 </a>
             </li>
-            <li><a href="#security" class="sidebar-item-link" data-tab="security"><span class="material-symbols-outlined sidebar-icon">shield_lock</span><span>Security</span></a></li>
-
             <li>
                 <a href="#support" class="sidebar-item-link" data-tab="support">
                     <span class="material-symbols-outlined sidebar-icon">help_outline</span>
@@ -506,16 +504,16 @@
                         <span class="material-symbols-outlined" style="font-size: 2.2rem; color: #fbbf24; background: rgba(251, 191, 36, 0.15); padding: 0.5rem; border-radius: 8px;">emoji_events</span>
                         <div>
                             <h3 style="margin: 0; font-size: 1.1rem; color: #ffffff;" class="font-display">Earn Network Commissions</h3>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #94a3b8;">Our direct multi-tier reward system pays out immediately.</p>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #94a3b8;">Referral rewards are credited after eligible account activity.</p>
                         </div>
                     </div>
                     <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.85rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <li><strong>5% Sign-up Reward:</strong> Anyone who signs up using your Referral Code receives an instant 5% wallet bonus.</li>
-                        <li><strong>10% Deposit Bonus:</strong> You receive a bonus equal to 10% of their total deposits credited instantly to your balance upon approval.</li>
-                        <li><strong>10% Daily Commission:</strong> You earn 10% of their daily investment profits compounded in real-time.</li>
+                        <li><strong><span id="ref-first-bonus-pct">5</span>% Referral Code Bonus:</strong> Bonus after first deposit. The new member receives this reward after their first deposit is approved.</li>
+                        <li><strong><span id="ref-deposit-commission-pct">5</span>% Deposit Commission:</strong> You receive this percentage of your referral's approved deposits.</li>
+                        <li><strong><span id="ref-daily-commission-pct">10</span>% Daily Commission:</strong> You earn this percentage of their completed daily investment profit.</li>
                     </ul>
                     <div style="margin-top: 1rem; font-size: 0.75rem; color: #fbbf24; font-weight: 700; background: rgba(251, 191, 36, 0.08); padding: 0.5rem 1rem; border-radius: 6px; border-left: 3px solid #fbbf24;">
-                        ✨ Referral Bonus will be 10% of total deposit and commission will be 10% of their daily income and 5% will be Bonus for who use Referral Code.
+                        ✨ Percentages are configured by Nova Administration. The referral-code bonus is credited only after the first approved deposit.
                     </div>
                 </div>
 
@@ -619,21 +617,6 @@
                     <div class="notification-privacy-note"><span class="material-symbols-outlined">admin_panel_settings</span><span>Your choices never disable operational alerts sent to Nova administrators.</span></div>
                     <div class="smtp-actions"><button type="submit" class="form-btn-db" id="user-notification-save-btn"><span class="material-symbols-outlined">save</span> Save My Preferences</button></div>
                 </form>
-            </section>
-
-            <section id="panel-security" class="dashboard-panel-view">
-                <h1 class="panel-title font-display">Account Security</h1><p class="panel-desc">Manage your password and protect your Nova account.</p>
-                <div class="security-summary-card"><span class="material-symbols-outlined">verified_user</span><div><strong>Password protected</strong><small>Never share your password or verification codes. Contact support if an activity is unfamiliar.</small></div></div>
-
-                <form class="notification-inbox-card" onsubmit="changeUserPassword(event)">
-                    <div class="notification-inbox-heading"><div><h2 class="font-display">Change password</h2><p>Confirm your current password before setting a new one.</p></div></div>
-                    <div class="smtp-form-grid">
-                        <div class="form-group-db"><label class="form-label-db" for="profile-current-password">Current password</label><input class="form-input-db" id="profile-current-password" type="password" autocomplete="current-password" required></div>
-                        <div class="form-group-db"><label class="form-label-db" for="profile-new-password">New password</label><input class="form-input-db" id="profile-new-password" type="password" minlength="8" autocomplete="new-password" required><small>Use at least 8 characters.</small></div>
-                    </div>
-                    <div class="smtp-actions"><button class="form-btn-db" type="submit"><span class="material-symbols-outlined">password</span> Update Password</button></div>
-                </form>
-
             </section>
 
         </main>
@@ -849,6 +832,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=70.1"></script>
+    <script src="/app.js?v=70.2"></script>
 </body>
 </html>
