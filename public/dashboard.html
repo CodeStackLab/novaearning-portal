@@ -585,7 +585,7 @@
                         <button type="button" onclick="document.getElementById('chat-screenshot-file').click()" class="chat-attach-btn" title="Attach Screenshot">
                             <span class="material-symbols-outlined">photo_camera</span>
                         </button>
-                        <input type="text" id="chat-message-input" placeholder="Type your message here..." class="chat-input" onkeydown="if(event.key === 'Enter') sendChatMessage()">
+                        <input type="text" id="chat-message-input" maxlength="5000" autocomplete="off" placeholder="Type your message here..." class="chat-input" onkeydown="if(event.key === 'Enter') sendChatMessage()">
                         <button type="button" onclick="sendChatMessage()" class="chat-send-btn" title="Send Message">
                             <span class="material-symbols-outlined">send</span>
                         </button>

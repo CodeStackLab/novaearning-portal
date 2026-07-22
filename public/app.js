@@ -1021,7 +1021,8 @@ function renderTicketsTable(tickets) {
     container.innerHTML = sortedTickets.map(ticket => {
         let userImageHtml = '';
         if (ticket.image_path) {
-            userImageHtml = `<img src="${ticket.image_path}" style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem; display: block; cursor: pointer;" onclick="window.open('${ticket.image_path}', '_blank')">`;
+            const imagePath = escapeUi(ticket.image_path);
+            userImageHtml = `<a href="${imagePath}" target="_blank" rel="noopener"><img src="${imagePath}" alt="Your attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
         }
 
         let html = '';
@@ -1031,7 +1032,7 @@ function renderTicketsTable(tickets) {
                     <div class="chat-bubble">
                         ${escapeHTML(ticket.message)}
                         ${userImageHtml}
-                        <span class="chat-bubble-time">${ticket.date}</span>
+                        <span class="chat-bubble-time">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
@@ -1040,7 +1041,7 @@ function renderTicketsTable(tickets) {
                 <div class="chat-bubble-wrapper user">
                     <div class="chat-bubble" style="padding: 0.5rem;">
                         ${userImageHtml}
-                        <span class="chat-bubble-time">${ticket.date}</span>
+                        <span class="chat-bubble-time">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
@@ -1048,7 +1049,8 @@ function renderTicketsTable(tickets) {
 
         let adminImageHtml = '';
         if (ticket.admin_image_path) {
-            adminImageHtml = `<img src="${ticket.admin_image_path}" style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem; display: block; cursor: pointer;" onclick="window.open('${ticket.admin_image_path}', '_blank')">`;
+            const adminImagePath = escapeUi(ticket.admin_image_path);
+            adminImageHtml = `<a href="${adminImagePath}" target="_blank" rel="noopener"><img src="${adminImagePath}" alt="Support attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
         }
 
         if (ticket.admin_reply) {
@@ -1057,7 +1059,7 @@ function renderTicketsTable(tickets) {
                     <div class="chat-bubble">
                         ${escapeHTML(ticket.admin_reply)}
                         ${adminImageHtml}
-                        <span class="chat-bubble-time">${ticket.date}</span>
+                        <span class="chat-bubble-time">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
@@ -1066,7 +1068,7 @@ function renderTicketsTable(tickets) {
                 <div class="chat-bubble-wrapper support">
                     <div class="chat-bubble" style="padding: 0.5rem;">
                         ${adminImageHtml}
-                        <span class="chat-bubble-time">${ticket.date}</span>
+                        <span class="chat-bubble-time">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;

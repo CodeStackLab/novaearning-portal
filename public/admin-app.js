@@ -901,6 +901,7 @@ function copyPayoutWallet(payoutId) {
 let activeChatUserId = null;
 let activeChatUserTickets = [];
 let allTicketsData = [];
+let adminChatUserGroups = {};
 
 function renderTicketsTable(tickets) {
     allTicketsData = tickets;
@@ -933,22 +934,20 @@ function renderTicketsTable(tickets) {
     });
 
     const groupsArray = Object.values(userGroups).sort((a, b) => b.latestDate - a.latestDate);
+    adminChatUserGroups = userGroups;
 
     usersListContainer.innerHTML = groupsArray.map(g => {
         const isCurrent = activeChatUserId === g.userId;
         const statusColor = g.status === 'Open' ? '#10b981' : '#64748b';
         const badgeBg = g.status === 'Open' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.15)';
-        const safeName = g.userName.replace(/'/g, "\\'");
-        const safeEmail = g.userEmail.replace(/'/g, "\\'");
-
         return `
-            <div onclick="selectAdminChatUser(${g.userId}, '${safeName}', '${safeEmail}')" style="padding: 1rem; border-bottom: 1px solid #1e2538; cursor: pointer; transition: background 0.2s; background-color: ${isCurrent ? '#0b0e14' : 'transparent'}; display: flex; flex-direction: column; gap: 0.35rem;">
+            <div onclick="selectAdminChatUser(${Number(g.userId)})" style="padding: 1rem; border-bottom: 1px solid #1e2538; cursor: pointer; transition: background 0.2s; background-color: ${isCurrent ? '#0b0e14' : 'transparent'}; display: flex; flex-direction: column; gap: 0.35rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; color: #f8fafc; font-size: 0.85rem;">${g.userName}</span>
+                    <span style="font-weight: 700; color: #f8fafc; font-size: 0.85rem;">${escapeUi(g.userName)}</span>
                     <span style="background-color: ${badgeBg}; color: ${statusColor}; border: 1px solid rgba(16,185,129,0.1); padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.65rem; font-weight: 700;">${g.status}</span>
                 </div>
                 <div style="font-size: 0.75rem; color: #94a3b8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                    ${g.userEmail}
+                    ${escapeUi(g.userEmail)}
                 </div>
             </div>
         `;
@@ -958,7 +957,7 @@ function renderTicketsTable(tickets) {
     if (activeChatUserId !== null) {
         const activeGroup = userGroups[activeChatUserId];
         if (activeGroup) {
-            selectAdminChatUser(activeChatUserId, activeGroup.userName, activeGroup.userEmail, false);
+            selectAdminChatUser(activeChatUserId, false);
         }
     }
 }
@@ -1108,7 +1107,11 @@ function clearAdminChatImageSelection() {
     document.getElementById('admin-chat-image-preview-box').style.display = 'none';
 }
 
-function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
+function selectAdminChatUser(userId, shouldScroll = true) {
+    const selectedGroup = adminChatUserGroups[userId];
+    if (!selectedGroup) { showToast('Conversation is no longer available.'); return; }
+    const userName = selectedGroup.userName;
+    const userEmail = selectedGroup.userEmail;
     activeChatUserId = userId;
 
     document.getElementById('admin-chat-user-name').textContent = userName;
@@ -1151,7 +1154,8 @@ function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
     messagesContainer.innerHTML = sorted.map(ticket => {
         let userImageHtml = '';
         if (ticket.image_path) {
-            userImageHtml = `<img src="${ticket.image_path}" style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem; display: block; cursor: pointer;" onclick="window.open('${ticket.image_path}', '_blank')">`;
+            const imagePath = escapeUi(ticket.image_path);
+            userImageHtml = `<a href="${imagePath}" target="_blank" rel="noopener"><img src="${imagePath}" alt="User attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
         }
 
         let html = '';
@@ -1161,7 +1165,7 @@ function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
                     <div class="chat-bubble" style="max-width: 70%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-bottom-right-radius: 2px;">
                         ${escapeHTML(ticket.message)}
                         ${userImageHtml}
-                        <span style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.7); margin-top: 0.25rem; display: block; text-align: right;">${ticket.date}</span>
+                        <span style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.7); margin-top: 0.25rem; display: block; text-align: right;">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
@@ -1170,7 +1174,7 @@ function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
                 <div class="chat-bubble-wrapper user" style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem; width: 100%;">
                     <div class="chat-bubble" style="max-width: 70%; padding: 0.5rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-bottom-right-radius: 2px;">
                         ${userImageHtml}
-                        <span style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.7); margin-top: 0.25rem; display: block; text-align: right;">${ticket.date}</span>
+                        <span style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.7); margin-top: 0.25rem; display: block; text-align: right;">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
@@ -1178,7 +1182,8 @@ function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
 
         let adminImageHtml = '';
         if (ticket.admin_image_path) {
-            adminImageHtml = `<img src="${ticket.admin_image_path}" style="max-width: 100%; border-radius: 8px; margin-top: 0.5rem; display: block; cursor: pointer;" onclick="window.open('${ticket.admin_image_path}', '_blank')">`;
+            const adminImagePath = escapeUi(ticket.admin_image_path);
+            adminImageHtml = `<a href="${adminImagePath}" target="_blank" rel="noopener"><img src="${adminImagePath}" alt="Admin attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
         }
 
         if (ticket.admin_reply) {
@@ -1187,7 +1192,7 @@ function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
                     <div class="chat-bubble" style="max-width: 70%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; background-color: #171d2c; color: #cbd5e1; border-bottom-left-radius: 2px; border: 1px solid #1e2538;">
                         ${escapeHTML(ticket.admin_reply)}
                         ${adminImageHtml}
-                        <span style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.25rem; display: block;">${ticket.date}</span>
+                        <span style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.25rem; display: block;">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
@@ -1196,7 +1201,7 @@ function selectAdminChatUser(userId, userName, userEmail, shouldScroll = true) {
                 <div class="chat-bubble-wrapper support" style="display: flex; justify-content: flex-start; margin-bottom: 0.5rem; width: 100%;">
                     <div class="chat-bubble" style="max-width: 70%; padding: 0.5rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; background-color: #171d2c; color: #cbd5e1; border-bottom-left-radius: 2px; border: 1px solid #1e2538;">
                         ${adminImageHtml}
-                        <span style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.25rem; display: block;">${ticket.date}</span>
+                        <span style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.25rem; display: block;">${escapeUi(ticket.date || '')}</span>
                     </div>
                 </div>
             `;
