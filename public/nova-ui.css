@@ -406,10 +406,11 @@ html, body {
 .header-notification-btn { position:relative; width:42px; height:42px; display:grid; place-items:center; flex:0 0 42px; color:#9db1cd; background:rgba(12,20,35,.8); border:1px solid rgba(126,156,205,.22); border-radius:12px; cursor:pointer; }
 .header-notification-btn b { position:absolute; top:-5px; right:-5px; min-width:18px; height:18px; padding:0 4px; display:grid; place-items:center; color:#fff; background:#ef4444; border:2px solid #111622; border-radius:99px; font-size:.58rem; }
 .notification-inbox-card { margin-bottom:1rem; padding:1rem; background:linear-gradient(145deg,rgba(14,24,43,.96),rgba(8,16,30,.98)); border:1px solid rgba(126,156,205,.2); border-radius:16px; }
-.notification-inbox-heading { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.8rem; }
+.notification-inbox-heading { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:.8rem; }
 .notification-inbox-heading h2 { margin:0;color:#f5f8fd;font-size:1rem; }
 .notification-inbox-heading p { margin:.2rem 0 0;color:#8391a6;font-size:.72rem; }
-.notification-inbox-heading button { color:#80a8ef;background:transparent;border:0;font-size:.72rem;font-weight:700;cursor:pointer; }
+.notification-inbox-heading button { color:#60a5fa !important; background:rgba(59,130,246,0.15) !important; border:1px solid rgba(59,130,246,0.3) !important; border-radius:6px !important; padding:0.4rem 0.75rem !important; font-size:.75rem !important; font-weight:700 !important; cursor:pointer !important; white-space:nowrap !important; flex-shrink:0 !important; transition:all 0.2s ease !important; }
+.notification-inbox-heading button:hover { background:rgba(59,130,246,0.28) !important; color:#fff !important; }
 .notification-inbox-list { display:grid; gap:.55rem; max-height:420px; overflow:auto; }
 .notification-inbox-item { width:100%; padding:.8rem; display:grid; grid-template-columns:38px minmax(0,1fr); gap:.7rem; text-align:left; color:#cbd5e1; background:rgba(3,9,18,.35); border:1px solid rgba(126,156,205,.1); border-radius:11px; cursor:pointer; }
 .notification-inbox-item.unread { background:rgba(37,99,235,.1); border-color:rgba(77,127,222,.3); }
@@ -741,17 +742,27 @@ html, body,
 
 /* Exact viewport-centred mobile brand, independent of side controls */
 @media (max-width: 900px) {
+    .dashboard-header { position: relative !important; }
     .dashboard-header .mobile-header-logo {
         position: absolute !important;
-        inset-inline-start: 50% !important;
-        inset-inline-end: auto !important;
+        left: 50% !important;
         top: 50% !important;
         margin: 0 !important;
-        transform: translate(-50%,-50%) !important;
-        z-index: 2 !important;
-        pointer-events: auto;
+        transform: translate(-50%, -50%) !important;
+        z-index: 20 !important;
+        pointer-events: auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
-    .dashboard-header .mobile-header-logo img { width: 86px !important; max-width: 22vw; }
+    .dashboard-header .mobile-header-logo img { 
+        width: 124px !important; 
+        max-width: 44vw !important; 
+        height: auto !important; 
+        max-height: 42px !important; 
+        object-fit: contain !important;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45)) !important;
+    }
 }
 
 .smtp-provider-tools { margin: 0 0 1rem; padding: .8rem; display: flex; align-items: center; justify-content: space-between; gap: .8rem; color: #aab4c1; background: rgba(214,168,95,.065); border: 1px solid rgba(214,168,95,.16); border-radius: 12px; }
@@ -909,10 +920,26 @@ html, body,
     .withdraw-action-row {
         flex-direction: column !important;
         align-items: stretch !important;
+        gap: 0.75rem !important;
+        margin-top: 1.25rem !important;
     }
     .withdraw-action-row .form-btn-db {
         width: 100% !important;
         justify-content: center !important;
+        min-height: 48px !important;
+        font-size: 0.92rem !important;
+        font-weight: 700 !important;
+        border-radius: 10px !important;
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35) !important;
+    }
+    .secure-transaction-label {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #94a3b8 !important;
+        font-size: 0.78rem !important;
+        gap: 0.35rem !important;
     }
 }
 

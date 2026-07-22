@@ -18,8 +18,8 @@
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="/style.css?v=14.0">
-    <link rel="stylesheet" href="/nova-ui.css?v=14.0">
+    <link rel="stylesheet" href="/style.css?v=18.0">
+    <link rel="stylesheet" href="/nova-ui.css?v=18.0">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="images/nova-logo.svg">
 </head>
@@ -329,20 +329,30 @@
                         Send the exact amount you selected to the TRON (TRC20) wallet address below.
                     </p>
                     
-                    <div style="background-color: #0b0e14; border: 1px solid #1e2538; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">TRON Wallet Address (TRC20)</span>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div style="width: 48px; height: 48px; background-color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">details</span>
+                    <div class="tron-wallet-container" style="background-color: #0b0e14; border: 1px solid #1e2538; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 42px; height: 42px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);">
+                                    <span class="material-symbols-outlined" style="color: white; font-size: 22px;">details</span>
+                                </div>
+                                <div>
+                                    <strong style="font-size: 0.88rem; color: #f8fafc; display: block;">TRON Wallet Address</strong>
+                                    <span style="font-size: 0.72rem; color: #94a3b8;">Network: TRC20 (USDT)</span>
+                                </div>
                             </div>
-                            <div style="flex-grow: 1; display: flex; align-items: center; background-color: #111622; border: 1px solid #1e2538; border-radius: 6px; padding: 0.5rem; padding-left: 1rem; overflow: hidden;">
-                                <input type="text" readonly value="TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX" id="tron-wallet-address" style="background: none; border: none; color: #f8fafc; font-size: 0.95rem; font-family: monospace; flex-grow: 1; outline: none; min-width: 0;">
-                                <button onclick="copyWalletAddress()" id="copy-tron-btn" style="background-color: #3b82f6; color: white; border: none; border-radius: 4px; padding: 0.4rem 1rem; display: flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; cursor: pointer; flex-shrink: 0; margin-left: 0.5rem;">
-                                    <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span>
-                                    <span>Copy</span>
-                                </button>
-                            </div>
+                            <span style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.25rem 0.65rem; border-radius: 99px; font-size: 0.7rem; font-weight: 700;">TRC20</span>
                         </div>
+                        
+                        <!-- Full Width Visible Address Box -->
+                        <div class="tron-address-box" style="background-color: #111622; border: 1px solid #1e2538; border-radius: 8px; padding: 0.85rem; margin-bottom: 0.85rem;">
+                            <input type="text" readonly value="TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX" id="tron-wallet-address" style="background: none; border: none; color: #60a5fa; font-size: 0.88rem; font-family: monospace; width: 100%; outline: none; font-weight: 700; word-break: break-all; text-align: center; letter-spacing: 0.5px; box-sizing: border-box;" onclick="this.select(); copyWalletAddress();">
+                        </div>
+
+                        <!-- Full Width Copy Button -->
+                        <button type="button" onclick="copyWalletAddress()" id="copy-tron-btn" style="width: 100%; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35); transition: all 0.2s;">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+                            <span>Copy TRON Address</span>
+                        </button>
                     </div>
                     
                     <!-- Orange Warning Alert -->
@@ -376,7 +386,7 @@
                     <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 1rem; background-color: #0c0f1a; border: 1px solid #1e2538; border-radius: 12px; padding: 1.5rem;">
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
                             <label style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">Transaction ID / Hash (Pasted)</label>
-                            <input type="text" id="deposit-txid-input" placeholder="Paste your TRX / TRC20 Transaction Hash here" style="background-color: #111622; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 0.95rem; outline: none; width: 100%;">
+                            <input type="text" id="deposit-txid-input" placeholder="Paste your TRX / TRC20 Transaction Hash here" style="background-color: #111622; border: 1px solid #1e2538; border-radius: 6px; padding: 0.75rem 1rem; color: #f8fafc; font-size: 0.95rem; outline: none; width: 100%; box-sizing: border-box;">
                         </div>
                         <span style="font-size: 0.88rem; font-weight: 700; color: #f8fafc; letter-spacing: 0.3px;">Submit your Payment Screenshot for verification:</span>
                         
@@ -388,9 +398,9 @@
                             <span style="font-size: 0.75rem; color: #64748b; margin-top: 0.35rem; pointer-events: none;">Supports JPG, JPEG, PNG (Max 5MB)</span>
                         </div>
 
-                        <div style="display: flex; justify-content: flex-end; margin-top: 0.25rem;">
-                            <button onclick="submitNewDeposit()" style="background-color: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0.75rem 1.75rem; font-weight: 600; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
-                                <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+                        <div style="display: flex; justify-content: stretch; margin-top: 0.25rem;">
+                            <button type="button" onclick="submitNewDeposit()" style="width: 100%; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 8px; padding: 0.85rem 1.75rem; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 14px rgba(59,130,246,0.35); transition: background-color 0.2s;">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
                                 <span>Submit Deposit</span>
                             </button>
                         </div>
@@ -849,6 +859,6 @@
     </nav>
 
     <!-- Application Javascript -->
-    <script src="/app.js?v=12.0"></script>
+    <script src="/app.js?v=18.0"></script>
 </body>
 </html>

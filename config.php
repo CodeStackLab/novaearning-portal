@@ -266,8 +266,11 @@ function clearFailedLogins($pdo, $identifier) {
 function createInAppNotification($pdo, $userId, $category, $title, $message, $actionUrl = null) {
     try {
         ensurePlatformFeatureTables($pdo);
+        $cleanMsg = preg_replace('/<\/(p|div|li)>\s*/i', ' ', $message);
+        $cleanMsg = preg_replace('/<br\s*\/?>/i', ' | ', $cleanMsg);
+        $cleanMsg = trim(preg_replace('/\s+/', ' ', strip_tags($cleanMsg)));
         $stmt = $pdo->prepare('INSERT INTO in_app_notifications (user_id, category, title, message, action_url) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$userId, $category, $title, trim(strip_tags($message)), $actionUrl]);
+        $stmt->execute([$userId, $category, $title, $cleanMsg, $actionUrl]);
     } catch (Exception $e) { error_log('In-app notification failed: ' . $e->getMessage()); }
 }
 

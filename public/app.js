@@ -188,8 +188,14 @@ async function markNotificationRead(notificationId) {
 }
 
 async function markAllNotificationsRead() {
-    await apiRequest('/user/notification-center', { method: 'POST', body: '{}' });
-    await loadNotificationCenter();
+    try {
+        await apiRequest('/user/notification-center', { method: 'POST', body: JSON.stringify({ notificationId: 0 }) });
+        await loadNotificationCenter();
+        showToast("All notifications marked as read!");
+    } catch (e) {
+        console.error('Mark all read error:', e);
+        showToast(e.message || "Unable to mark notifications as read", "error");
+    }
 }
 
 async function loadLoginActivity() {
@@ -556,26 +562,41 @@ async function fetchUserTronAddress() {
 function copyWalletAddress() {
     const addrInput = document.getElementById('tron-wallet-address');
     const copyBtn = document.getElementById('copy-tron-btn');
-    if (addrInput) {
-        addrInput.select();
-        addrInput.setSelectionRange(0, 99999);
-        
+    if (!addrInput) return;
+
+    addrInput.select();
+    addrInput.setSelectionRange(0, 99999);
+
+    const handleSuccess = () => {
+        showToast("TRON (TRC20) wallet address copied!");
+        if (copyBtn) {
+            copyBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">check</span><span>Copied!</span>`;
+            setTimeout(() => {
+                copyBtn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span><span>Copy TRON Address</span>`;
+            }, 2500);
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(addrInput.value)
-            .then(() => {
-                showToast("TRON (TRC20) wallet address copied!");
-                if (copyBtn) {
-                    const originalHTML = copyBtn.innerHTML;
-                    copyBtn.style.backgroundColor = '#10b981';
-                    copyBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px;">check</span><span>Copied!</span>`;
-                    setTimeout(() => {
-                        copyBtn.style.backgroundColor = '#3b82f6';
-                        copyBtn.innerHTML = originalHTML;
-                    }, 2000);
-                }
-            })
+            .then(handleSuccess)
             .catch(() => {
-                showToast("Failed to copy address.");
+                try {
+                    document.execCommand('copy');
+                    handleSuccess();
+                } catch (e) {
+                    showToast("TRON address selected. Please press Copy.", "info");
+                }
             });
+    } else {
+        try {
+            document.execCommand('copy');
+            handleSuccess();
+        } catch (e) {
+            showToast("TRON address selected. Please press Copy.", "info");
+        }
     }
 }
 
