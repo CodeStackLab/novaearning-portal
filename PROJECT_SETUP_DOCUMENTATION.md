@@ -1,6 +1,6 @@
 # Nova Portal - Complete System Architecture & Setup Documentation
 
-> **Last Updated**: July 20, 2026  
+> **Last Updated**: July 22, 2026
 > **Status**: 100% Live & Operational on IONOS Production Hosting
 
 ---
@@ -27,6 +27,7 @@
   - `IONOS_SFTP_PORT`: `22`
   - `IONOS_SFTP_USER`: configured
   - `IONOS_SFTP_PASSWORD`: configured as an encrypted repository secret
+  - `IONOS_REMOTE_PATH`: production web root (for the current shared-hosting setup this is `/novaearning/`; the workflow falls back to `.` only when omitted)
 
 ---
 
@@ -82,8 +83,44 @@
 - **Workflow File**: `.github/workflows/deploy-ionos.yml`
 - **Automated Flow**:
   - Triggers automatically on every `git push origin main`.
-  - Bundles `public/`, `public/.htaccess`, `api/`, `api/.htaccess`, `config.php`, `migrate.php`, `database.sql` into `dist/`.
-  - Uses `sshpass` + `sftp` to upload changed files to `/novaearning/` directory on IONOS.
+  - Can also be started manually from GitHub → Actions → Deploy production to IONOS → Run workflow.
+  - Validates JavaScript and every deployed PHP entry point before upload. A validation failure stops deployment.
+  - Validates that all required SFTP secrets exist without printing their values.
+  - Bundles `public/`, `.htaccess`, `api/`, `config.php`, `cron.php`, `migrate.php`, `database.sql`, and this documentation into `dist/`.
+  - Uses SFTP to upload the package to `IONOS_REMOTE_PATH`.
+  - Calls the protected production commission scheduler as a post-deployment smoke test.
+
+### One-time GitHub configuration
+
+Open GitHub repository → **Settings → Secrets and variables → Actions** and add:
+
+1. `IONOS_SFTP_HOST` = `access-5020930432.webspace-host.com`
+2. `IONOS_SFTP_PORT` = `22`
+3. `IONOS_SFTP_USER` = the IONOS SFTP account username
+4. `IONOS_SFTP_PASSWORD` = the IONOS SFTP account password
+5. `IONOS_REMOTE_PATH` = `/novaearning/` (confirm the connected-domain folder in IONOS before changing this)
+
+Then open **Actions**, enable workflows if GitHub asks, and manually run **Deploy production to IONOS** once. After it succeeds, every push to `main` deploys automatically. Verify each deployment from the workflow run summary and `https://novaearning.com/admin.html`.
+
+### Normal deployment commands
+
+```bash
+git add .
+git commit -m "Describe the production change"
+git push origin main
+```
+
+Do not store a GitHub token in the remote URL. The safe remote is:
+
+```bash
+git remote set-url origin https://github.com/CodeStackLab/novaearning-portal.git
+```
+
+If a token was previously embedded in a remote URL or log, revoke it immediately in GitHub → Settings → Developer settings → Personal access tokens, then create a replacement only if needed.
+
+### Database changes
+
+Deploying uploads `database.sql` and `migrate.php`, but the SFTP workflow does **not** automatically execute the browser migration because it requires authenticated admin access. For an actual schema change, update both files, deploy, then run `migrate.php` with an admin JWT or use an authorized CLI migration. The post-deployment `cron.php` request is a scheduler smoke test, not a general database migration.
 
 ---
 

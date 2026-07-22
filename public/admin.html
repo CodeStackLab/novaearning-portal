@@ -260,6 +260,8 @@
                                 <option value="has-referrals">Has Referrals Only</option>
                                 <option value="active">Active Only</option>
                                 <option value="suspended">Suspended Only</option>
+                                <option value="hold">Hold Only</option>
+                                <option value="under-review">Under Review Only</option>
                             </select>
                         </div>
                         
@@ -309,10 +311,27 @@
                         <span>+ Add Manual Deposit</span>
                     </button>
                 </div>
+
+                <div class="admin-deposit-tools" aria-label="Deposit search and filters">
+                    <label class="admin-deposit-search">
+                        <span class="material-symbols-outlined">search</span>
+                        <input type="search" id="deposit-search-input" maxlength="120" placeholder="Search user, email or deposit ID…" oninput="triggerDepositsFilter()">
+                    </label>
+                    <label class="admin-deposit-filter">
+                        <span class="material-symbols-outlined">filter_list</span>
+                        <select id="deposit-status-filter" onchange="triggerDepositsFilter()">
+                            <option value="all">All deposits</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </label>
+                    <span id="deposit-filter-count" class="admin-deposit-count" aria-live="polite"></span>
+                </div>
                 
-                <div class="recent-deposits-section">
-                    <div class="table-responsive-box">
-                        <table class="deposits-table-list">
+                <div class="recent-deposits-section admin-deposits-card">
+                    <div class="table-responsive-box admin-deposits-table-wrap">
+                        <table class="deposits-table-list admin-deposits-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -337,9 +356,9 @@
                 <h1 class="panel-title font-display">Manage Payouts</h1>
                 <p class="panel-desc">Process, verify, and complete pending user withdrawals.</p>
                 
-                <div class="recent-deposits-section">
-                    <div class="table-responsive-box">
-                        <table class="deposits-table-list">
+                <div class="recent-deposits-section admin-payouts-card">
+                    <div class="table-responsive-box admin-payouts-table-wrap">
+                        <table class="deposits-table-list admin-payouts-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -814,15 +833,15 @@
             <div class="modal-form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                 <div style="grid-column: 1 / -1;">
                     <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Full Name</label>
-                    <input type="text" id="user-mgmt-name" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
+                    <input type="text" id="user-mgmt-name" maxlength="255" autocomplete="name" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
                 </div>
                 <div>
                     <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Email Address</label>
-                    <input type="email" id="user-mgmt-email" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
+                    <input type="email" id="user-mgmt-email" maxlength="255" autocomplete="email" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
                 </div>
                 <div>
                     <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Password (Leave blank to keep)</label>
-                    <input type="password" id="user-mgmt-password" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
+                    <input type="password" id="user-mgmt-password" minlength="8" maxlength="4096" autocomplete="new-password" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
                 </div>
                 <div>
                     <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Role</label>
@@ -859,9 +878,9 @@
             <div class="modal-form-group">
                 <p id="alert-user-info" style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.75rem;"></p>
                 <label class="modal-input-label">Subject</label>
-                <input type="text" id="alert-subject" placeholder="e.g. Action Required" class="modal-text-input" style="margin-bottom: 1rem;">
+                <input type="text" id="alert-subject" maxlength="180" placeholder="e.g. Action Required" class="modal-text-input" style="margin-bottom: 1rem;">
                 <label class="modal-input-label">Message</label>
-                <textarea id="alert-message" class="modal-text-input" rows="4" style="resize: vertical;"></textarea>
+                <textarea id="alert-message" maxlength="5000" class="modal-text-input" rows="4" style="resize: vertical;"></textarea>
             </div>
             
             <button onclick="sendUserAlert()" class="modal-submit-btn" style="background-color: #3b82f6;">Send Alert</button>

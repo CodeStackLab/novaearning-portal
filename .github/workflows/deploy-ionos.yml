@@ -38,8 +38,19 @@ jobs:
           php -l config.php
           php -l migrate.php
 
-      - name: Install SFTP Client library
-        run: npm install ssh2-sftp-client
+      - name: Validate deployment secrets
+        env:
+          IONOS_SFTP_HOST: ${{ secrets.IONOS_SFTP_HOST }}
+          IONOS_SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
+          IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
+          IONOS_SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          for name in IONOS_SFTP_HOST IONOS_SFTP_PORT IONOS_SFTP_USER IONOS_SFTP_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required GitHub Actions secret $name is not configured."
+              exit 1
+            fi
+          done
 
       - name: Prepare deployment package
         env:
@@ -83,7 +94,7 @@ jobs:
           quit
           EOF
 
-      - name: Run database migrations and commission scheduler
+      - name: Run protected commission scheduler smoke test
         env:
           IONOS_SOURCE_SECRET: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |

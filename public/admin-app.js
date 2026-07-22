@@ -4,6 +4,8 @@ const API_BASE = '/api';
 let activeEditUserId = null;
 let activeReplyTicketId = null;
 let globalUsersList = [];
+let globalDepositsList = [];
+let globalPayoutsList = [];
 let globalAuditLog = [];
 
 function escapeAdminUi(value) { const node = document.createElement('div'); node.textContent = String(value ?? ''); return node.innerHTML; }
@@ -107,9 +109,11 @@ async function fetchActiveTabDetails(tabId) {
             renderUsersTable(users);
         } else if (tabId === 'deposits') {
             const deposits = await adminRequest('/admin/deposits');
+            globalDepositsList = Array.isArray(deposits) ? deposits : [];
             renderDepositsTable(deposits);
         } else if (tabId === 'payouts') {
             const payouts = await adminRequest('/admin/payouts');
+            globalPayoutsList = Array.isArray(payouts) ? payouts : [];
             renderPayoutsTable(payouts);
         } else if (tabId === 'tickets') {
             const tickets = await adminRequest('/admin/tickets');
@@ -492,7 +496,7 @@ function renderUsersTable(serverUsers) {
 
     // Pre-calculate referral counts dynamically based on the current list of users
     allUsers = allUsers.map(user => {
-        const refCount = allUsers.filter(u => u.referred_by === user.id).length;
+        const refCount = allUsers.filter(u => Number(u.referred_by) === Number(user.id)).length;
         return {
             ...user,
             referral_count: refCount
@@ -524,6 +528,10 @@ function renderUsersTable(serverUsers) {
         allUsers = allUsers.filter(u => (u.status || 'Active') === 'Active');
     } else if (filterVal === 'suspended') {
         allUsers = allUsers.filter(u => u.status === 'Suspended');
+    } else if (filterVal === 'hold') {
+        allUsers = allUsers.filter(u => u.status === 'Hold');
+    } else if (filterVal === 'under-review') {
+        allUsers = allUsers.filter(u => u.status === 'Under Review');
     }
 
     // 3. Sorting
@@ -537,6 +545,11 @@ function renderUsersTable(serverUsers) {
         allUsers.sort((a, b) => b.referral_count - a.referral_count);
     }
 
+    if (allUsers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#94a3b8;">No users match the selected filters.</td></tr>';
+        return;
+    }
+
     tbody.innerHTML = allUsers.map(user => {
         const status = user.status || 'Active';
         
@@ -546,42 +559,43 @@ function renderUsersTable(serverUsers) {
         if (status === 'Hold') { statusColor = '#f59e0b'; statusBg = 'rgba(245, 158, 11, 0.15)'; }
         if (status === 'Under Review') { statusColor = '#3b82f6'; statusBg = 'rgba(59, 130, 246, 0.15)'; }
 
-        // Escape quotes
-        const safeName = (user.name || '').replace(/'/g, "\\'");
-        const safeEmail = (user.email || '').replace(/'/g, "\\'");
-        const safeStatus = status.replace(/'/g, "\\'");
+        const safeName = escapeUi(user.name || 'User');
+        const safeEmail = escapeUi(user.email || '');
+        const safeStatus = escapeUi(status);
+        const safeInitials = escapeUi(user.name ? user.name.substring(0, 2).toUpperCase() : 'U');
+        const numericId = Number(user.id);
 
         return `
         <tr class="admin-user-row">
-            <td class="admin-user-identity" data-label="User" style="cursor: pointer;" title="Click to view referral members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')">
+            <td class="admin-user-identity" data-label="User" style="cursor: pointer;" title="Click to view referral members" onclick="viewReferredMembers(${numericId})">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: white;">
-                        ${user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                        ${safeInitials}
                     </div>
                     <div>
                         <div style="font-weight:600; color:#f1f5f9; display: flex; align-items: center; gap: 0.25rem;">
-                            <span>${user.name}</span>
+                            <span>${safeName}</span>
                             <span class="material-symbols-outlined" style="font-size: 0.85rem; color: #94a3b8;">open_in_new</span>
                         </div>
-                        <div style="font-size:0.75rem; color:#94a3b8;">${user.email}</div>
+                        <div style="font-size:0.75rem; color:#94a3b8;">${safeEmail}</div>
                     </div>
                 </div>
             </td>
             <td class="admin-user-balance" data-label="Balance" style="font-weight:700; color:#10b981;">${formatUSD(user.balance)}</td>
             <td class="admin-user-referrals" data-label="Referrals">
-                <span onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="cursor: pointer; background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;">
+                <span onclick="viewReferredMembers(${numericId})" style="cursor: pointer; background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;">
                     <span class="material-symbols-outlined" style="font-size: 0.85rem;">group</span>
                     <span>${user.referral_count} referred</span>
                 </span>
             </td>
-            <td class="admin-user-status" data-label="Account Status"><span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${status}</span></td>
+            <td class="admin-user-status" data-label="Account Status"><span style="background-color: ${statusBg}; color: ${statusColor}; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">${safeStatus}</span></td>
             <td class="admin-user-actions-cell" data-label="Actions">
                 <div class="admin-user-actions" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-                    <button class="admin-user-action" data-action-label="Referrals" aria-label="View referred members" title="View Referred Members" onclick="viewReferredMembers(${user.id}, '${safeName}', '${user.referral_code || ''}')" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
-                    <button class="admin-user-action" data-action-label="Edit User" aria-label="Edit profile and status" title="Edit Profile/Status" onclick="openEditUserModal(${user.id}, '${safeName}', '${safeEmail}', '${user.role || 'user'}', '${safeStatus}')" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
-                    <button class="admin-user-action" data-action-label="Balance" aria-label="Edit user balance" title="Edit Balance" onclick="openEditBalanceModal(${user.id}, '${safeName}', ${user.balance})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
-                    <button class="admin-user-action" data-action-label="Send Alert" aria-label="Send alert or ticket" title="Send Alert/Ticket" onclick="openSendAlertModal(${user.id}, '${safeName}')" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
-                    <button class="admin-user-action" data-action-label="Delete" aria-label="Delete user" title="Delete User" onclick="adminDeleteUser(${user.id}, '${safeName}')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
+                    <button class="admin-user-action" data-action-label="Referrals" aria-label="View referred members" title="View Referred Members" onclick="viewReferredMembers(${numericId})" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
+                    <button class="admin-user-action" data-action-label="Edit User" aria-label="Edit profile and status" title="Edit Profile/Status" onclick="openEditUserModal(${numericId})" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
+                    <button class="admin-user-action" data-action-label="Balance" aria-label="Edit user balance" title="Edit Balance" onclick="openEditBalanceModal(${numericId})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
+                    <button class="admin-user-action" data-action-label="Send Alert" aria-label="Send alert or ticket" title="Send Alert/Ticket" onclick="openSendAlertModal(${numericId})" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
+                    <button class="admin-user-action" data-action-label="Delete" aria-label="Delete user" title="Delete User" onclick="adminDeleteUser(${numericId})" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
                 </div>
             </td>
         </tr>
@@ -706,12 +720,25 @@ function renderDepositsTable(deposits) {
         }, 1500);
     }
 
-    if (deposits.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2rem; color:#64748b; font-size: 0.9rem;"><span class="material-symbols-outlined" style="display:block; font-size: 2rem; margin-bottom: 0.5rem; color: #475569;">inbox</span>No pending or processed deposits found yet.</td></tr>`;
+    const query = document.getElementById('deposit-search-input')?.value.toLowerCase().trim() || '';
+    const statusFilter = document.getElementById('deposit-status-filter')?.value || 'all';
+    const filteredDeposits = deposits.filter(dep => {
+        if (!dep) return false;
+        const normalizedStatus = String(dep.status || 'Pending').toLowerCase();
+        const statusMatches = statusFilter === 'all'
+            || (statusFilter === 'rejected' ? ['failed', 'rejected'].includes(normalizedStatus) : normalizedStatus === statusFilter);
+        const searchable = [dep.user_name, dep.user_email, dep.txn_id, dep.id, dep.amount].join(' ').toLowerCase();
+        return statusMatches && (!query || searchable.includes(query));
+    });
+    const count = document.getElementById('deposit-filter-count');
+    if (count) count.textContent = `${filteredDeposits.length} of ${deposits.length}`;
+
+    if (filteredDeposits.length === 0) {
+        tbody.innerHTML = `<tr class="admin-deposits-empty"><td colspan="7" style="text-align:center; padding: 2rem; color:#64748b; font-size: 0.9rem;"><span class="material-symbols-outlined" style="display:block; font-size: 2rem; margin-bottom: 0.5rem; color: #475569;">inbox</span>No deposits match your search or filter.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = deposits.map(dep => {
+    tbody.innerHTML = filteredDeposits.map(dep => {
         if (!dep) return '';
         const depId = dep.id || 0;
         const depStatus = dep.status || 'Pending';
@@ -722,35 +749,44 @@ function renderDepositsTable(deposits) {
         const screenshotPath = dep.screenshot_path ? escapeUi(dep.screenshot_path) : '';
         const depDate = escapeUi(dep.date || '');
 
-        let actionCell = `<span style="color:#64748b; font-size:0.8rem;">Processed</span>`;
+        let actionCell = `<button type="button" class="deposit-action-btn revise" onclick="reviseDeposit(${Number(depId)}, this)"><span class="material-symbols-outlined">history</span>Revise</button>`;
         if (depStatus === 'Pending') {
             actionCell = `
-                <div style="display:flex; gap:0.5rem;">
-                    <button type="button" onclick="verifyDeposit(${depId}, 'Approve', this)" style="background-color:#10b981; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Approve</button>
-                    <button type="button" onclick="verifyDeposit(${depId}, 'Reject', this)" style="background-color:#ef4444; color:white; padding:0.35rem 0.7rem; border-radius:6px; font-size:0.75rem; font-weight:700; border:none; cursor:pointer;">Reject</button>
+                <div class="deposit-action-group">
+                    <button type="button" class="deposit-action-btn approve" onclick="verifyDeposit(${Number(depId)}, 'Approve', this)">Approve</button>
+                    <button type="button" class="deposit-action-btn reject" onclick="verifyDeposit(${Number(depId)}, 'Reject', this)">Reject</button>
                 </div>
             `;
         }
 
         return `
-            <tr>
-                <td style="white-space:nowrap;">${depDate}</td>
-                <td style="font-weight:600; color:#f1f5f9;">${userName}</td>
-                <td style="font-weight:700; color:#3b82f6;">$${formattedAmount}</td>
-                <td style="font-family: monospace; white-space: nowrap;">
+            <tr class="admin-deposit-row">
+                <td data-label="Date" style="white-space:nowrap;">${depDate}</td>
+                <td data-label="User" style="font-weight:600; color:#f1f5f9;">${userName}</td>
+                <td data-label="Amount" style="font-weight:700; color:#3b82f6;">$${formattedAmount}</td>
+                <td data-label="Deposit ID" style="font-family: monospace; white-space: nowrap;">
                     <span>${txnId}</span>
-                    <button type="button" onclick="copyToClipboard('${txnId}')" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Transaction ID">
+                    <button type="button" onclick="copyDepositReference(${Number(depId)})" style="background: none; border: none; color: #3b82f6; cursor: pointer; display: inline-flex; align-items: center; vertical-align: middle; padding: 0; margin-left: 0.35rem;" title="Copy Transaction ID">
                         <span class="material-symbols-outlined" style="font-size: 13px;">content_copy</span>
                     </button>
                 </td>
-                <td>
+                <td data-label="Receipt">
                     ${screenshotPath ? `<a href="${screenshotPath}" target="_blank" style="color: #3b82f6; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem;"><span class="material-symbols-outlined" style="font-size: 1rem;">image</span>View Screenshot</a>` : `<span style="color: #64748b; font-size: 0.8rem;">No screenshot</span>`}
                 </td>
-                <td><span class="status-badge-lbl ${depStatus.toLowerCase()}">${escapeUi(depStatus)}</span></td>
-                <td>${actionCell}</td>
+                <td data-label="Status"><span class="status-badge-lbl ${depStatus.toLowerCase()}">${escapeUi(depStatus === 'Failed' ? 'Rejected' : depStatus)}</span></td>
+                <td data-label="Actions">${actionCell}</td>
             </tr>
         `;
     }).join('');
+}
+
+function triggerDepositsFilter() {
+    renderDepositsTable(globalDepositsList);
+}
+
+function copyDepositReference(depositId) {
+    const deposit = globalDepositsList.find(item => Number(item.id) === Number(depositId));
+    if (deposit?.txn_id) copyToClipboard(String(deposit.txn_id));
 }
 
 function openManualDepositModal() {
@@ -810,9 +846,10 @@ async function submitManualDeposit() {
 function renderPayoutsTable(payouts) {
     const tbody = document.getElementById('admin-payouts-table-body');
     if (!tbody) return;
+    if (!Array.isArray(payouts)) payouts = [];
 
     if (payouts.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b;">No withdrawal requests found.</td></tr>`;
+        tbody.innerHTML = `<tr class="admin-payouts-empty"><td colspan="7" style="text-align:center; padding:2rem; color:#64748b;"><span class="material-symbols-outlined" style="display:block;font-size:2rem;margin-bottom:.5rem;">payments</span>No withdrawal requests found.</td></tr>`;
         return;
     }
 
@@ -820,34 +857,45 @@ function renderPayoutsTable(payouts) {
         let actionCell = `<span style="color:#64748b; font-size:0.8rem;">Processed</span>`;
         if (po.status === 'Pending') {
             actionCell = `
-                <button onclick="verifyPayout(${po.id})" style="background-color:#3b82f6; color:white; padding:0.35rem 0.75rem; border-radius:6px; font-size:0.75rem; font-weight:600;">Confirm Payout</button>
+                <button type="button" class="payout-confirm-btn" onclick="verifyPayout(${Number(po.id)}, this)">Confirm Payout</button>
             `;
         }
 
-        const walletAddress = po.wallet_address || 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb';
+        const payoutId = Number(po.id);
+        const walletAddress = String(po.wallet_address || 'Address unavailable');
+        const safeWalletAddress = escapeUi(walletAddress);
+        const reference = String(po.ref || 'N/A');
+        const safeReference = escapeUi(reference);
+        const shortReference = escapeUi(reference.length > 16 ? `${reference.substring(0, 16)}…` : reference);
         const copyButton = `
-            <button onclick="navigator.clipboard.writeText('${walletAddress}'); showToast('Wallet address copied!')" style="background: none; border: none; color: #fbbf24; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; margin-top: 0.25rem; padding: 0;">
+            <button type="button" onclick="copyPayoutWallet(${payoutId})" class="payout-copy-btn">
                 <span class="material-symbols-outlined" style="font-size: 0.95rem;">content_copy</span> Copy Address
             </button>
         `;
 
         return `
-            <tr>
-                <td>${po.date}</td>
-                <td style="font-weight:600; color:#f1f5f9;">${escapeUi(po.user_name || 'User #' + po.user_id)}</td>
-                <td>
+            <tr class="admin-payout-row">
+                <td data-label="Date">${escapeUi(po.date || '')}</td>
+                <td data-label="User" style="font-weight:600; color:#f1f5f9;">${escapeUi(po.user_name || 'User #' + po.user_id)}</td>
+                <td data-label="Wallet Address">
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.15rem;">
-                        <span style="font-size:0.8rem; color:#cbd5e1; font-family:monospace; word-break:break-all;">${walletAddress}</span>
+                        <span class="payout-wallet-value">${safeWalletAddress}</span>
                         ${copyButton}
                     </div>
                 </td>
-                <td style="font-weight:700; color:#ef4444;">$${Number(po.amount || 0).toFixed(2)}</td>
-                <td class="deposit-tx-hash" title="${po.ref}">${po.ref.substring(0, 16)}...</td>
-                <td><span class="status-badge-lbl ${po.status.toLowerCase()}">${po.status}</span></td>
-                <td>${actionCell}</td>
+                <td data-label="Amount" style="font-weight:700; color:#ef4444;">$${Number(po.amount || 0).toFixed(2)}</td>
+                <td data-label="Reference" class="deposit-tx-hash" title="${safeReference}">${shortReference}</td>
+                <td data-label="Status"><span class="status-badge-lbl ${escapeUi(String(po.status || '').toLowerCase())}">${escapeUi(po.status || '')}</span></td>
+                <td data-label="Action">${actionCell}</td>
             </tr>
         `;
     }).join('');
+}
+
+function copyPayoutWallet(payoutId) {
+    const payout = globalPayoutsList.find(item => Number(item.id) === Number(payoutId));
+    if (payout?.wallet_address) copyToClipboard(String(payout.wallet_address), 'Wallet address copied!');
+    else showToast('Wallet address is unavailable.');
 }
 
 let activeChatUserId = null;
@@ -918,7 +966,11 @@ function renderTicketsTable(tickets) {
 // Edit balance Modal handlers
 let activeEditUserCurrentBalance = 0;
 
-function openEditBalanceModal(userId, userName, currentBalance) {
+function openEditBalanceModal(userId) {
+    const user = findManagedUser(userId);
+    if (!user) { showToast('User details are no longer available.'); return; }
+    const userName = user.name || user.email;
+    const currentBalance = Number(user.balance) || 0;
     activeEditUserId = userId;
     activeEditUserCurrentBalance = parseFloat(currentBalance) || 0;
     
@@ -991,18 +1043,47 @@ async function verifyDeposit(depositId, action, button = null) {
     }
 }
 
-// Verify Payout approvals
-async function verifyPayout(transactionId) {
+async function reviseDeposit(depositId, button = null) {
+    const deposit = globalDepositsList.find(item => Number(item.id) === Number(depositId));
+    if (!deposit) { showToast('Deposit details are no longer available.'); return; }
+    const status = deposit.status === 'Failed' ? 'Rejected' : deposit.status;
+    const warning = status === 'Confirmed'
+        ? 'This will reopen the deposit and roll back its credited amount. Continue?'
+        : 'Reopen this rejected deposit for admin review?';
+    if (!confirm(warning)) return;
+    const originalLabel = button?.innerHTML;
+    if (button) { button.disabled = true; button.textContent = 'Reopening…'; }
     try {
-        await adminRequest('/admin/payouts/verify', {
+        const result = await adminRequest('/admin/deposits/revise', {
+            method: 'POST',
+            body: JSON.stringify({ depositId })
+        });
+        showToast(result.message || 'Deposit reopened for review.');
+        await fetchActiveTabDetails('deposits');
+        await fetchActiveTabDetails('overview');
+    } catch (error) {
+        alert(error.message || 'Unable to revise this deposit.');
+        if (button) { button.disabled = false; button.innerHTML = originalLabel; }
+    }
+}
+
+// Verify Payout approvals
+async function verifyPayout(transactionId, button = null) {
+    if (!confirm('Confirm that this payout has been completed?')) return;
+    const originalLabel = button?.textContent;
+    if (button) { button.disabled = true; button.textContent = 'Confirming…'; }
+    try {
+        const result = await adminRequest('/admin/payouts/verify', {
             method: 'POST',
             body: JSON.stringify({ transactionId })
         });
 
-        showToast('Payout confirmed successfully!');
+        showToast(result.message || 'Payout confirmed successfully!');
         await fetchActiveTabDetails('payouts');
+        await fetchActiveTabDetails('overview');
     } catch (e) {
         alert(e.message || 'Payout confirm failed');
+        if (button) { button.disabled = false; button.textContent = originalLabel; }
     }
 }
 
@@ -1359,14 +1440,20 @@ function openAddUserModal() {
     document.getElementById('user-mgmt-modal').classList.add('active');
 }
 
-function openEditUserModal(id, name, email, role, status) {
+function findManagedUser(id) {
+    return globalUsersList.find(user => Number(user.id) === Number(id));
+}
+
+function openEditUserModal(id) {
+    const user = findManagedUser(id);
+    if (!user) { showToast('User details are no longer available. Refreshing list.'); fetchActiveTabDetails('users'); return; }
     document.getElementById('user-mgmt-title').textContent = 'Edit User Profile';
     document.getElementById('user-mgmt-id').value = id;
-    document.getElementById('user-mgmt-name').value = name;
-    document.getElementById('user-mgmt-email').value = email;
+    document.getElementById('user-mgmt-name').value = user.name || '';
+    document.getElementById('user-mgmt-email').value = user.email || '';
     document.getElementById('user-mgmt-password').value = '';
-    document.getElementById('user-mgmt-role').value = role || 'user';
-    document.getElementById('user-mgmt-status').value = status || 'Active';
+    document.getElementById('user-mgmt-role').value = user.role || 'user';
+    document.getElementById('user-mgmt-status').value = user.status || 'Active';
     document.getElementById('user-mgmt-modal').classList.add('active');
 }
 
@@ -1378,7 +1465,6 @@ async function saveUserMgmt() {
     const id = document.getElementById('user-mgmt-id').value;
     const name = document.getElementById('user-mgmt-name').value.trim();
     const email = document.getElementById('user-mgmt-email').value.trim();
-    const role = document.getElementById('user-mgmt-role').value;
     const status = document.getElementById('user-mgmt-status').value;
 
     if (!name || !email) {
@@ -1386,15 +1472,21 @@ async function saveUserMgmt() {
         return;
     }
 
+    const password = document.getElementById('user-mgmt-password').value;
+    if ((!id || password) && password.length < 8) {
+        alert('Password must be at least 8 characters.');
+        return;
+    }
+
     if (!id) {
         try {
-            const result = await adminRequest('/admin/users/create', { method:'POST', body:JSON.stringify({ name, email, password:document.getElementById('user-mgmt-password').value }) });
+            const result = await adminRequest('/admin/users/create', { method:'POST', body:JSON.stringify({ name, email, password }) });
             showToast(result.message);
         } catch (error) { alert(error.message); return; }
     } else {
         const userId = parseInt(id);
         try {
-            const result = await adminRequest('/admin/users/profile', { method:'POST', body:JSON.stringify({ userId, name, email, status, password:document.getElementById('user-mgmt-password').value }) });
+            const result = await adminRequest('/admin/users/profile', { method:'POST', body:JSON.stringify({ userId, name, email, status, password }) });
             showToast(result.message || 'User details updated!');
         } catch (error) { showToast(error.message || 'Unable to update user details.'); return; }
     }
@@ -1404,7 +1496,10 @@ async function saveUserMgmt() {
     await fetchActiveTabDetails('users');
 }
 
-async function adminDeleteUser(id, name) {
+async function adminDeleteUser(id) {
+    const user = findManagedUser(id);
+    if (!user) { showToast('User details are no longer available.'); return; }
+    const name = user.name || `#${id}`;
     if (!confirm(`Are you absolutely sure you want to completely delete user "${name}"? This action cannot be undone.`)) return;
     try {
         const result = await adminRequest('/admin/users/delete', { method:'POST', body:JSON.stringify({ userId:id }) });
@@ -1415,9 +1510,11 @@ async function adminDeleteUser(id, name) {
     }
 }
 
-function openSendAlertModal(id, name) {
+function openSendAlertModal(id) {
+    const user = findManagedUser(id);
+    if (!user) { showToast('User details are no longer available.'); return; }
     document.getElementById('alert-user-id').value = id;
-    document.getElementById('alert-user-info').textContent = `Sending to User: ${name}`;
+    document.getElementById('alert-user-info').textContent = `Sending to User: ${user.name || user.email}`;
     document.getElementById('alert-subject').value = '';
     document.getElementById('alert-message').value = '';
     document.getElementById('send-alert-modal').classList.add('active');
@@ -1446,22 +1543,24 @@ async function sendUserAlert() {
     }
 }
 
-function viewReferredMembers(userId, name, refCode) {
-    document.getElementById('ref-modal-title').textContent = `Members Referred by ${name}`;
+function viewReferredMembers(userId) {
+    const user = findManagedUser(userId);
+    if (!user) { showToast('User details are no longer available.'); return; }
+    document.getElementById('ref-modal-title').textContent = `Members Referred by ${user.name || user.email}`;
     const listContainer = document.getElementById('ref-members-list-container');
     if (!listContainer) return;
 
     // Filter globalUsersList for users whose referred_by matches this user's ID
-    const referred = globalUsersList.filter(u => u.referred_by === userId);
+    const referred = globalUsersList.filter(u => Number(u.referred_by) === Number(userId));
     
     if (referred.length === 0) {
-        listContainer.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:0.85rem; padding: 1.5rem 0;">No members referred yet (Code: ${refCode || 'N/A'}).</p>`;
+        listContainer.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:0.85rem; padding: 1.5rem 0;">No members referred yet (Code: ${escapeUi(user.referral_code || 'N/A')}).</p>`;
     } else {
         listContainer.innerHTML = referred.map(u => `
             <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0.5rem; border-bottom:1px solid #1e2538;">
                 <div>
-                    <div style="font-weight:600; color:#f8fafc; font-size:0.85rem;">${u.name}</div>
-                    <div style="font-size:0.75rem; color:#94a3b8;">${u.email}</div>
+                    <div style="font-weight:600; color:#f8fafc; font-size:0.85rem;">${escapeUi(u.name || 'User')}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">${escapeUi(u.email || '')}</div>
                 </div>
                 <div style="font-size:0.75rem; background-color:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:0.2rem 0.5rem; border-radius:4px;">
                     Balance: ${formatUSD(u.balance)}

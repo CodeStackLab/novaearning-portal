@@ -313,17 +313,33 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         }
 
         if ($action === 'users' && $subaction === 'balance') {
-            $targetUserId = $body['userId'] ?? null;
+            $targetUserId = (int)($body['userId'] ?? 0);
             $newBalance = $body['newBalance'] ?? null;
 
-            if ($targetUserId === null || $newBalance === null || !is_numeric($newBalance) || $newBalance < 0) {
+            if ($targetUserId < 1 || $newBalance === null || !is_numeric($newBalance) || !is_finite((float)$newBalance) || (float)$newBalance < 0 || (float)$newBalance > 9999999999999.99) {
                 sendJson(['message' => 'Valid user ID and non-negative balance are required'], 400);
             }
-
-            $stmt = $pdo->prepare('SELECT balance FROM users WHERE id = ?'); $stmt->execute([$targetUserId]); $beforeBalance = (float)($stmt->fetch()['balance'] ?? 0);
-            $stmt = $pdo->prepare('UPDATE users SET balance = ? WHERE id = ?');
-            $stmt->execute([(float)$newBalance, $targetUserId]);
-            recordBalanceLedger($pdo, $targetUserId, 'ADMIN-' . $userId . '-' . time(), 'admin_adjustment', (float)$newBalance - $beforeBalance, $beforeBalance, 'Administrative balance adjustment');
+            ensurePlatformFeatureTables($pdo);
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare("SELECT balance FROM users WHERE id = ? AND role = 'user' FOR UPDATE");
+                $stmt->execute([$targetUserId]);
+                $target = $stmt->fetch();
+                if (!$target) {
+                    $pdo->rollBack();
+                    sendJson(['message' => 'User not found or protected.'], 404);
+                }
+                $beforeBalance = (float)$target['balance'];
+                $normalizedBalance = round((float)$newBalance, 2);
+                $stmt = $pdo->prepare("UPDATE users SET balance = ? WHERE id = ? AND role = 'user'");
+                $stmt->execute([$normalizedBalance, $targetUserId]);
+                $ledger = $pdo->prepare('INSERT INTO balance_ledger (user_id, transaction_ref, entry_type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $ledger->execute([$targetUserId, 'ADMIN-' . $userId . '-' . bin2hex(random_bytes(8)), 'admin_adjustment', $normalizedBalance - $beforeBalance, $beforeBalance, $normalizedBalance, 'Administrative balance adjustment']);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to update user balance.'], 500);
+            }
             auditAdminAction($pdo, $userId, 'user.balance.updated', 'user', $targetUserId, ['newBalance' => (float)$newBalance]);
             sendJson(['message' => 'User balance updated successfully.']);
         }
@@ -332,7 +348,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $name = trim($body['name'] ?? '');
             $email = strtolower(trim($body['email'] ?? ''));
             $password = (string)($body['password'] ?? '');
-            if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) sendJson(['message' => 'Name, valid email, and password of at least 8 characters are required.'], 400);
+            if ($name === '' || strlen($name) > 255 || strlen($email) > 255 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8 || strlen($password) > 4096) sendJson(['message' => 'Name, valid email, and password of at least 8 characters are required.'], 400);
             $code = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 4)) . random_int(1000, 9999);
             try {
                 $stmt = $pdo->prepare("INSERT INTO users (name,email,username,password,balance,earnings,active_investments,role,referral_code) VALUES (?,?,?,?,0,0,0,'user',?)");
@@ -353,7 +369,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $newPassword = (string)($body['password'] ?? '');
             $status = trim((string)($body['status'] ?? 'Active'));
 
-            if ($targetUserId < 1 || $name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if ($targetUserId < 1 || $name === '' || strlen($name) > 255 || strlen($email) > 255 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 sendJson(['message' => 'Valid user, name, and email are required.'], 400);
             }
             if (!in_array($status, ['Active', 'Suspended', 'Hold', 'Under Review'], true)) {
@@ -371,7 +387,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             if ($stmt->fetch()) sendJson(['message' => 'This email address is already in use.'], 409);
 
             if ($newPassword !== '') {
-                if (strlen($newPassword) < 6) sendJson(['message' => 'Password must be at least 6 characters.'], 400);
+                if (strlen($newPassword) < 8 || strlen($newPassword) > 4096) sendJson(['message' => 'Password must be at least 8 characters.'], 400);
                 $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, username = ?, password = ?, account_status = ? WHERE id = ? AND role = ?');
                 $stmt->execute([$name, $email, $email, password_hash($newPassword, PASSWORD_BCRYPT), $status, $targetUserId, 'user']);
             } else {
@@ -404,15 +420,85 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt->execute([$targetUserId]);
             $target = $stmt->fetch();
             if (!$target) sendJson(['message' => 'User not found or protected.'], 404);
+            ensurePlatformFeatureTables($pdo);
+            $pdo->beginTransaction();
             try {
+                // These operational tables intentionally support older installs without
+                // foreign keys, so remove their user-owned rows explicitly.
+                foreach (['in_app_notifications', 'balance_ledger', 'login_activity'] as $table) {
+                    $cleanup = $pdo->prepare("DELETE FROM {$table} WHERE user_id = ?");
+                    $cleanup->execute([$targetUserId]);
+                }
                 $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'user'");
                 $stmt->execute([$targetUserId]);
-                if (!$stmt->rowCount()) sendJson(['message' => 'User could not be deleted.'], 409);
+                if (!$stmt->rowCount()) {
+                    $pdo->rollBack();
+                    sendJson(['message' => 'User could not be deleted.'], 409);
+                }
+                $pdo->commit();
                 auditAdminAction($pdo, $userId, 'user.deleted', 'user', $targetUserId, ['email' => $target['email']]);
                 sendJson(['message' => 'User account and associated records deleted.']);
-            } catch (PDOException $e) {
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
                 sendJson(['message' => 'User has protected linked records and cannot be deleted. Suspend the account instead.'], 409);
             }
+        }
+
+        if ($action === 'deposits' && $subaction === 'revise') {
+            $depositId = (int)($body['depositId'] ?? 0);
+            if ($depositId < 1) sendJson(['message' => 'Valid deposit ID is required.'], 400);
+            ensurePlatformFeatureTables($pdo);
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare('SELECT * FROM deposits WHERE id = ? FOR UPDATE');
+                $stmt->execute([$depositId]);
+                $deposit = $stmt->fetch();
+                if (!$deposit) {
+                    $pdo->rollBack();
+                    sendJson(['message' => 'Deposit not found.'], 404);
+                }
+                if ($deposit['status'] === 'Pending') {
+                    $pdo->rollBack();
+                    sendJson(['message' => 'This deposit is already pending review.'], 409);
+                }
+                if (!in_array($deposit['status'], ['Confirmed', 'Failed', 'Rejected'], true)) {
+                    $pdo->rollBack();
+                    sendJson(['message' => 'This deposit status cannot be revised.'], 409);
+                }
+
+                if ($deposit['status'] === 'Confirmed') {
+                    $userStmt = $pdo->prepare('SELECT balance, referred_by FROM users WHERE id = ? FOR UPDATE');
+                    $userStmt->execute([$deposit['user_id']]);
+                    $depositUser = $userStmt->fetch();
+                    if (!$depositUser) throw new Exception('Deposit user was not found');
+                    if (!empty($deposit['plan_name']) || !empty($depositUser['referred_by'])) {
+                        $pdo->rollBack();
+                        sendJson(['message' => 'This confirmed deposit has linked investment or referral rewards. Reverse those linked records first, then revise the deposit.'], 409);
+                    }
+                    if ((float)$depositUser['balance'] < (float)$deposit['amount']) {
+                        $pdo->rollBack();
+                        sendJson(['message' => 'The credited funds have already been used. Restore sufficient user balance before revising this deposit.'], 409);
+                    }
+                    $deduct = $pdo->prepare('UPDATE users SET balance = balance - ? WHERE id = ? AND balance >= ?');
+                    $deduct->execute([$deposit['amount'], $deposit['user_id'], $deposit['amount']]);
+                    if ($deduct->rowCount() !== 1) throw new Exception('Unable to roll back deposit credit');
+                    $ledger = $pdo->prepare("DELETE FROM balance_ledger WHERE user_id = ? AND transaction_ref = ? AND entry_type = 'deposit_credit'");
+                    $ledger->execute([$deposit['user_id'], $deposit['txn_id']]);
+                }
+
+                $stmt = $pdo->prepare("UPDATE deposits SET status = 'Pending' WHERE id = ?");
+                $stmt->execute([$depositId]);
+                $stmt = $pdo->prepare("UPDATE transactions SET status = 'Pending' WHERE ref = ? AND type = 'Deposit'");
+                $stmt->execute([$deposit['txn_id']]);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                sendJson(['message' => 'Unable to revise this deposit safely.'], 500);
+            }
+            auditAdminAction($pdo, $userId, 'deposit.reopened', 'deposit', $depositId, ['previousStatus' => $deposit['status'], 'amount' => (float)$deposit['amount']]);
+            $amountText = number_format((float)$deposit['amount'], 2);
+            notifyUserById($pdo, $deposit['user_id'], 'Deposit returned to review', '<p>Your deposit of <strong>$' . $amountText . '</strong> has been reopened for administrative review.</p><p><strong>Reference:</strong> ' . htmlspecialchars($deposit['txn_id']) . '</p>', 'deposit');
+            sendJson(['message' => $deposit['status'] === 'Confirmed' ? 'Deposit credit rolled back and reopened for review.' : 'Rejected deposit reopened for review.']);
         }
 
         if ($action === 'deposits' && $subaction === 'verify') {
