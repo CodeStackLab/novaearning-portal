@@ -61,6 +61,54 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             sendJson($stmt->fetchAll());
         }
 
+        if ($action === 'investments' || $action === 'user-investments') {
+            $stmt = $pdo->query('SELECT investments.*, users.name AS user_name, users.email AS user_email FROM investments LEFT JOIN users ON investments.user_id = users.id ORDER BY investments.id DESC');
+            sendJson($stmt->fetchAll());
+        }
+
+        if ($action === 'user-financial-overview') {
+            $targetUserId = (int)($_GET['user_id'] ?? 0);
+            if ($targetUserId <= 0) {
+                sendJson(['message' => 'Valid user_id parameter required'], 400);
+            }
+            $stmt = $pdo->prepare('SELECT id, name, email, balance, earnings, active_investments, account_status, created_at, referral_code FROM users WHERE id = ?');
+            $stmt->execute([$targetUserId]);
+            $user = $stmt->fetch();
+            if (!$user) sendJson(['message' => 'User not found'], 404);
+
+            $stmt = $pdo->prepare("SELECT SUM(amount) as dSum FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+            $stmt->execute([$targetUserId]);
+            $totalDeposits = (float)($stmt->fetch()['dSum'] ?? 0);
+
+            $stmt = $pdo->prepare("SELECT SUM(amount) as wSum FROM transactions WHERE user_id = ? AND type = 'Withdrawal' AND status = 'Confirmed'");
+            $stmt->execute([$targetUserId]);
+            $totalWithdrawals = (float)($stmt->fetch()['wSum'] ?? 0);
+
+            $stmt = $pdo->prepare("SELECT * FROM investments WHERE user_id = ? ORDER BY id DESC");
+            $stmt->execute([$targetUserId]);
+            $userInvestments = $stmt->fetchAll();
+
+            $activeCapital = 0;
+            foreach ($userInvestments as $inv) {
+                if ($inv['status'] === 'Active') {
+                    $activeCapital += (float)$inv['amount'];
+                }
+            }
+
+            $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 100");
+            $stmt->execute([$targetUserId]);
+            $transactions = $stmt->fetchAll();
+
+            sendJson([
+                'user' => $user,
+                'totalDeposits' => $totalDeposits,
+                'totalWithdrawals' => $totalWithdrawals,
+                'activeCapital' => $activeCapital,
+                'investments' => $userInvestments,
+                'transactions' => $transactions
+            ]);
+        }
+
         if ($action === 'settings' && $subaction === 'referrals') {
             sendJson([
                 'firstDepositBonusPct' => getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100),
@@ -939,6 +987,107 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             auditAdminAction($pdo, $userId, 'settings.email_change', 'admin', $userId, ['new_email' => $newEmail]);
             sendJson(['message' => 'Admin email address updated successfully!']);
+        }
+
+        if ($action === 'investments' && $subaction === 'update-status') {
+            $investmentId = (int)($body['investmentId'] ?? $body['id'] ?? 0);
+            $newStatus = trim($body['status'] ?? '');
+            $validStatuses = ['Active', 'Suspended', 'Hold', 'Completed'];
+            if ($investmentId <= 0 || !in_array($newStatus, $validStatuses, true)) {
+                sendJson(['message' => 'Invalid investment ID or status.'], 400);
+            }
+
+            $stmt = $pdo->prepare('SELECT * FROM investments WHERE id = ?');
+            $stmt->execute([$investmentId]);
+            $inv = $stmt->fetch();
+            if (!$inv) sendJson(['message' => 'Investment not found.'], 404);
+
+            $oldStatus = $inv['status'];
+            $stmt = $pdo->prepare('UPDATE investments SET status = ? WHERE id = ?');
+            $stmt->execute([$newStatus, $investmentId]);
+
+            auditAdminAction($pdo, $userId, 'investment.status_update', 'investment', $investmentId, [
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'investment_name' => $inv['name']
+            ]);
+
+            $safeName = htmlspecialchars($inv['name']);
+            $subject = "Investment Status Updated: {$safeName}";
+            $contentHtml = "<p>Your investment <strong>{$safeName}</strong> (ID: #{$investmentId}) status has been changed from <strong>{$oldStatus}</strong> to <strong style='color:#0070f3;'>{$newStatus}</strong> by System Support.</p>";
+            if ($newStatus === 'Suspended') {
+                $contentHtml .= "<p style='color:#e53e3e;'>Earning cycles for this plan are temporarily suspended. Please contact support if you have questions.</p>";
+            } else if ($newStatus === 'Hold') {
+                $contentHtml .= "<p style='color:#dd6b20;'>Earnings for this plan are temporarily placed on hold.</p>";
+            } else if ($newStatus === 'Active') {
+                $contentHtml .= "<p style='color:#38a169;'>Your investment plan is now active and earning daily returns again!</p>";
+            }
+            notifyUserById($pdo, (int)$inv['user_id'], $subject, $contentHtml, 'investment');
+
+            sendJson(['message' => "Investment status updated to {$newStatus}."]);
+        }
+
+        if ($action === 'investments' && $subaction === 'edit') {
+            $investmentId = (int)($body['investmentId'] ?? $body['id'] ?? 0);
+            $amount = (float)($body['amount'] ?? 0);
+            $dailyProfitPct = (float)($body['dailyProfitPct'] ?? $body['daily_profit_pct'] ?? 0);
+            $durationDays = (int)($body['durationDays'] ?? $body['duration_days'] ?? 0);
+            $status = trim($body['status'] ?? 'Active');
+            $startDate = trim($body['startDate'] ?? $body['start_date'] ?? '');
+
+            if ($investmentId <= 0 || $amount <= 0 || $dailyProfitPct <= 0 || $durationDays <= 0) {
+                sendJson(['message' => 'Invalid edit parameters.'], 400);
+            }
+
+            $stmt = $pdo->prepare('SELECT * FROM investments WHERE id = ?');
+            $stmt->execute([$investmentId]);
+            $inv = $stmt->fetch();
+            if (!$inv) sendJson(['message' => 'Investment not found.'], 404);
+
+            $stmt = $pdo->prepare('UPDATE investments SET amount = ?, daily_profit_pct = ?, duration_days = ?, status = ?, start_date = ? WHERE id = ?');
+            $stmt->execute([$amount, $dailyProfitPct, $durationDays, $status, $startDate ?: $inv['start_date'], $investmentId]);
+
+            auditAdminAction($pdo, $userId, 'investment.edit', 'investment', $investmentId, [
+                'amount' => $amount,
+                'daily_profit_pct' => $dailyProfitPct,
+                'duration_days' => $durationDays,
+                'status' => $status
+            ]);
+
+            $safeName = htmlspecialchars($inv['name']);
+            $subject = "Investment Details Modified: {$safeName}";
+            $contentHtml = "<p>Your investment <strong>{$safeName}</strong> (ID: #{$investmentId}) details have been modified by Support:</p>"
+                . "<ul>"
+                . "<li><strong>Principal:</strong> \$" . number_format($amount, 2) . "</li>"
+                . "<li><strong>Daily Return Rate:</strong> {$dailyProfitPct}%</li>"
+                . "<li><strong>Duration:</strong> {$durationDays} Days</li>"
+                . "<li><strong>Status:</strong> {$status}</li>"
+                . "</ul>";
+            notifyUserById($pdo, (int)$inv['user_id'], $subject, $contentHtml, 'investment');
+
+            sendJson(['message' => 'Investment updated successfully.']);
+        }
+
+        if ($action === 'investments' && $subaction === 'delete') {
+            $investmentId = (int)($body['investmentId'] ?? $body['id'] ?? 0);
+            if ($investmentId <= 0) sendJson(['message' => 'Invalid investment ID.'], 400);
+
+            $stmt = $pdo->prepare('SELECT * FROM investments WHERE id = ?');
+            $stmt->execute([$investmentId]);
+            $inv = $stmt->fetch();
+            if (!$inv) sendJson(['message' => 'Investment not found.'], 404);
+
+            $stmt = $pdo->prepare('DELETE FROM investments WHERE id = ?');
+            $stmt->execute([$investmentId]);
+
+            auditAdminAction($pdo, $userId, 'investment.delete', 'investment', $investmentId, ['investment_name' => $inv['name']]);
+
+            $safeName = htmlspecialchars($inv['name']);
+            $subject = "Investment Plan Removed: {$safeName}";
+            $contentHtml = "<p>Your investment plan <strong>{$safeName}</strong> (ID: #{$investmentId}) has been removed by System Admin.</p>";
+            notifyUserById($pdo, (int)$inv['user_id'], $subject, $contentHtml, 'investment');
+
+            sendJson(['message' => 'Investment deleted successfully.']);
         }
     }
 

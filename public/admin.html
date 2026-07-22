@@ -66,6 +66,12 @@
                 </a>
             </li>
             <li>
+                <a href="#investments" class="sidebar-item-link" data-tab="investments">
+                    <span class="material-symbols-outlined sidebar-icon">show_chart</span>
+                    <span>User Investments</span>
+                </a>
+            </li>
+            <li>
                 <a href="#commissions" class="sidebar-item-link" data-tab="commissions">
                     <span class="material-symbols-outlined sidebar-icon">tune</span>
                     <span>Financial Settings</span>
@@ -461,6 +467,57 @@
                                         <button onclick="adminDeletePlan('Apple Gift Card Plan')" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
                                     </td>
                                 </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL: USER INVESTMENTS MANAGEMENT -->
+            <section id="panel-investments" class="dashboard-panel-view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h1 class="panel-title font-display" style="margin:0;">User Investments Control</h1>
+                        <p class="panel-desc" style="margin:0.25rem 0 0 0;">View, edit, suspend, hold, resume, delete user investments, and inspect financial overviews.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <button type="button" class="form-btn-db" onclick="loadAdminInvestments()" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                            <span class="material-symbols-outlined" style="font-size:1.1rem;">refresh</span> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Investment Filters & Search -->
+                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.2rem; padding:0.75rem; background:rgba(15,25,43,0.6); border:1px solid rgba(126,156,205,0.18); border-radius:12px;">
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" class="my-investments-tabs">
+                        <button type="button" class="inv-admin-filter-btn active" data-filter="All" onclick="filterAdminInvestments('All')">All</button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Active" onclick="filterAdminInvestments('Active')">Active</button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Hold" onclick="filterAdminInvestments('Hold')">On Hold</button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Suspended" onclick="filterAdminInvestments('Suspended')">Suspended</button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Completed" onclick="filterAdminInvestments('Completed')">Completed</button>
+                    </div>
+                    <div style="min-width:240px; flex:1; max-width:360px;">
+                        <input type="text" id="admin-inv-search" class="form-input-db" placeholder="Search user name, email, plan name..." oninput="filterAdminInvestments()" style="padding:0.45rem 0.75rem; font-size:0.8rem;">
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="nova-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Plan Name</th>
+                                    <th>Amount</th>
+                                    <th>Daily ROI</th>
+                                    <th>Status</th>
+                                    <th>Started</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-investments-tbody">
+                                <tr><td colspan="8" style="text-align:center; padding:2rem; color:#8897ab;">Loading user investments...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -983,6 +1040,101 @@
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">save</span>
                 Save New Deposit Address
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT USER INVESTMENT -->
+    <div id="edit-investment-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content-box" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title font-display">Edit User Investment</h3>
+                <button class="modal-close-btn" onclick="closeEditInvestmentModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <input type="hidden" id="edit-inv-id">
+            <div class="modal-form-group" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Plan Name</label>
+                    <input type="text" id="edit-inv-name" class="modal-text-input" readonly style="width: 100%; background: #0b0e14; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #94a3b8; box-sizing: border-box;">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Amount ($)</label>
+                        <input type="number" id="edit-inv-amount" step="0.01" min="1" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Daily ROI (%)</label>
+                        <input type="number" id="edit-inv-roi" step="0.01" min="0.01" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; box-sizing: border-box;">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+                    <div>
+                        <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Duration (Days)</label>
+                        <input type="number" id="edit-inv-duration" min="1" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Status</label>
+                        <select id="edit-inv-status" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; box-sizing: border-box;">
+                            <option value="Active">Active</option>
+                            <option value="Hold">Hold</option>
+                            <option value="Suspended">Suspended</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="modal-input-label" style="display: block; margin-bottom: 0.35rem;">Start Date</label>
+                    <input type="text" id="edit-inv-start-date" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; box-sizing: border-box;">
+                </div>
+            </div>
+            <button onclick="submitEditInvestment()" class="modal-submit-btn" style="background-color: #3b82f6; color: white; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700; border: none; cursor: pointer;">Save Investment Changes</button>
+        </div>
+    </div>
+
+    <!-- MODAL: USER FINANCIAL OVERVIEW -->
+    <div id="user-financial-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content-box" style="max-width: 750px; width:92%;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title font-display" id="user-fin-modal-name">User Financial Overview</h3>
+                    <p style="margin:0.2rem 0 0; color:#94a3b8; font-size:0.8rem;" id="user-fin-modal-email">user@example.com</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeUserFinancialModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:0.75rem; margin:1rem 0 1.25rem;">
+                <div style="background:rgba(3,9,18,0.5); padding:0.75rem; border-radius:10px; border:1px solid rgba(126,156,205,0.15);">
+                    <span style="color:#718096; font-size:0.68rem;">Total Deposited</span>
+                    <strong id="user-fin-deposited" style="display:block; margin-top:0.2rem; color:#34d399; font-size:1.05rem;">$0.00</strong>
+                </div>
+                <div style="background:rgba(3,9,18,0.5); padding:0.75rem; border-radius:10px; border:1px solid rgba(126,156,205,0.15);">
+                    <span style="color:#718096; font-size:0.68rem;">Active Capital</span>
+                    <strong id="user-fin-active" style="display:block; margin-top:0.2rem; color:#60a5fa; font-size:1.05rem;">$0.00</strong>
+                </div>
+                <div style="background:rgba(3,9,18,0.5); padding:0.75rem; border-radius:10px; border:1px solid rgba(126,156,205,0.15);">
+                    <span style="color:#718096; font-size:0.68rem;">Total Earnings</span>
+                    <strong id="user-fin-earnings" style="display:block; margin-top:0.2rem; color:#c084fc; font-size:1.05rem;">$0.00</strong>
+                </div>
+                <div style="background:rgba(3,9,18,0.5); padding:0.75rem; border-radius:10px; border:1px solid rgba(126,156,205,0.15);">
+                    <span style="color:#718096; font-size:0.68rem;">Wallet Balance</span>
+                    <strong id="user-fin-balance" style="display:block; margin-top:0.2rem; color:#f4f7fb; font-size:1.05rem;">$0.00</strong>
+                </div>
+                <div style="background:rgba(3,9,18,0.5); padding:0.75rem; border-radius:10px; border:1px solid rgba(126,156,205,0.15);">
+                    <span style="color:#718096; font-size:0.68rem;">Total Withdrawn</span>
+                    <strong id="user-fin-withdrawn" style="display:block; margin-top:0.2rem; color:#fb7185; font-size:1.05rem;">$0.00</strong>
+                </div>
+            </div>
+
+            <div style="max-height: 400px; overflow-y: auto; padding-right: 0.25rem;">
+                <h4 class="font-display" style="margin: 0.5rem 0 0.5rem; color:#f1f5fb; font-size:0.9rem;">User Investments</h4>
+                <div id="user-fin-investments-list" style="margin-bottom: 1.25rem;"></div>
+
+                <h4 class="font-display" style="margin: 0.5rem 0 0.5rem; color:#f1f5fb; font-size:0.9rem;">Recent Activity & Transactions</h4>
+                <div id="user-fin-tx-list"></div>
+            </div>
         </div>
     </div>
 

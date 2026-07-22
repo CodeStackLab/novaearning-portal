@@ -17,6 +17,12 @@ function handleInvestments($action, $pdo, $body) {
         sendJson($stmt->fetchAll());
     }
 
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($action === 'latest-commissions' || $action === 'commissions')) {
+        $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? AND type IN ('Daily ROI', 'Investment Return', 'Commission', 'Referral Bonus', 'Referral Commission') ORDER BY id DESC LIMIT 10");
+        $stmt->execute([$userId]);
+        sendJson($stmt->fetchAll());
+    }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$action) {
         $name = $body['name'] ?? '';
         $quantity = isset($body['quantity']) ? (int)$body['quantity'] : 1;

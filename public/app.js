@@ -1662,28 +1662,160 @@ async function confirmBuyPlan() {
 }
 
 
+let myInvestmentsFilter = 'Active';
+let myInvestmentsUpcomingOnly = false;
+let myInvestmentsCountdownTimer = null;
+
+function filterMyInvestments(filterName) {
+    if (!['Active', 'Completed', 'Hold', 'All'].includes(filterName)) return;
+    myInvestmentsFilter = filterName;
+    myInvestmentsPage = 1;
+    document.querySelectorAll('.inv-filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === filterName);
+    });
+    renderMyInvestments(dashboardInvestments);
+}
+
+function toggleUpcomingPayoutFilter() {
+    myInvestmentsUpcomingOnly = !myInvestmentsUpcomingOnly;
+    myInvestmentsPage = 1;
+    const btn = document.getElementById('toggle-upcoming-payout');
+    if (btn) btn.classList.toggle('active', myInvestmentsUpcomingOnly);
+    renderMyInvestments(dashboardInvestments);
+}
+
+async function renderLatestCommissions() {
+    const container = document.getElementById('recent-commissions-list');
+    if (!container) return;
+    try {
+        const comms = await apiRequest('/investments/latest-commissions');
+        const rows = Array.isArray(comms) ? comms : [];
+        if (!rows.length) {
+            container.innerHTML = '<div class="financial-empty-sm"><span class="material-symbols-outlined">history</span>No recent commissions yet</div>';
+            return;
+        }
+        container.innerHTML = rows.slice(0, 5).map(item => `
+            <div class="recent-commission-item">
+                <div class="commission-item-icon"><span class="material-symbols-outlined">paid</span></div>
+                <div class="commission-item-info">
+                    <strong>${escapeUi(item.type || 'Daily Return')}</strong>
+                    <small>Ref: ${escapeUi(item.ref || '—')} · ${escapeUi(item.date || 'Recently')}</small>
+                </div>
+                <div class="commission-item-amount">+${formatUSD(Number(item.amount) || 0)}</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        const fallback = dashboardTransactions.filter(t => ['Daily ROI', 'Investment Return', 'Commission', 'Referral Bonus', 'Referral Commission', 'Investment'].includes(t.type)).slice(0, 5);
+        if (!fallback.length) {
+            container.innerHTML = '<div class="financial-empty-sm"><span class="material-symbols-outlined">history</span>No recent commissions yet</div>';
+            return;
+        }
+        container.innerHTML = fallback.map(item => `
+            <div class="recent-commission-item">
+                <div class="commission-item-icon"><span class="material-symbols-outlined">paid</span></div>
+                <div class="commission-item-info">
+                    <strong>${escapeUi(item.type)}</strong>
+                    <small>Ref: ${escapeUi(item.ref || '—')} · ${escapeUi(item.date || 'Recently')}</small>
+                </div>
+                <div class="commission-item-amount">+${formatUSD(Number(item.amount) || 0)}</div>
+            </div>
+        `).join('');
+    }
+}
+
 function renderMyInvestments(investments) {
     const container = document.getElementById('my-investments-list');
     if (!container) return;
     const rows = Array.isArray(investments) ? investments : [];
-    const active = rows.filter(inv => inv.status === 'Active');
-    const activePrincipal = active.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
-    const dailyReturn = active.reduce((sum, inv) => sum + ((Number(inv.amount) || 0) * (Number(inv.daily_profit_pct) || 0) / 100), 0);
-    document.getElementById('myinv-active-principal').textContent = formatUSD(activePrincipal);
-    document.getElementById('myinv-daily-return').textContent = formatUSD(dailyReturn);
-    document.getElementById('myinv-total-plans').textContent = String(rows.length);
 
-    if (!rows.length) {
+    const activeRows = rows.filter(inv => inv.status === 'Active');
+    const completedRows = rows.filter(inv => inv.status === 'Completed');
+    const holdRows = rows.filter(inv => ['Hold', 'Suspended'].includes(inv.status));
+
+    // Update filter counts
+    const bActive = document.getElementById('count-badge-active');
+    const bComp = document.getElementById('count-badge-completed');
+    const bHold = document.getElementById('count-badge-hold');
+    const bAll = document.getElementById('count-badge-all');
+    if (bActive) bActive.textContent = activeRows.length;
+    if (bComp) bComp.textContent = completedRows.length;
+    if (bHold) bHold.textContent = holdRows.length;
+    if (bAll) bAll.textContent = rows.length;
+
+    // Header Metrics
+    const activePrincipal = activeRows.reduce((sum, inv) => sum + (Number(inv.amount) || 0), 0);
+    const dailyReturn = activeRows.reduce((sum, inv) => sum + ((Number(inv.amount) || 0) * (Number(inv.daily_profit_pct) || 0) / 100), 0);
+    const activePrincipalElem = document.getElementById('myinv-active-principal');
+    const dailyReturnElem = document.getElementById('myinv-daily-return');
+    const totalPlansElem = document.getElementById('myinv-total-plans');
+    if (activePrincipalElem) activePrincipalElem.textContent = formatUSD(activePrincipal);
+    if (dailyReturnElem) dailyReturnElem.textContent = formatUSD(dailyReturn);
+    if (totalPlansElem) totalPlansElem.textContent = String(rows.length);
+
+    // Calculate minimum countdown across active investments for next payout metric
+    const dayMs = 86400000;
+    let minRemainingMs = null;
+    activeRows.forEach(inv => {
+        let started = Number(inv.created_at) || Date.parse(inv.start_date || '') || Date.now();
+        if (started < 1000000000000) started *= 1000;
+        const elapsed = Math.max(0, Date.now() - started);
+        const rem = Math.max(0, dayMs - (elapsed % dayMs));
+        if (minRemainingMs === null || rem < minRemainingMs) {
+            minRemainingMs = rem;
+        }
+    });
+
+    const nextCountdownElem = document.getElementById('myinv-next-countdown');
+    if (nextCountdownElem) {
+        if (minRemainingMs !== null) {
+            const h = Math.floor(minRemainingMs / 3600000);
+            const m = Math.floor((minRemainingMs % 3600000) / 60000);
+            const s = Math.floor((minRemainingMs % 60000) / 1000);
+            nextCountdownElem.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        } else {
+            nextCountdownElem.textContent = 'No Active Plans';
+        }
+    }
+
+    renderLatestCommissions();
+
+    // Filtering logic
+    let filtered = rows;
+    if (myInvestmentsFilter === 'Active') {
+        filtered = activeRows;
+    } else if (myInvestmentsFilter === 'Completed') {
+        filtered = completedRows;
+    } else if (myInvestmentsFilter === 'Hold') {
+        filtered = holdRows;
+    }
+
+    if (myInvestmentsUpcomingOnly) {
+        filtered = filtered.filter(inv => {
+            if (inv.status !== 'Active') return false;
+            let started = Number(inv.created_at) || Date.parse(inv.start_date || '') || Date.now();
+            if (started < 1000000000000) started *= 1000;
+            const elapsed = Math.max(0, Date.now() - started);
+            const rem = Math.max(0, dayMs - (elapsed % dayMs));
+            return rem <= 82800000; // <= 23 hours left
+        });
+    }
+
+    if (!filtered.length) {
         const pagination = document.getElementById('my-investments-pagination');
         if (pagination) pagination.hidden = true;
-        container.innerHTML = '<div class="financial-empty"><span class="material-symbols-outlined">account_balance</span><strong>No investments yet</strong><small>Choose an investment plan to start your first 24-hour earning cycle.</small><button type="button" onclick="switchTab(\'invest\')">Browse investment plans</button></div>';
+        container.innerHTML = `<div class="financial-empty">
+            <span class="material-symbols-outlined">account_balance</span>
+            <strong>No investments found in "${escapeUi(myInvestmentsFilter)}" filter</strong>
+            <small>${myInvestmentsUpcomingOnly ? 'No active plans with upcoming payout within 23h.' : 'Purchase an investment plan to start receiving daily returns.'}</small>
+            <button type="button" onclick="switchTab('invest')">Browse investment plans</button>
+        </div>`;
         return;
     }
 
-    const dayMs = 86400000;
-    const totalPages = Math.max(1, Math.ceil(rows.length / MY_INVESTMENTS_PER_PAGE));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / MY_INVESTMENTS_PER_PAGE));
     myInvestmentsPage = Math.min(Math.max(1, myInvestmentsPage), totalPages);
-    const visibleRows = rows.slice((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE, myInvestmentsPage * MY_INVESTMENTS_PER_PAGE);
+    const visibleRows = filtered.slice((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE, myInvestmentsPage * MY_INVESTMENTS_PER_PAGE);
+
     container.innerHTML = visibleRows.map((inv, index) => {
         const amount = Number(inv.amount) || 0;
         const roi = Number(inv.daily_profit_pct) || 0;
@@ -1692,20 +1824,61 @@ function renderMyInvestments(investments) {
         if (started < 1000000000000) started *= 1000;
         const elapsed = Math.max(0, Date.now() - started);
         const completedCycles = Math.min(duration, Math.floor(elapsed / dayMs));
-        const completed = inv.status === 'Completed';
-        const cycleProgress = completed ? 100 : Math.min(100, Math.round(((elapsed % dayMs) / dayMs) * 100));
-        const remaining = completed ? 0 : Math.max(0, dayMs - (elapsed % dayMs));
+        const isCompleted = inv.status === 'Completed' || completedCycles >= duration;
+        const isHold = inv.status === 'Hold';
+        const isSuspended = inv.status === 'Suspended';
+        const cycleProgress = isCompleted ? 100 : (isHold || isSuspended) ? 0 : Math.min(100, Math.round(((elapsed % dayMs) / dayMs) * 100));
+        const remaining = isCompleted || isHold || isSuspended ? 0 : Math.max(0, dayMs - (elapsed % dayMs));
         const hours = Math.floor(remaining / 3600000);
         const minutes = Math.floor((remaining % 3600000) / 60000);
-        return `<article class="my-investment-card tone-${((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE + index) % 4}">
-            <div class="my-investment-title"><span class="material-symbols-outlined">show_chart</span><div><small>Investment Plan · #${Number(inv.id) || '—'}</small><h2>${escapeUi(inv.name || 'Investment')}</h2></div><b class="status-badge-lbl ${completed ? 'confirmed' : 'active'}">${escapeUi(inv.status || 'Active')}</b></div>
-            <div class="my-investment-values"><div><span>Principal</span><strong>${formatUSD(amount)}</strong></div><div><span>Daily ROI</span><strong>+${roi.toFixed(2)}%</strong></div><div><span>Daily commission</span><strong>${formatUSD(amount * roi / 100)}</strong></div><div><span>Cycles</span><strong>${completedCycles} / ${duration}</strong></div></div>
-            <div class="my-investment-progress"><div><span>${completed ? 'Plan completed' : `${hours}h ${minutes}m until next commission`}</span><strong>${cycleProgress}%</strong></div><i><em style="width:${cycleProgress}%"></em></i></div>
-            <footer><span>Started: ${escapeUi(inv.start_date || '—')}</span><span>Type: Fixed daily-return plan</span></footer>
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        const hoursLeftLabel = `${hours}h ${minutes}m ${seconds}s`;
+
+        let statusClass = 'active';
+        let statusText = 'Active';
+        if (isCompleted) { statusClass = 'completed'; statusText = 'Completed'; }
+        else if (isHold) { statusClass = 'hold'; statusText = 'On Hold'; }
+        else if (isSuspended) { statusClass = 'suspended'; statusText = 'Suspended'; }
+
+        const isSoon = !isCompleted && !isHold && !isSuspended && hours <= 23;
+
+        return `<article class="my-investment-card tone-${((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE + index) % 4} ${isSoon ? 'upcoming-highlight' : ''}">
+            <div class="my-investment-title">
+                <span class="material-symbols-outlined">show_chart</span>
+                <div>
+                    <small>Investment Plan · #${Number(inv.id) || '—'}</small>
+                    <h2>${escapeUi(inv.name || 'Investment')}</h2>
+                </div>
+                <span class="inv-status-pill ${statusClass}">
+                    <i class="status-dot"></i> ${escapeUi(statusText)}
+                </span>
+            </div>
+
+            ${isSoon ? `<div class="payout-soon-banner"><span class="material-symbols-outlined">bolt</span> Commission Payout Approaching Soon! (${hours} hours left)</div>` : ''}
+
+            <div class="my-investment-values">
+                <div><span>Principal</span><strong>${formatUSD(amount)}</strong></div>
+                <div><span>Daily ROI</span><strong>+${roi.toFixed(2)}%</strong></div>
+                <div><span>Daily commission</span><strong>${formatUSD(amount * roi / 100)}</strong></div>
+                <div><span>Cycles</span><strong>${completedCycles} / ${duration}</strong></div>
+            </div>
+
+            <div class="my-investment-progress">
+                <div>
+                    <span>${isCompleted ? 'Plan fully completed' : isHold ? 'Earnings paused (On Hold)' : isSuspended ? 'Account suspended' : `${hoursLeftLabel} until next commission`}</span>
+                    <strong>${cycleProgress}%</strong>
+                </div>
+                <i><em style="width:${cycleProgress}%"></em></i>
+            </div>
+            <footer>
+                <span>Started: ${escapeUi(inv.start_date || '—')}</span>
+                <span>Type: Fixed daily-return plan</span>
+            </footer>
         </article>`;
     }).join('');
+
     const pagination = document.getElementById('my-investments-pagination');
-    if (pagination) pagination.hidden = rows.length <= MY_INVESTMENTS_PER_PAGE;
+    if (pagination) pagination.hidden = filtered.length <= MY_INVESTMENTS_PER_PAGE;
     const pageInfo = document.getElementById('myinv-page-info');
     if (pageInfo) pageInfo.textContent = `Page ${myInvestmentsPage} of ${totalPages}`;
     const previous = document.getElementById('myinv-prev');
@@ -1715,7 +1888,12 @@ function renderMyInvestments(investments) {
 }
 
 function changeMyInvestmentsPage(direction) {
-    const totalPages = Math.max(1, Math.ceil(dashboardInvestments.length / MY_INVESTMENTS_PER_PAGE));
+    let filtered = dashboardInvestments;
+    if (myInvestmentsFilter === 'Active') filtered = filtered.filter(i => i.status === 'Active');
+    else if (myInvestmentsFilter === 'Completed') filtered = filtered.filter(i => i.status === 'Completed');
+    else if (myInvestmentsFilter === 'Hold') filtered = filtered.filter(i => ['Hold', 'Suspended'].includes(i.status));
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / MY_INVESTMENTS_PER_PAGE));
     myInvestmentsPage = Math.min(totalPages, Math.max(1, myInvestmentsPage + Number(direction || 0)));
     renderMyInvestments(dashboardInvestments);
     document.getElementById('panel-myinvestments')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -293,15 +293,64 @@
             <!-- PANEL: MY INVESTMENTS -->
             <section id="panel-myinvestments" class="dashboard-panel-view">
                 <div class="reference-panel-heading">
-                    <div><h1 class="panel-title font-display">My Investments</h1><p class="panel-desc">Track every active and completed plan, earning cycle and expected return.</p></div>
+                    <div>
+                        <h1 class="panel-title font-display">My Investments</h1>
+                        <p class="panel-desc">Manage active plans, track daily commission cycles, and monitor upcoming payouts.</p>
+                    </div>
                     <button type="button" class="section-link-btn" onclick="switchTab('invest')">Browse plans <span class="material-symbols-outlined">arrow_forward</span></button>
                 </div>
+
                 <div class="investment-summary-grid">
                     <article><span>Active principal</span><strong id="myinv-active-principal">$0.00</strong></article>
                     <article><span>Expected daily commission</span><strong id="myinv-daily-return">$0.00</strong></article>
+                    <article><span>Next upcoming payout</span><strong id="myinv-next-countdown">--:--:--</strong></article>
                     <article><span>Total plans</span><strong id="myinv-total-plans">0</strong></article>
                 </div>
+
+                <!-- Latest 5 Recent Commissions Showcase Card -->
+                <div class="recent-commissions-card" id="recent-commissions-container">
+                    <div class="recent-commissions-header">
+                        <div class="recent-commissions-title">
+                            <span class="material-symbols-outlined">payments</span>
+                            <div>
+                                <h3 class="font-display">Latest Commission Payouts</h3>
+                                <p>Recent daily returns credited to your account</p>
+                            </div>
+                        </div>
+                        <span class="commission-badge-count" id="recent-commissions-count">5 Recent</span>
+                    </div>
+                    <div class="recent-commissions-list" id="recent-commissions-list">
+                        <div class="financial-empty">Loading latest commission payouts…</div>
+                    </div>
+                </div>
+
+                <!-- Investment Filters Toolbar -->
+                <div class="my-investments-filter-bar">
+                    <div class="my-investments-tabs" role="tablist" aria-label="Investment status filters">
+                        <button type="button" class="inv-filter-btn active" data-filter="Active" onclick="filterMyInvestments('Active')">
+                            Active <span class="filter-count-badge" id="count-badge-active">0</span>
+                        </button>
+                        <button type="button" class="inv-filter-btn" data-filter="Completed" onclick="filterMyInvestments('Completed')">
+                            Completed <span class="filter-count-badge" id="count-badge-completed">0</span>
+                        </button>
+                        <button type="button" class="inv-filter-btn" data-filter="Hold" onclick="filterMyInvestments('Hold')">
+                            On Hold / Suspended <span class="filter-count-badge" id="count-badge-hold">0</span>
+                        </button>
+                        <button type="button" class="inv-filter-btn" data-filter="All" onclick="filterMyInvestments('All')">
+                            All Plans <span class="filter-count-badge" id="count-badge-all">0</span>
+                        </button>
+                    </div>
+
+                    <div class="my-investments-actions">
+                        <button type="button" class="upcoming-payout-toggle" id="toggle-upcoming-payout" onclick="toggleUpcomingPayoutFilter()">
+                            <span class="material-symbols-outlined">bolt</span>
+                            <span id="upcoming-filter-text">&lt; 24h Payout Left</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div id="my-investments-list" class="my-investments-list"><div class="financial-empty">Loading investments…</div></div>
+
                 <div class="my-investments-pagination" id="my-investments-pagination" hidden>
                     <button type="button" id="myinv-prev" onclick="changeMyInvestmentsPage(-1)"><span class="material-symbols-outlined">chevron_left</span> Previous</button>
                     <span id="myinv-page-info">Page 1 of 1</span>

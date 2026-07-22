@@ -123,6 +123,8 @@ async function fetchActiveTabDetails(tabId) {
             renderCommissionsTable(commissions);
             await loadTransactionLimits();
             await loadReferralPercentages();
+        } else if (tabId === 'investments') {
+            await loadAdminInvestments();
         } else if (tabId === 'smtp') {
             await loadSmtpSettings();
         } else if (tabId === 'notifications') {
@@ -1821,4 +1823,250 @@ async function adminVerifyChangeEmailOtp() {
     } catch (e) {
         showToast('Error: ' + (e.message || 'Invalid OTP.'));
     }
+}
+
+/* ==========================================================================
+   ADMIN USER INVESTMENTS CONTROL & FINANCIAL OVERVIEW
+   ========================================================================== */
+
+let adminInvestmentsData = [];
+let adminInvestmentsFilter = 'All';
+
+async function loadAdminInvestments() {
+    const tbody = document.getElementById('admin-investments-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#8897ab;">Loading user investments...</td></tr>';
+    try {
+        const rows = await adminRequest('/admin/investments');
+        adminInvestmentsData = Array.isArray(rows) ? rows : [];
+        renderAdminInvestments();
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:#f87171;">Failed to load investments: ${escapeAdminUi(e.message)}</td></tr>`;
+    }
+}
+
+function filterAdminInvestments(filterName) {
+    if (filterName) {
+        adminInvestmentsFilter = filterName;
+        document.querySelectorAll('.inv-admin-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-filter') === filterName);
+        });
+    }
+    renderAdminInvestments();
+}
+
+function renderAdminInvestments() {
+    const tbody = document.getElementById('admin-investments-tbody');
+    if (!tbody) return;
+
+    const searchTerm = (document.getElementById('admin-inv-search')?.value || '').toLowerCase().trim();
+
+    let filtered = adminInvestmentsData;
+    if (adminInvestmentsFilter !== 'All') {
+        if (adminInvestmentsFilter === 'Hold') {
+            filtered = filtered.filter(inv => inv.status === 'Hold');
+        } else {
+            filtered = filtered.filter(inv => inv.status === adminInvestmentsFilter);
+        }
+    }
+
+    if (searchTerm) {
+        filtered = filtered.filter(inv => 
+            (inv.name || '').toLowerCase().includes(searchTerm) ||
+            (inv.user_name || '').toLowerCase().includes(searchTerm) ||
+            (inv.user_email || '').toLowerCase().includes(searchTerm) ||
+            String(inv.id || '').includes(searchTerm)
+        );
+    }
+
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#8897ab;">No user investments found</td></tr>';
+        return;
+    }
+
+    const dayMs = 86400000;
+    tbody.innerHTML = filtered.map(inv => {
+        const amount = Number(inv.amount) || 0;
+        const roi = Number(inv.daily_profit_pct) || 0;
+        const duration = Math.max(1, Number(inv.duration_days) || 1);
+        let started = Number(inv.created_at) || Date.parse(inv.start_date || '') || Date.now();
+        if (started < 1000000000000) started *= 1000;
+        const elapsed = Math.max(0, Date.now() - started);
+        const completedCycles = Math.min(duration, Math.floor(elapsed / dayMs));
+
+        let badgeStyle = 'background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3);';
+        if (inv.status === 'Hold') badgeStyle = 'background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3);';
+        else if (inv.status === 'Suspended') badgeStyle = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);';
+        else if (inv.status === 'Completed') badgeStyle = 'background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);';
+
+        const invJson = JSON.stringify(inv).replace(/"/g, '&quot;');
+
+        return `<tr>
+            <td style="font-weight:700; color:#94a3b8;">#${inv.id}</td>
+            <td>
+                <div style="font-weight:600; color:#f8fafc;">${escapeAdminUi(inv.user_name || 'User #' + inv.user_id)}</div>
+                <small style="color:#64748b;">${escapeAdminUi(inv.user_email || '')}</small>
+                <button type="button" onclick="openUserFinancialOverviewModal(${inv.user_id})" style="display:block; margin-top:2px; background:none; border:none; color:#60a5fa; font-size:0.7rem; cursor:pointer; text-decoration:underline; padding:0;">View Financial Overview</button>
+            </td>
+            <td>
+                <div style="font-weight:600; color:#e2e8f0;">${escapeAdminUi(inv.name)}</div>
+                <small style="color:#64748b;">Cycles: ${completedCycles} / ${duration} Days</small>
+            </td>
+            <td style="font-weight:700; color:#f8fafc;">${formatUSD(amount)}</td>
+            <td style="color:#34d399; font-weight:700;">+${roi.toFixed(2)}% / day</td>
+            <td><span style="padding:0.25rem 0.6rem; border-radius:99px; font-size:0.72rem; font-weight:700; ${badgeStyle}">${escapeAdminUi(inv.status)}</span></td>
+            <td style="font-size:0.78rem; color:#94a3b8;">${escapeAdminUi(inv.start_date || '—')}</td>
+            <td style="text-align:right;">
+                <div style="display:flex; justify-content:flex-end; gap:0.35rem; flex-wrap:wrap;">
+                    ${inv.status === 'Active' ? `
+                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Hold')" style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Hold</button>
+                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Suspended')" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Suspend</button>
+                    ` : inv.status === 'Hold' || inv.status === 'Suspended' ? `
+                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Active')" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Resume</button>
+                    ` : ''}
+                    <button type="button" onclick="openEditInvestmentModal(${invJson})" style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Edit</button>
+                    <button type="button" onclick="adminDeleteInvestment(${inv.id})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:0.3rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Delete</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function changeAdminInvestmentStatus(investmentId, newStatus) {
+    if (!confirm(`Are you sure you want to change investment #${investmentId} status to "${newStatus}"? This will trigger an email notification to the user.`)) return;
+    try {
+        const result = await adminRequest('/admin/investments/update-status', {
+            method: 'POST',
+            body: JSON.stringify({ investmentId, status: newStatus })
+        });
+        alert(result.message || 'Investment status updated.');
+        await loadAdminInvestments();
+    } catch (e) {
+        alert(e.message || 'Failed to update investment status.');
+    }
+}
+
+function openEditInvestmentModal(inv) {
+    const modal = document.getElementById('edit-investment-modal');
+    if (!modal) return;
+    document.getElementById('edit-inv-id').value = inv.id;
+    document.getElementById('edit-inv-name').value = inv.name || '';
+    document.getElementById('edit-inv-amount').value = inv.amount || '';
+    document.getElementById('edit-inv-roi').value = inv.daily_profit_pct || '';
+    document.getElementById('edit-inv-duration').value = inv.duration_days || 1;
+    document.getElementById('edit-inv-status').value = inv.status || 'Active';
+    document.getElementById('edit-inv-start-date').value = inv.start_date || '';
+    modal.style.display = 'flex';
+}
+
+function closeEditInvestmentModal() {
+    const modal = document.getElementById('edit-investment-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitEditInvestment() {
+    const investmentId = document.getElementById('edit-inv-id').value;
+    const amount = document.getElementById('edit-inv-amount').value;
+    const dailyProfitPct = document.getElementById('edit-inv-roi').value;
+    const durationDays = document.getElementById('edit-inv-duration').value;
+    const status = document.getElementById('edit-inv-status').value;
+    const startDate = document.getElementById('edit-inv-start-date').value;
+
+    try {
+        const result = await adminRequest('/admin/investments/edit', {
+            method: 'POST',
+            body: JSON.stringify({ investmentId, amount, dailyProfitPct, durationDays, status, startDate })
+        });
+        alert(result.message || 'Investment updated successfully.');
+        closeEditInvestmentModal();
+        await loadAdminInvestments();
+    } catch (e) {
+        alert(e.message || 'Failed to update investment.');
+    }
+}
+
+async function adminDeleteInvestment(investmentId) {
+    if (!confirm(`Are you sure you want to permanently delete investment #${investmentId}? An email notification will be dispatched to the user.`)) return;
+    try {
+        const result = await adminRequest('/admin/investments/delete', {
+            method: 'POST',
+            body: JSON.stringify({ investmentId })
+        });
+        alert(result.message || 'Investment deleted.');
+        await loadAdminInvestments();
+    } catch (e) {
+        alert(e.message || 'Failed to delete investment.');
+    }
+}
+
+async function openUserFinancialOverviewModal(userId) {
+    const modal = document.getElementById('user-financial-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    document.getElementById('user-fin-modal-name').textContent = 'Loading user financial overview...';
+    document.getElementById('user-fin-modal-email').textContent = '';
+    document.getElementById('user-fin-deposited').textContent = '$0.00';
+    document.getElementById('user-fin-active').textContent = '$0.00';
+    document.getElementById('user-fin-earnings').textContent = '$0.00';
+    document.getElementById('user-fin-balance').textContent = '$0.00';
+    document.getElementById('user-fin-withdrawn').textContent = '$0.00';
+    document.getElementById('user-fin-investments-list').innerHTML = '<div style="color:#718096; padding:1rem; text-align:center;">Loading...</div>';
+    document.getElementById('user-fin-tx-list').innerHTML = '<div style="color:#718096; padding:1rem; text-align:center;">Loading...</div>';
+
+    try {
+        const data = await adminRequest(`/admin/user-financial-overview?user_id=${userId}`);
+        const user = data.user || {};
+        document.getElementById('user-fin-modal-name').textContent = `${user.name || 'User'} (ID #${user.id})`;
+        document.getElementById('user-fin-modal-email').textContent = `${user.email || ''} · Ref: ${user.referral_code || 'N/A'} · Status: ${user.account_status || 'Active'}`;
+        document.getElementById('user-fin-deposited').textContent = formatUSD(data.totalDeposits || 0);
+        document.getElementById('user-fin-active').textContent = formatUSD(data.activeCapital || 0);
+        document.getElementById('user-fin-earnings').textContent = formatUSD(Number(user.earnings) || 0);
+        document.getElementById('user-fin-balance').textContent = formatUSD(Number(user.balance) || 0);
+        document.getElementById('user-fin-withdrawn').textContent = formatUSD(data.totalWithdrawals || 0);
+
+        const invs = Array.isArray(data.investments) ? data.investments : [];
+        if (!invs.length) {
+            document.getElementById('user-fin-investments-list').innerHTML = '<div style="color:#64748b; font-size:0.8rem;">No investments found for this user.</div>';
+        } else {
+            document.getElementById('user-fin-investments-list').innerHTML = invs.map(inv => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.75rem; background:rgba(15,25,43,0.6); border:1px solid rgba(126,156,205,0.12); border-radius:8px; margin-bottom:0.4rem;">
+                    <div>
+                        <strong style="color:#f1f5fb; font-size:0.82rem;">${escapeAdminUi(inv.name)}</strong>
+                        <small style="display:block; color:#64748b; font-size:0.68rem;">Started: ${escapeAdminUi(inv.start_date)} · ROI: +${Number(inv.daily_profit_pct).toFixed(2)}%</small>
+                    </div>
+                    <div style="text-align:right;">
+                        <strong style="color:#34d399; font-size:0.85rem;">${formatUSD(Number(inv.amount))}</strong>
+                        <span style="display:block; font-size:0.65rem; color:#94a3b8;">${escapeAdminUi(inv.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const txs = Array.isArray(data.transactions) ? data.transactions : [];
+        if (!txs.length) {
+            document.getElementById('user-fin-tx-list').innerHTML = '<div style="color:#64748b; font-size:0.8rem;">No transaction history available.</div>';
+        } else {
+            document.getElementById('user-fin-tx-list').innerHTML = txs.map(tx => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.75rem; background:rgba(3,9,18,0.4); border-bottom:1px solid rgba(126,156,205,0.08);">
+                    <div>
+                        <strong style="color:#e2e8f0; font-size:0.78rem;">${escapeAdminUi(tx.type)}</strong>
+                        <small style="display:block; color:#64748b; font-size:0.65rem;">Ref: ${escapeAdminUi(tx.ref)} · ${escapeAdminUi(tx.date)}</small>
+                    </div>
+                    <div style="text-align:right;">
+                        <strong style="color:${tx.type === 'Withdrawal' ? '#fb7185' : '#34d399'}; font-size:0.82rem;">${tx.type === 'Withdrawal' ? '-' : '+'}${formatUSD(Number(tx.amount))}</strong>
+                        <span style="display:block; font-size:0.65rem; color:#94a3b8;">${escapeAdminUi(tx.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        document.getElementById('user-fin-modal-name').textContent = 'Error loading user data';
+        alert(e.message || 'Unable to load user financial overview.');
+    }
+}
+
+function closeUserFinancialModal() {
+    const modal = document.getElementById('user-financial-modal');
+    if (modal) modal.style.display = 'none';
 }
