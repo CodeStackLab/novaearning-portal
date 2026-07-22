@@ -1845,3 +1845,145 @@ html, body,
     }
 }
 
+/* ── Admin Header & Advanced User Management Mobile Responsiveness (412x870 & Mobile Screens) ── */
+@media (max-width: 650px) {
+    .admin-dashboard-body .dashboard-header,
+    .dashboard-header {
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 0.6rem 0.85rem !important;
+        height: 58px !important;
+    }
+
+    .admin-dashboard-body .dashboard-header-context,
+    .dashboard-header-context {
+        display: none !important;
+    }
+
+    .admin-dashboard-body .mobile-header-logo,
+    .dashboard-header .mobile-header-logo {
+        display: block !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+    }
+
+    .admin-dashboard-body .mobile-header-logo img,
+    .dashboard-header .mobile-header-logo img {
+        height: 24px !important;
+        width: auto !important;
+        display: block !important;
+    }
+
+    .admin-dashboard-body .header-right-user,
+    .dashboard-header .header-right-user {
+        margin-left: auto !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .user-name-label {
+        font-size: 0.78rem !important;
+    }
+
+    #panel-users {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0 !important;
+    }
+
+    #panel-users .panel-title {
+        font-size: clamp(1.35rem, 5.5vw, 1.75rem) !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    #panel-users .panel-desc {
+        font-size: 0.8rem !important;
+        line-height: 1.45 !important;
+        color: #94a3b8 !important;
+        margin-bottom: 1rem !important;
+    }
+
+    #panel-users button[onclick*="openAddUserModal"],
+    #panel-users .form-btn-db {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.88rem !important;
+        font-weight: 700 !important;
+        border-radius: 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-users .db-search-filters-bar {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.65rem !important;
+        padding: 0.75rem !important;
+        border-radius: 12px !important;
+        background-color: #111622 !important;
+        border: 1px solid #1e2538 !important;
+        margin-bottom: 1.25rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-users .db-search-filters-bar > div:first-child {
+        width: 100% !important;
+        min-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-users .db-search-filters-bar > div:last-child {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-users .db-search-filters-bar select {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        font-size: 0.75rem !important;
+        padding: 0.5rem 0.4rem !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #panel-users .recent-deposits-section {
+        padding: 0.85rem !important;
+        border-radius: 14px !important;
+        background-color: #111622 !important;
+        border: 1px solid #1e2538 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #panel-users .recent-deposits-title {
+        font-size: 1.05rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    #panel-users .table-responsive-box {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        border-radius: 8px !important;
+    }
+
+    #panel-users table.deposits-table-list th,
+    #panel-users table.deposits-table-list td {
+        padding: 0.65rem 0.5rem !important;
+        font-size: 0.78rem !important;
+        white-space: nowrap !important;
+    }
+}
+
