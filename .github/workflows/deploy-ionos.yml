@@ -82,5 +82,14 @@ jobs:
           quit
           EOF
 
+      - name: Run database migrations and commission scheduler
+        env:
+          IONOS_SOURCE_SECRET: ${{ secrets.IONOS_SFTP_PASSWORD }}
+        run: |
+          TOKEN="$(php -r 'echo hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET"));')"
+          curl --fail --silent --show-error --retry 2 --max-time 90 \
+            -H "X-Nova-Cron-Token: $TOKEN" \
+            https://novaearning.com/cron.php
+
       - name: Deployment summary
         run: echo "IONOS production deployment completed successfully."
