@@ -208,7 +208,7 @@ function handleUser($action, $subaction, $pdo, $body) {
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'login-activity') {
         ensurePlatformFeatureTables($pdo);
-        $stmt = $pdo->prepare('SELECT ip_address, user_agent, login_at FROM login_activity WHERE user_id = ? ORDER BY id DESC LIMIT 20');
+        $stmt = $pdo->prepare('SELECT ip_address, user_agent, login_at FROM login_activity WHERE user_id = ? ORDER BY id DESC LIMIT 4');
         $stmt->execute([$userId]);
         sendJson($stmt->fetchAll());
     }

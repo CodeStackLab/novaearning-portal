@@ -202,7 +202,8 @@ async function loadLoginActivity() {
     const list = document.getElementById('login-activity-list'); if (!list) return;
     try {
         const rows = await apiRequest('/user/login-activity');
-        list.innerHTML = rows.length ? rows.map(row => `<article class="audit-log-item"><span class="material-symbols-outlined">devices</span><div><strong>${escapeUi(row.user_agent || 'Unknown device')}</strong><small>IP: ${escapeUi(row.ip_address || 'Unavailable')}</small><time>${escapeUi(row.login_at)}</time></div></article>`).join('') : '<div class="notification-inbox-empty">No login activity recorded yet.</div>';
+        const latest4 = (rows || []).slice(0, 4);
+        list.innerHTML = latest4.length ? latest4.map(row => `<article class="audit-log-item"><span class="material-symbols-outlined">devices</span><div><strong>${escapeUi(row.user_agent || 'Unknown device')}</strong><small>IP: ${escapeUi(row.ip_address || 'Unavailable')}</small><time>${escapeUi(row.login_at)}</time></div></article>`).join('') : '<div class="notification-inbox-empty">No login activity recorded yet.</div>';
     } catch (error) { list.innerHTML = `<div class="notification-inbox-empty">${escapeUi(error.message)}</div>`; }
 }
 

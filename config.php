@@ -243,6 +243,8 @@ function recordLoginActivity($pdo, $userId) {
         ensurePlatformFeatureTables($pdo);
         $stmt = $pdo->prepare('INSERT INTO login_activity (user_id, ip_address, user_agent) VALUES (?, ?, ?)');
         $stmt->execute([$userId, $_SERVER['REMOTE_ADDR'] ?? null, substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown device', 0, 255)]);
+        $pruneStmt = $pdo->prepare('DELETE FROM login_activity WHERE user_id = ? AND id NOT IN (SELECT id FROM (SELECT id FROM login_activity WHERE user_id = ? ORDER BY id DESC LIMIT 4) AS tmp)');
+        $pruneStmt->execute([$userId, $userId]);
     } catch (Exception $e) { error_log('Login activity failed: ' . $e->getMessage()); }
 }
 
