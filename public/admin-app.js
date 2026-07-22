@@ -127,6 +127,7 @@ async function fetchActiveTabDetails(tabId) {
             await loadAdminInvestments();
         } else if (tabId === 'smtp') {
             await loadSmtpSettings();
+            await checkEmailDeliverability();
         } else if (tabId === 'notifications') {
             await loadNotificationSettings();
         } else if (tabId === 'audit') {
@@ -219,6 +220,24 @@ async function loadSmtpSettings() {
     } catch (error) {
         if (status) status.textContent = 'Unable to load';
         showToast(error.message || 'Unable to load SMTP settings');
+    }
+}
+
+async function checkEmailDeliverability() {
+    const container = document.getElementById('email-deliverability-results');
+    if (!container) return;
+    container.innerHTML = '<div class="notification-inbox-empty">Checking live DNS records…</div>';
+    try {
+        const result = await adminRequest('/admin/settings/email-deliverability');
+        const dkimMissing = Object.entries(result.dkim || {}).filter(([, configured]) => !configured).map(([selector]) => `${selector}._domainkey`);
+        const items = [
+            { name:'SPF', ok:Boolean(result.spf?.ok), detail:result.spf?.ok ? 'IONOS sending servers are authorised.' : 'No SPF policy was detected.' },
+            { name:'DKIM', ok:Number(result.dkimConfigured) === Number(result.dkimExpected), detail:dkimMissing.length ? `Missing: ${dkimMissing.join(', ')}` : 'All recommended IONOS signing records are present.' },
+            { name:'DMARC', ok:Boolean(result.dmarc?.ok), detail:result.dmarc?.ok ? `Policy detected: ${result.dmarc.value}` : 'No DMARC policy was detected.' }
+        ];
+        container.innerHTML = items.map(item => `<article class="deliverability-result ${item.ok ? 'ok' : 'warning'}"><span class="material-symbols-outlined">${item.ok ? 'check_circle' : 'warning'}</span><div><strong>${escapeUi(item.name)}</strong><small>${escapeUi(item.detail)}</small></div></article>`).join('') + `<p class="deliverability-checked">Domain: ${escapeUi(result.domain)} · Checked ${escapeUi(result.checkedAt)}</p>`;
+    } catch (error) {
+        container.innerHTML = `<div class="smtp-test-result error" style="display:block">${escapeUi(error.message || 'Unable to check email DNS records.')}</div>`;
     }
 }
 

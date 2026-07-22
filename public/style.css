@@ -384,6 +384,12 @@ body.dark-theme {
 .smtp-test-result.testing { color: #9eb7dd; background: rgba(53,94,157,.12); border: 1px solid rgba(80,129,203,.2); }
 .smtp-test-result.success { color: #67d797; background: rgba(35,155,89,.11); border: 1px solid rgba(52,190,112,.24); }
 .smtp-test-result.error { color: #fb8d99; background: rgba(202,57,73,.11); border: 1px solid rgba(235,77,94,.24); }
+.email-deliverability-card { margin-top:1rem; padding:1rem; background:linear-gradient(145deg,rgba(15,26,44,.96),rgba(7,15,28,.98)); border:1px solid rgba(126,156,205,.18); border-radius:16px; }
+.email-deliverability-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.email-deliverability-heading h2 { margin:0; color:#f1f5f9; font-size:1rem; }.email-deliverability-heading p { max-width:620px; margin:.25rem 0 0; color:#8190a5; font-size:.7rem; line-height:1.5; }
+.email-deliverability-heading button { display:flex; align-items:center; gap:.35rem; flex:0 0 auto; padding:.5rem .7rem; color:#dbeafe; background:rgba(37,99,235,.25); border:1px solid rgba(96,165,250,.3); border-radius:8px; font-size:.68rem; font-weight:700; cursor:pointer; }.email-deliverability-heading button span{font-size:1rem}
+.email-deliverability-results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; margin-top:.9rem; }.deliverability-result{display:grid;grid-template-columns:32px minmax(0,1fr);align-items:center;gap:.55rem;padding:.7rem;background:rgba(3,9,18,.35);border:1px solid rgba(126,156,205,.12);border-radius:10px}.deliverability-result>span{color:#34d399}.deliverability-result.warning>span{color:#fbbf24}.deliverability-result strong,.deliverability-result small{display:block}.deliverability-result strong{color:#e7eef8;font-size:.72rem}.deliverability-result small{margin-top:.15rem;color:#7d8da3;font-size:.62rem;line-height:1.4}.deliverability-checked{grid-column:1/-1;margin:0;color:#5f6f85;font-size:.59rem}.email-deliverability-tip{display:flex;gap:.5rem;margin-top:.75rem;padding:.65rem;color:#96a5b8;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.14);border-radius:9px;font-size:.65rem;line-height:1.45}.email-deliverability-tip>span:first-child{color:#fbbf24;font-size:1rem}
+@media(max-width:700px){.email-deliverability-heading{flex-direction:column}.email-deliverability-results{grid-template-columns:1fr}.email-deliverability-heading button{width:100%;justify-content:center}}
 
 @media (max-width: 760px) {
     #panel-smtp .panel-desc { margin-bottom: 1rem; }

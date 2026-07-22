@@ -308,6 +308,11 @@
             align-items: center;
             gap: 0.4rem;
         }
+        .otp-delivery-help { margin:-.25rem 0 1rem; padding:.75rem; display:flex; gap:.55rem; color:#aeb9c8; background:rgba(59,130,246,.08); border:1px solid rgba(96,165,250,.2); border-radius:9px; font-size:.72rem; line-height:1.5; }
+        .otp-delivery-help .material-symbols-outlined { flex:0 0 auto; color:#60a5fa; font-size:1.05rem; }
+        .otp-resend-row { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin:.8rem 0 0; color:var(--muted); font-size:.7rem; }
+        .otp-resend-row button { padding:.35rem .55rem; color:#8ab4ff; background:transparent; border:1px solid rgba(96,165,250,.25); border-radius:7px; font-size:.7rem; font-weight:700; cursor:pointer; }
+        .otp-resend-row button:disabled { opacity:.5; cursor:not-allowed; }
 
         /* Security footer */
         .auth-footer {
@@ -445,9 +450,11 @@
                 </div>
             </div>
             <div class="forgot-step" id="forgot-s2">
-                <div class="msg-success">OTP sent to your email.</div>
+                <div class="msg-success"><span class="material-symbols-outlined">mark_email_read</span> OTP sent to your email.</div>
+                <div class="otp-delivery-help"><span class="material-symbols-outlined">info</span><span><strong>Didn’t receive the email?</strong><br>Check your Spam or Junk folder, confirm the email address is correct, and allow a few minutes for delivery.</span></div>
                 <div class="field"><label>6-Digit OTP</label><input type="text" id="forgot-otp" placeholder="123456" maxlength="6"></div>
                 <button type="button" class="btn-primary" onclick="verifyForgotOTP()">Verify OTP</button>
+                <div class="otp-resend-row"><span>Code expires in 10 minutes.</span><button type="button" id="forgot-resend-btn" onclick="resendForgotOTP(this)">Resend code</button></div>
             </div>
             <div class="forgot-step" id="forgot-s3">
                 <div class="msg-success"><span class="material-symbols-outlined">verified</span> OTP verified! Set new password.</div>
@@ -590,9 +597,9 @@
     }
 
     // --- Forgot Password ---
-    async function sendForgotOTP() {
+    async function sendForgotOTP(isResend = false) {
         const email = document.getElementById('forgot-email').value;
-        if (!email) { alert('Enter your email'); return; }
+        if (!email) { alert('Enter your email'); return false; }
         try {
             const res = await fetch('/api/auth/forgot-password/send-otp', {
                 method: 'POST',
@@ -601,9 +608,26 @@
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
-            document.getElementById('forgot-s1').classList.remove('active');
-            document.getElementById('forgot-s2').classList.add('active');
-        } catch (err) { alert(err.message); }
+            if (!isResend) {
+                document.getElementById('forgot-s1').classList.remove('active');
+                document.getElementById('forgot-s2').classList.add('active');
+            }
+            return true;
+        } catch (err) { alert(err.message); return false; }
+    }
+
+    async function resendForgotOTP(button) {
+        button.disabled = true;
+        button.textContent = 'Sending…';
+        const sent = await sendForgotOTP(true);
+        if (!sent) { button.disabled = false; button.textContent = 'Resend code'; return; }
+        let seconds = 60;
+        button.textContent = `Resend in ${seconds}s`;
+        const timer = setInterval(() => {
+            seconds -= 1;
+            button.textContent = seconds > 0 ? `Resend in ${seconds}s` : 'Resend code';
+            if (seconds <= 0) { clearInterval(timer); button.disabled = false; }
+        }, 1000);
     }
 
     async function verifyForgotOTP() {

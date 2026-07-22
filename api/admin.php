@@ -162,6 +162,45 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             ]);
         }
 
+        if ($action === 'settings' && $subaction === 'email-deliverability') {
+            $stmt = $pdo->query("SELECT value FROM settings WHERE `key` = 'smtp_from_email' LIMIT 1");
+            $fromEmail = (string)($stmt->fetchColumn() ?: 'admin@novaearning.com');
+            $domain = strtolower((string)substr(strrchr($fromEmail, '@') ?: '@novaearning.com', 1));
+            if (!preg_match('/^[a-z0-9.-]+$/', $domain)) sendJson(['message' => 'Sender domain is invalid.'], 400);
+
+            $txtValues = function ($host) {
+                $values = [];
+                foreach ((array)@dns_get_record($host, DNS_TXT) as $record) {
+                    if (!empty($record['txt'])) $values[] = $record['txt'];
+                }
+                return $values;
+            };
+            $spf = false;
+            foreach ($txtValues($domain) as $value) {
+                if (stripos($value, 'v=spf1') === 0) { $spf = $value; break; }
+            }
+            $dmarc = false;
+            foreach ($txtValues('_dmarc.' . $domain) as $value) {
+                if (stripos($value, 'v=DMARC1') === 0) { $dmarc = $value; break; }
+            }
+            $dkimSelectors = ['s1-ionos', 's2-ionos', 's42582890'];
+            $dkim = [];
+            foreach ($dkimSelectors as $selector) {
+                $host = $selector . '._domainkey.' . $domain;
+                $records = (array)@dns_get_record($host, DNS_CNAME | DNS_TXT);
+                $dkim[$selector] = count($records) > 0;
+            }
+            sendJson([
+                'domain' => $domain,
+                'spf' => ['ok' => (bool)$spf, 'value' => $spf ?: null],
+                'dmarc' => ['ok' => (bool)$dmarc, 'value' => $dmarc ?: null],
+                'dkim' => $dkim,
+                'dkimConfigured' => count(array_filter($dkim)),
+                'dkimExpected' => count($dkimSelectors),
+                'checkedAt' => gmdate('Y-m-d H:i:s') . ' UTC'
+            ]);
+        }
+
         if ($action === 'settings' && $subaction === 'notifications') {
             $keys = ['admin_email_notifications', 'admin_email_deposit_notifications', 'admin_email_withdrawal_notifications', 'admin_email_investment_notifications', 'admin_email_commission_notifications', 'admin_email_support_notifications'];
             $placeholders = implode(',', array_fill(0, count($keys), '?'));
