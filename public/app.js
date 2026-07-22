@@ -256,7 +256,7 @@ async function fetchAllDashboardData() {
 
         const dbAccountId = document.getElementById('db-account-id');
         if (dbAccountId && profile.id) {
-            dbAccountId.textContent = String(profile.id).padStart(2, '0');
+            dbAccountId.textContent = `#${String(profile.id).padStart(4, '0')}`;
         }
         
         // Render profile metrics
