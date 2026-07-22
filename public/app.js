@@ -1179,7 +1179,22 @@ function applyCustomAmount() {
     showToast(`Custom Deposit Selected: $${parsed}`);
 }
 
+function updateDepositAmount(val) {
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && parsed > 0) {
+        currentSelectedDepositAmount = parsed;
+    }
+}
+
 async function submitNewDeposit() {
+    const customAmtEl = document.getElementById('custom-deposit-amount');
+    if (customAmtEl && customAmtEl.value) {
+        const parsedAmt = parseFloat(customAmtEl.value);
+        if (!isNaN(parsedAmt) && parsedAmt > 0) {
+            currentSelectedDepositAmount = parsedAmt;
+        }
+    }
+
     const txIdInput = document.getElementById('deposit-txid-input');
     const txnId = txIdInput ? txIdInput.value.trim() : '';
 
