@@ -707,14 +707,18 @@ async function saveReferralPercentages(event) {
     }
 }
 
+let adminReferralRows = [];
 function renderCommissionsTable(commissions) {
+    adminReferralRows = Array.isArray(commissions) ? commissions : [];
+    const query = (document.getElementById('admin-referral-search')?.value || '').toLowerCase().trim();
+    const rows = query ? adminReferralRows.filter(x => JSON.stringify(x).toLowerCase().includes(query)) : adminReferralRows;
     const tbody = document.getElementById('admin-commissions-table-body');
     if (!tbody) return;
-    if (!Array.isArray(commissions) || commissions.length === 0) {
+    if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#64748b;">No referral commissions recorded yet.</td></tr>';
         return;
     }
-    tbody.innerHTML = commissions.map(item => {
+    tbody.innerHTML = rows.map(item => {
         const confirmed = item.status === 'Confirmed';
         return `<tr>
             <td>${escapeAdminUi(item.date || '')}</td>
@@ -726,6 +730,7 @@ function renderCommissionsTable(commissions) {
         </tr>`;
     }).join('');
 }
+function filterReferralTracker() { renderCommissionsTable(adminReferralRows); }
 
 function updateReferralStatus(transactionId, status, button) {
     openAdminReasonModal({title:`Referral reward ${status}`, required:true, help:`Enter the reason for ${status.toLowerCase()} this referral reward.`, onSubmit: async comment => {
