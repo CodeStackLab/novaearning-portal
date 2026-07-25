@@ -249,11 +249,15 @@ function ensurePlatformFeatureTables($pdo) {
         attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, INDEX idx_auth_attempt (identifier_hash, ip_address, attempted_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $pdo->exec("CREATE TABLE IF NOT EXISTS registration_otps (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(191) NOT NULL,
-        otp_hash VARCHAR(255) NOT NULL, attempts INT DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP NOT NULL,
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(191) NOT NULL UNIQUE,
+        name VARCHAR(190) NOT NULL DEFAULT '', password_hash VARCHAR(255) NOT NULL DEFAULT '', referral_code VARCHAR(80) DEFAULT '',
+        token_hash VARCHAR(255) NOT NULL DEFAULT '', otp_hash VARCHAR(255) DEFAULT NULL, attempts INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at DATETIME NOT NULL,
         INDEX idx_reg_otp_email (email, expires_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    foreach (["name VARCHAR(190) NOT NULL DEFAULT ''", "password_hash VARCHAR(255) NOT NULL DEFAULT ''", "referral_code VARCHAR(80) DEFAULT ''", "token_hash VARCHAR(255) NOT NULL DEFAULT ''"] as $column) {
+        try { $pdo->exec("ALTER TABLE registration_otps ADD COLUMN $column"); } catch (Exception $e) {}
+    }
 }
 
 function recordLoginActivity($pdo, $userId) {

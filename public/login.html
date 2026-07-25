@@ -404,6 +404,8 @@
                 <div class="step-dot" id="step-ind-2">2</div>
                 <div class="step-line"></div>
                 <div class="step-dot" id="step-ind-3">3</div>
+                <div class="step-line"></div>
+                <div class="step-dot" id="step-ind-4">4</div>
             </div>
             <form onsubmit="submitSignUp(event)">
                 <!-- Step 1 -->
@@ -427,15 +429,20 @@
                 </div>
                 <!-- Step 3 -->
                 <div class="step-pane" id="step-pane-3">
-                    <div class="pane-title">Verify your email</div>
-                    <div class="pane-sub">We will send a 6-digit code to your Gmail address.</div>
+                    <div class="pane-title">Referral code</div>
+                    <div class="pane-sub">Add a referral code if you have one.</div>
                     <div class="field"><label>Referral Code</label><input type="text" id="signup-ref" placeholder="e.g. JOHN1234"></div>
-                    <div class="field" id="signup-otp-field" style="display:none"><label>6-Digit Email OTP</label><input type="text" id="signup-otp" placeholder="123456" maxlength="6" inputmode="numeric"></div>
-                    <div class="otp-delivery-help"><span class="material-symbols-outlined">info</span><span>Check Gmail <strong>Spam, Promotions and All Mail</strong>; search for “Nova”. Code expires in 10 minutes.</span></div>
                     <div class="btn-row">
                         <button type="button" class="btn-secondary" onclick="prevStep(2)">← Back</button>
                         <button type="submit" class="btn-primary" id="signup-submit-btn" style="margin-top:0;flex:2;">Send verification code</button>
                     </div>
+                </div>
+                <div class="step-pane" id="step-pane-4">
+                    <div class="pane-title">Verify your email</div>
+                    <div class="pane-sub">Enter the 6-digit code sent to your Gmail address.</div>
+                    <div class="otp-delivery-help"><span class="material-symbols-outlined">info</span><span>Check Gmail <strong>Spam, Promotions and All Mail</strong>; search for “Nova”. Code expires in 10 minutes.</span></div>
+                    <div class="field"><label>6-Digit Email OTP</label><input type="text" id="signup-otp" placeholder="123456" maxlength="6" inputmode="numeric"></div>
+                    <div class="btn-row"><button type="button" class="btn-secondary" onclick="prevStep(3)">← Back</button><button type="submit" class="btn-primary" id="signup-verify-btn" style="margin-top:0;flex:2;">Verify OTP &amp; Create Account</button></div>
                 </div>
             </form>
         </div>
@@ -480,6 +487,7 @@
     // --- URL params ---
     const globalUrlParams = new URLSearchParams(window.location.search);
     const redirectTarget = globalUrlParams.get('redirect');
+    const referralFromUrl = (globalUrlParams.get('ref') || '').trim();
 
     // --- Auth guard: already logged in ---
     (function() {
@@ -489,6 +497,14 @@
             window.location.href = role === 'admin' ? '/admin' : (redirectTarget || '/dashboard');
         }
     })();
+    window.addEventListener('DOMContentLoaded', () => {
+        const referralInput = document.getElementById('signup-ref');
+        if (referralInput && referralFromUrl) {
+            referralInput.value = referralFromUrl;
+            referralInput.readOnly = true;
+            referralInput.title = 'Referral code from your invitation link';
+        }
+    });
 
     // --- Tab switch ---
     function switchTab(tabId) {
@@ -574,7 +590,7 @@
         if (!name || !email || !email.includes('@')) { alert('Please enter a valid name and email address.'); showStep(1); return; }
         if (password.length < 6 || password !== confirmPassword) { alert(password !== confirmPassword ? 'Passwords do not match.' : 'Password must be at least 6 characters.'); showStep(2); return; }
 
-        const btn = document.getElementById('signup-submit-btn');
+        const btn = document.getElementById(signupOtpSent ? 'signup-verify-btn' : 'signup-submit-btn');
         if (btn) { btn.textContent = signupOtpSent ? 'Verifying…' : 'Sending code…'; btn.disabled = true; }
 
         try {
@@ -582,8 +598,7 @@
             if (!signupOtpSent) {
                 const res = await fetch('/api/auth/register/send-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
                 const data = await res.json(); if (!res.ok) throw new Error(data.message || 'Could not send verification code');
-                signupOtpSent = true; document.getElementById('signup-otp-field').style.display = 'block';
-                btn.textContent = 'Verify OTP & Create Account'; btn.disabled = false; alert('Verification code sent. Check Gmail Spam/Promotions if needed.'); return;
+                signupOtpSent = true; showStep(4); btn.textContent = 'Verify OTP & Create Account'; btn.disabled = false; alert('Verification code sent. Check Gmail Spam/Promotions if needed.'); return;
             }
             const otp = document.getElementById('signup-otp').value.trim();
             if (!/^\d{6}$/.test(otp)) throw new Error('Enter the 6-digit email OTP.');

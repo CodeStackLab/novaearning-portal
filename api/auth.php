@@ -53,6 +53,7 @@ function handleAuth($action, $subaction, $pdo, $body) {
 
     if ($action === 'register') {
         if ($subaction === 'send-otp') {
+            ensurePlatformFeatureTables($pdo);
             $name = trim($body['name'] ?? '');
             $email = strtolower(trim($body['email'] ?? ''));
             $password = $body['password'] ?? '';
@@ -73,6 +74,7 @@ function handleAuth($action, $subaction, $pdo, $body) {
 
         $registrationVerified = false;
         if ($subaction === 'verify-otp') {
+            ensurePlatformFeatureTables($pdo);
             $email = strtolower(trim($body['email'] ?? '')); $otpCode = trim($body['otpCode'] ?? '');
             if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^\d{6}$/', $otpCode)) sendJson(['message' => 'Enter the 6-digit verification code.'], 400);
             $pdo->exec("CREATE TABLE IF NOT EXISTS registration_otps (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(190) NOT NULL UNIQUE, name VARCHAR(190) NOT NULL, password_hash VARCHAR(255) NOT NULL, referral_code VARCHAR(80) DEFAULT '', token_hash VARCHAR(255) NOT NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at DATETIME NOT NULL, INDEX(expires_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
