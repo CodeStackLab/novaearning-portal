@@ -11,10 +11,10 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/images/logo.png",
+      "src": "/images/nova-pwa-circle.svg",
       "sizes": "192x192 512x512 1024x1024",
       "purpose": "any maskable",
-      "type": "image/png"
+      "type": "image/svg+xml"
     }
   ]
 }

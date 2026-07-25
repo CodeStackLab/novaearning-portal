@@ -1,10 +1,10 @@
-const CACHE_NAME = 'nova-pwa-cache-v5';
+const CACHE_NAME = 'nova-pwa-cache-v6';
 const urlsToCache = [
   '/login',
   '/login.html',
   '/manifest.json',
   '/images/nova-logo-full.svg',
-  '/images/logo.png'
+  '/images/nova-pwa-circle.svg'
 ];
 
 self.addEventListener('install', event => {
