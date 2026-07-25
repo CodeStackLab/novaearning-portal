@@ -80,10 +80,11 @@ body.dark-theme::before {
     border-color: #5e92ef !important; box-shadow: 0 0 0 3px rgba(61, 125, 237, .13) !important;
 }
 .form-btn-db, .modal-submit-btn, .auth-btn, .amount-select-btn,
-.admin-dashboard-body button[style*="background-color"], .admin-dashboard-body button[style*="background:"] {
-    min-height: 42px; padding: .68rem 1.1rem !important; border-radius: 10px !important; color: #fff !important;
-    background: linear-gradient(135deg, #4b8df5, #3377df) !important; border: 1px solid rgba(126,173,255,.36) !important;
-    font-weight: 650 !important; box-shadow: 0 8px 22px rgba(35, 91, 183, .2);
+.admin-dashboard-body button[style*="background-color"]:not(.inv-action-btn):not(.btn-user-overview-sm):not(.inv-admin-filter-btn),
+.admin-dashboard-body button[style*="background:"]:not(.inv-action-btn):not(.btn-user-overview-sm):not(.inv-admin-filter-btn) {
+    min-height: 42px; padding: .68rem 1.1rem; border-radius: 10px; color: #fff;
+    background: linear-gradient(135deg, #4b8df5, #3377df); border: 1px solid rgba(126,173,255,.36);
+    font-weight: 650; box-shadow: 0 8px 22px rgba(35, 91, 183, .2);
 }
 .form-btn-db:hover, .modal-submit-btn:hover, .auth-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
 
