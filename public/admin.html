@@ -47,6 +47,7 @@
                     <span>Manage Users</span>
                 </a>
             </li>
+            <li><a href="#financial-overview" class="sidebar-item-link" data-tab="financial-overview"><span class="material-symbols-outlined sidebar-icon">analytics</span><span>Financial Overview</span></a></li>
             <li>
                 <a href="#deposits" class="sidebar-item-link" data-tab="deposits">
                     <span class="material-symbols-outlined sidebar-icon">playlist_add_check</span>
@@ -234,6 +235,12 @@
                         </a>
                     </div>
                 </div>
+            </section>
+
+            <section id="panel-financial-overview" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">Financial Overview</h1><p class="panel-desc">Track platform deposits, investments, withdrawals, commissions, balances and referral exposure.</p>
+                <div class="admin-financial-grid" id="admin-financial-metrics"></div>
+                <div class="recent-deposits-section admin-financial-table-card"><h3 class="recent-deposits-title">User financial exposure</h3><div class="table-responsive-box"><table class="deposits-table-list"><thead><tr><th>User</th><th>Balance</th><th>Earnings</th><th>Confirmed deposits</th><th>Referrals</th></tr></thead><tbody id="admin-financial-users"></tbody></table></div></div>
             </section>
 
             <!-- PANEL: MANAGE USERS -->

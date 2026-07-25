@@ -37,6 +37,17 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             ]);
         }
 
+        if ($action === 'financial-overview') {
+            $q = static function($pdo, $sql) { $row = $pdo->query($sql)->fetch(); return $row ?: []; };
+            $users = $q($pdo, "SELECT COUNT(*) users, COALESCE(SUM(balance),0) balances, COALESCE(SUM(earnings),0) earnings FROM users WHERE role='user'");
+            $deposits = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Confirmed' THEN amount ELSE 0 END),0) confirmed, COALESCE(SUM(CASE WHEN status='Pending' THEN amount ELSE 0 END),0) pending, COALESCE(SUM(CASE WHEN status IN ('Failed','Rejected') THEN amount ELSE 0 END),0) rejected FROM deposits");
+            $invest = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Active' THEN amount ELSE 0 END),0) active, COALESCE(SUM(CASE WHEN status='Completed' THEN amount ELSE 0 END),0) completed, COALESCE(SUM(CASE WHEN status IN ('Hold','Suspended') THEN amount ELSE 0 END),0) held FROM investments");
+            $withdraw = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Confirmed' THEN amount ELSE 0 END),0) paid, COALESCE(SUM(CASE WHEN status='Pending' THEN amount ELSE 0 END),0) pending, COALESCE(SUM(CASE WHEN status='Hold' THEN amount ELSE 0 END),0) held, COALESCE(SUM(CASE WHEN status='Cancelled' THEN amount ELSE 0 END),0) cancelled FROM transactions WHERE type='Withdrawal'");
+            $comm = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN type IN ('Referral Bonus','Referral Commission') THEN amount ELSE 0 END),0) referral, COALESCE(SUM(CASE WHEN type='Daily Commission' THEN amount ELSE 0 END),0) daily FROM transactions WHERE status='Confirmed'");
+            $top = $pdo->query("SELECT u.id,u.name,u.email,u.balance,u.earnings,COUNT(DISTINCT CASE WHEN d.status='Confirmed' THEN d.id END) deposits,COALESCE(SUM(CASE WHEN d.status='Confirmed' THEN d.amount ELSE 0 END),0) deposit_total,COUNT(DISTINCT CASE WHEN u2.id IS NOT NULL THEN u2.id END) referrals FROM users u LEFT JOIN deposits d ON d.user_id=u.id LEFT JOIN users u2 ON u2.referred_by=u.id WHERE u.role='user' GROUP BY u.id ORDER BY u.balance DESC LIMIT 100")->fetchAll();
+            sendJson(['users'=>$users,'deposits'=>$deposits,'investments'=>$invest,'withdrawals'=>$withdraw,'commissions'=>$comm,'topUsers'=>$top]);
+        }
+
         if ($action === 'users') {
             $stmt = $pdo->query("SELECT id, name, email, balance, earnings, role, account_status AS status, referral_code, referred_by FROM users WHERE role = 'user' ORDER BY id DESC");
             sendJson($stmt->fetchAll());
