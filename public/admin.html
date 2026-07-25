@@ -1161,6 +1161,16 @@
         </div>
     </div>
 
+    <div id="admin-reason-modal" class="modal-overlay" style="display:none;" aria-hidden="true">
+        <div class="modal-content-box" style="max-width:520px;">
+            <div class="modal-header"><h3 class="modal-title font-display" id="admin-reason-title">Admin comment</h3><button class="modal-close-btn" type="button" onclick="closeAdminReasonModal()"><span class="material-symbols-outlined">close</span></button></div>
+            <p id="admin-reason-help" style="color:#94a3b8;font-size:.8rem;line-height:1.45;margin:.2rem 0 1rem;">Add a comment for the user.</p>
+            <textarea id="admin-reason-input" rows="4" maxlength="1000" placeholder="Write comment or reason…" class="modal-text-input" style="width:100%;resize:vertical;box-sizing:border-box;"></textarea>
+            <p id="admin-reason-error" role="alert" style="display:none;color:#fca5a5;font-size:.75rem;margin:.5rem 0 0;"></p>
+            <div style="display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem;"><button type="button" class="btn-secondary" onclick="closeAdminReasonModal()">Cancel</button><button type="button" class="modal-submit-btn" onclick="submitAdminReasonModal()">Continue</button></div>
+        </div>
+    </div>
+
     <!-- Ergonomic Mobile Bottom Navigation for Admin -->
     <nav class="mobile-bottom-nav" id="admin-mobile-bottom-nav" aria-label="Admin Mobile Navigation">
         <a href="#overview" class="mobile-nav-item active" data-tab="overview" onclick="switchTab('overview')">

@@ -939,14 +939,28 @@ function renderPayoutsTable(payouts) {
 async function updatePayoutStatus(transactionId, status, button) {
     const labels = { Confirmed:'approve and mark this payout as paid', Hold:'place this payout on hold', Cancelled:'cancel this payout' };
     if (!confirm(`Are you sure you want to ${labels[status]}?`)) return;
-    const comment = (status === 'Confirmed') ? (prompt('Optional admin comment for the user:') || '') : (prompt(`Enter the reason for ${status.toLowerCase()}:`) || '').trim();
-    if ((status === 'Hold' || status === 'Cancelled') && !comment) { alert('A reason is required.'); return; }
+    openAdminReasonModal({ title: `${status} payout`, required: status !== 'Confirmed', help: status === 'Confirmed' ? 'Optional comment for the user.' : `Enter the reason for ${status.toLowerCase()}.`, onSubmit: comment => performPayoutStatusUpdate(transactionId, status, comment, button) });
+}
+async function performPayoutStatusUpdate(transactionId, status, comment, button) {
     if (button) { button.disabled = true; button.textContent = 'Saving…'; }
     try {
         const result = await adminRequest('/admin/payouts/update-status', { method:'POST', body:JSON.stringify({ transactionId, status, comment }) });
         showToast(result.message || 'Payout status updated.'); await fetchActiveTabDetails('payouts'); await fetchActiveTabDetails('overview');
-    } catch (e) { alert(e.message || 'Unable to update payout.'); if (button) button.disabled = false; }
+    } catch (e) { showToast(e.message || 'Unable to update payout.'); if (button) button.disabled = false; }
 }
+
+let activeAdminReasonRequest = null;
+function openAdminReasonModal(options) {
+    activeAdminReasonRequest = options;
+    document.getElementById('admin-reason-title').textContent = options.title || 'Admin comment';
+    document.getElementById('admin-reason-help').textContent = options.help || 'Add a comment for the user.';
+    document.getElementById('admin-reason-input').value = '';
+    document.getElementById('admin-reason-error').style.display = 'none';
+    const modal = document.getElementById('admin-reason-modal'); modal.style.display = 'flex'; modal.setAttribute('aria-hidden','false');
+    setTimeout(() => document.getElementById('admin-reason-input')?.focus(), 40);
+}
+function closeAdminReasonModal() { const modal=document.getElementById('admin-reason-modal'); if (modal) { modal.style.display='none'; modal.setAttribute('aria-hidden','true'); } activeAdminReasonRequest=null; }
+function submitAdminReasonModal() { const req=activeAdminReasonRequest; if (!req) return; const value=document.getElementById('admin-reason-input').value.trim(); if (req.required && !value) { const error=document.getElementById('admin-reason-error'); error.textContent='A reason is required.'; error.style.display='block'; return; } closeAdminReasonModal(); req.onSubmit(value); }
 
 function copyPayoutWallet(payoutId) {
     const payout = globalPayoutsList.find(item => Number(item.id) === Number(payoutId));
@@ -1118,7 +1132,9 @@ async function applyEditBalance() {
 
 // Verify Deposit approvals
 async function verifyDeposit(depositId, action, button = null) {
-    const comment = prompt(`Optional admin comment/reason for this ${action === 'Approve' ? 'approval' : 'rejection'}:`) || '';
+    openAdminReasonModal({ title: `Deposit ${action}`, required: action !== 'Approve', help: action === 'Approve' ? 'Optional comment for the user.' : 'Enter the reason for rejecting this deposit.', onSubmit: comment => performDepositVerification(depositId, action, comment, button) });
+}
+async function performDepositVerification(depositId, action, comment, button = null) {
     const originalLabel = button?.textContent;
     if (button) {
         button.disabled = true;
