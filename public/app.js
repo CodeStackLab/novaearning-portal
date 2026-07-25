@@ -1045,6 +1045,13 @@ function renderInvestmentsTable(investments) {
     `).join('');
 }
 
+function formatUserLocalDateTime(value, fallback = '—') {
+    const raw = Number(value);
+    let date = Number.isFinite(raw) && raw > 0 ? new Date(raw < 1000000000000 ? raw * 1000 : raw) : new Date(String(value || ''));
+    if (Number.isNaN(date.getTime())) return fallback;
+    return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
 function renderActiveInvestmentsTracking(investments) {
     const cardContainer = document.getElementById('profile-active-investments-container');
     const tbody = document.getElementById('active-investments-tbody');
@@ -1969,7 +1976,7 @@ function renderMyInvestments(investments) {
                 <i><em style="width:${cycleProgress}%"></em></i>
             </div>
             <footer>
-                <span>Started: ${escapeUi(inv.start_date || '—')}</span>
+                <span>Started: ${escapeUi(formatUserLocalDateTime(inv.created_at, inv.start_date || '—'))}</span>
                 <span>Type: Fixed daily-return plan</span>
             </footer>
         </article>`;
