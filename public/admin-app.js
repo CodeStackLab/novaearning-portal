@@ -153,7 +153,7 @@ async function loadAuditLog() {
     const list = document.getElementById('audit-log-list');
     if (!list) return;
     try { globalAuditLog = await adminRequest('/admin/audit-log'); renderAuditLog(globalAuditLog); }
-    catch (error) { list.innerHTML = `<div class="notification-inbox-empty">${error.message || 'Unable to load audit log'}</div>`; }
+    catch (error) { list.innerHTML = `<div class="notification-inbox-empty">${escapeAdminUi(error.message || 'Unable to load audit log')}</div>`; }
 }
 
 function filterAuditLog() {
