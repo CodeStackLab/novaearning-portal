@@ -715,7 +715,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         }
                     }
 
-                    if ($user && $user['referred_by'] && $depositCommissionPct > 0) {
+                    // Referral commission is also a one-time reward: only the first
+                    // confirmed deposit for the referred user is eligible.
+                    $isFirstConfirmedDeposit = false;
+                    $firstCheck = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+                    $firstCheck->execute([$deposit['user_id']]);
+                    $isFirstConfirmedDeposit = ((int)$firstCheck->fetchColumn() === 1);
+                    if ($user && $user['referred_by'] && $depositCommissionPct > 0 && $isFirstConfirmedDeposit) {
                         $referralBonusAmt = $deposit['amount'] * ($depositCommissionPct / 100);
                         $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                         $stmt->execute([$referralBonusAmt, $user['referred_by']]);
@@ -841,7 +847,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         $stmt->execute([$targetUserId, $dateStr, 'First Deposit Bonus', $firstBonus, 'FIRST-BONUS-' . $depCode, 'Confirmed']);
                     }
                 }
-                if ($uInfo && $uInfo['referred_by'] && $depositCommissionPct > 0) {
+                // Referral commission is also a one-time reward: only the first
+                // confirmed deposit for the referred user is eligible.
+                $isFirstConfirmedDeposit = false;
+                $firstCheck = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+                $firstCheck->execute([$targetUserId]);
+                $isFirstConfirmedDeposit = ((int)$firstCheck->fetchColumn() === 1);
+                if ($uInfo && $uInfo['referred_by'] && $depositCommissionPct > 0 && $isFirstConfirmedDeposit) {
                     $refBonus = $amount * ($depositCommissionPct / 100);
                     $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                     $stmt->execute([$refBonus, $uInfo['referred_by']]);
