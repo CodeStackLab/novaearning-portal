@@ -225,10 +225,13 @@ async function loadNotificationCenter() {
         if (badge) { badge.textContent = result.unread > 99 ? '99+' : result.unread; badge.hidden = !result.unread; }
         // Surface the newest unread account event immediately after login, while
         // keeping the full history in the Notifications panel.
-        if (result.unread && result.items?.length && !window.novaInitialAlertShown) {
-            window.novaInitialAlertShown = true;
+        if (result.unread && result.items?.length) {
             const latest = result.items.find(item => !item.is_read) || result.items[0];
-            setTimeout(() => showToast(`New alert: ${latest.title}`), 650);
+            const alertKey = `nova-alert-toast-${latest.id}`;
+            if (latest?.id && localStorage.getItem(alertKey) !== 'shown') {
+                localStorage.setItem(alertKey, 'shown');
+                setTimeout(() => showToast(`New alert: ${latest.title}`), 650);
+            }
         }
         const list = document.getElementById('notification-inbox-list');
         if (!list) return;
