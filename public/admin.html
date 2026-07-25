@@ -481,32 +481,43 @@
                         <p class="panel-desc" style="margin:0.25rem 0 0 0;">View, edit, suspend, hold, resume, delete user investments, and inspect financial overviews.</p>
                     </div>
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                        <button type="button" class="form-btn-db" onclick="loadAdminInvestments()" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; display:inline-flex; align-items:center; gap:0.3rem;">
-                            <span class="material-symbols-outlined" style="font-size:1.1rem;">refresh</span> Refresh
+                        <button type="button" class="form-btn-db" onclick="loadAdminInvestments()" style="padding: 0.5rem 0.95rem; font-size: 0.8rem; display:inline-flex; align-items:center; gap:0.35rem; border-radius: 9px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">
+                            <span class="material-symbols-outlined" style="font-size:1.1rem;">refresh</span> <span>Refresh</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Admin Investment Filters & Search -->
-                <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.2rem; padding:0.75rem; background:rgba(15,25,43,0.6); border:1px solid rgba(126,156,205,0.18); border-radius:12px;">
-                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;" class="my-investments-tabs">
-                        <button type="button" class="inv-admin-filter-btn active" data-filter="All" onclick="filterAdminInvestments('All')">All</button>
-                        <button type="button" class="inv-admin-filter-btn" data-filter="Active" onclick="filterAdminInvestments('Active')">Active</button>
-                        <button type="button" class="inv-admin-filter-btn" data-filter="Hold" onclick="filterAdminInvestments('Hold')">On Hold</button>
-                        <button type="button" class="inv-admin-filter-btn" data-filter="Suspended" onclick="filterAdminInvestments('Suspended')">Suspended</button>
-                        <button type="button" class="inv-admin-filter-btn" data-filter="Completed" onclick="filterAdminInvestments('Completed')">Completed</button>
+                <div class="inv-admin-toolbar" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:1.25rem; padding:0.85rem 1rem; background:rgba(15,23,42,0.75); border:1px solid rgba(126,156,205,0.2); border-radius:14px; backdrop-filter:blur(12px);">
+                    <div style="display:flex; gap:0.45rem; flex-wrap:wrap;" class="my-investments-tabs">
+                        <button type="button" class="inv-admin-filter-btn active" data-filter="All" onclick="filterAdminInvestments('All')">
+                            <span class="material-symbols-outlined" style="font-size:1rem;">grid_view</span> <span>All</span>
+                        </button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Active" onclick="filterAdminInvestments('Active')">
+                            <span class="material-symbols-outlined" style="font-size:1rem; color:#34d399;">check_circle</span> <span>Active</span>
+                        </button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Hold" onclick="filterAdminInvestments('Hold')">
+                            <span class="material-symbols-outlined" style="font-size:1rem; color:#fbbf24;">pause_circle</span> <span>On Hold</span>
+                        </button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Suspended" onclick="filterAdminInvestments('Suspended')">
+                            <span class="material-symbols-outlined" style="font-size:1rem; color:#f87171;">block</span> <span>Suspended</span>
+                        </button>
+                        <button type="button" class="inv-admin-filter-btn" data-filter="Completed" onclick="filterAdminInvestments('Completed')">
+                            <span class="material-symbols-outlined" style="font-size:1rem; color:#38bdf8;">task_alt</span> <span>Completed</span>
+                        </button>
                     </div>
-                    <div style="min-width:240px; flex:1; max-width:360px;">
-                        <input type="text" id="admin-inv-search" class="form-input-db" placeholder="Search user name, email, plan name..." oninput="filterAdminInvestments()" style="padding:0.45rem 0.75rem; font-size:0.8rem;">
+                    <div class="inv-search-input-wrap" style="min-width:240px; flex:1; max-width:360px; position:relative;">
+                        <span class="material-symbols-outlined inv-search-icon" style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); font-size:1.15rem; color:#64748b; pointer-events:none;">search</span>
+                        <input type="text" id="admin-inv-search" class="form-input-db inv-search-input" placeholder="Search user name, email, plan..." oninput="filterAdminInvestments()" style="padding:0.5rem 0.75rem 0.5rem 2.4rem; font-size:0.82rem; border-radius:9px; background:rgba(11,19,41,0.85); border:1px solid rgba(126,156,205,0.22); width:100%;">
                     </div>
                 </div>
 
-                <div class="table-card">
-                    <div class="table-responsive">
-                        <table class="nova-table">
+                <div class="table-card inv-table-card">
+                    <div class="table-responsive inv-table-wrap">
+                        <table class="nova-table inv-nova-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th style="width:70px;">ID</th>
                                     <th>User Details</th>
                                     <th>Plan Name</th>
                                     <th>Amount</th>

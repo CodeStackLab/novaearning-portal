@@ -268,7 +268,7 @@
 
             // Previous Button
             html += `
-                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center; background-color: ${currentPage === 1 ? '#e2e8f0' : 'white'}; border: 1px solid #cbd5e1; color: ${currentPage === 1 ? '#94a3b8' : '#334155'}; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease;">
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center; background: ${currentPage === 1 ? 'rgba(15,23,42,0.4)' : 'rgba(30,41,59,0.85)'}; border: 1px solid ${currentPage === 1 ? 'rgba(126,156,205,0.1)' : 'rgba(126,156,205,0.3)'}; color: ${currentPage === 1 ? '#64748b' : '#f1f5f9'}; border-radius: 8px; padding: 0.5rem 0.85rem; font-size: 0.85rem; font-weight: 600; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-right: 0.25rem;">chevron_left</span>
                     <span>Prev</span>
                 </button>
@@ -277,7 +277,7 @@
             // Page numbers
             for (let i = 1; i <= totalPages; i++) {
                 html += `
-                    <button onclick="changePage(${i})" style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; background-color: ${currentPage === i ? '#3b82f6' : 'white'}; border: 1px solid ${currentPage === i ? '#3b82f6' : '#cbd5e1'}; color: ${currentPage === i ? 'white' : '#334155'}; border-radius: 6px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">
+                    <button onclick="changePage(${i})" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: ${currentPage === i ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : 'rgba(15,23,42,0.75)'}; border: 1px solid ${currentPage === i ? '#3b82f6' : 'rgba(126,156,205,0.2)'}; color: ${currentPage === i ? '#ffffff' : '#cbd5e1'}; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: ${currentPage === i ? '0 4px 12px rgba(37,99,235,0.35)' : 'none'};">
                         ${i}
                     </button>
                 `;
@@ -285,7 +285,7 @@
 
             // Next Button
             html += `
-                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center; background-color: ${currentPage === totalPages ? '#e2e8f0' : 'white'}; border: 1px solid #cbd5e1; color: ${currentPage === totalPages ? '#94a3b8' : '#334155'}; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease;">
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} style="display: inline-flex; align-items: center; justify-content: center; background: ${currentPage === totalPages ? 'rgba(15,23,42,0.4)' : 'rgba(30,41,59,0.85)'}; border: 1px solid ${currentPage === totalPages ? 'rgba(126,156,205,0.1)' : 'rgba(126,156,205,0.3)'}; color: ${currentPage === totalPages ? '#64748b' : '#f1f5f9'}; border-radius: 8px; padding: 0.5rem 0.85rem; font-size: 0.85rem; font-weight: 600; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; transition: all 0.2s ease;">
                     <span>Next</span>
                     <span class="material-symbols-outlined" style="font-size: 1.1rem; margin-left: 0.25rem;">chevron_right</span>
                 </button>

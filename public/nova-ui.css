@@ -3025,7 +3025,7 @@ html, body,
     }
 }
 
-/* Admin Investments Control UI Polish */
+/* Admin Investments Control UI Polish & Action Buttons */
 .inv-admin-filter-btn {
     display: inline-flex !important;
     align-items: center !important;
@@ -3054,6 +3054,115 @@ html, body,
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
 }
 
+.inv-search-input-wrap .inv-search-input:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+}
+
+.inv-id-badge {
+    background: rgba(126, 156, 205, 0.12);
+    color: #94a3b8;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    border: 1px solid rgba(126, 156, 205, 0.18);
+}
+
+.inv-action-buttons-wrap {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+}
+
+.inv-action-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.3rem !important;
+    padding: 0.4rem 0.7rem !important;
+    border-radius: 7px !important;
+    font-size: 0.74rem !important;
+    font-weight: 650 !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-sizing: border-box !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+.inv-action-btn .material-symbols-outlined {
+    font-size: 0.95rem !important;
+}
+
+.inv-action-btn.btn-hold {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.inv-action-btn.btn-hold:hover {
+    background: #d97706 !important;
+    color: #ffffff !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+.inv-action-btn.btn-suspend {
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+.inv-action-btn.btn-suspend:hover {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;
+}
+
+.inv-action-btn.btn-resume {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+.inv-action-btn.btn-resume:hover {
+    background: #059669 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+}
+
+.inv-action-btn.btn-edit {
+    background: rgba(59, 130, 246, 0.12) !important;
+    color: #60a5fa !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+.inv-action-btn.btn-edit:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+}
+
+.inv-action-btn.btn-delete {
+    background: rgba(225, 29, 72, 0.1) !important;
+    color: #fb7185 !important;
+    border: 1px solid rgba(225, 29, 72, 0.25) !important;
+}
+
+.inv-action-btn.btn-delete:hover {
+    background: #e11d48 !important;
+    color: #ffffff !important;
+    border-color: #f43f5e !important;
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35) !important;
+}
+
 .btn-user-overview-sm {
     display: inline-flex !important;
     align-items: center !important;
@@ -3074,6 +3183,111 @@ html, body,
     color: #ffffff !important;
     background: #2563eb !important;
     border-color: #3b82f6 !important;
+}
+
+/* Mobile zero-scroll card transformation for User Investments Control */
+@media (max-width: 820px) {
+    #panel-investments .inv-admin-toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.85rem !important;
+        padding: 0.85rem !important;
+    }
+    
+    #panel-investments .my-investments-tabs {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.4rem !important;
+    }
+
+    #panel-investments .inv-admin-filter-btn {
+        justify-content: center !important;
+        padding: 0.5rem 0.4rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    #panel-investments .inv-search-input-wrap {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    #panel-investments table.inv-nova-table thead {
+        display: none !important;
+    }
+
+    #panel-investments table.inv-nova-table,
+    #panel-investments table.inv-nova-table tbody {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr {
+        display: flex !important;
+        flex-direction: column !important;
+        background: rgba(15, 23, 42, 0.85) !important;
+        border: 1px solid rgba(126, 156, 205, 0.2) !important;
+        border-radius: 14px !important;
+        padding: 1rem !important;
+        margin-bottom: 0.9rem !important;
+        gap: 0.5rem !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 0.4rem 0 !important;
+        border: none !important;
+        background: none !important;
+        font-size: 0.82rem !important;
+        white-space: normal !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td:not(:first-child):not(:last-child)::before {
+        content: attr(data-label);
+        font-size: 0.72rem;
+        color: #94a3b8;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td:nth-child(1) {
+        display: none !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td:nth-child(2) {
+        padding-bottom: 0.65rem !important;
+        border-bottom: 1px dashed rgba(126, 156, 205, 0.2) !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.25rem !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td:nth-child(8) {
+        padding-top: 0.75rem !important;
+        border-top: 1px dashed rgba(126, 156, 205, 0.2) !important;
+        margin-top: 0.25rem !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td:nth-child(8) .inv-action-buttons-wrap {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+    }
+
+    #panel-investments table.inv-nova-table tbody tr td:nth-child(8) .inv-action-btn {
+        width: 100% !important;
+        min-height: 42px !important;
+        padding: 0.55rem 0.5rem !important;
+    }
 }
 
 /* Profile Active Investments Premium UI */

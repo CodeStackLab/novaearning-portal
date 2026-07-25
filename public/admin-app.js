@@ -1972,40 +1972,66 @@ function renderAdminInvestments() {
         const completedCycles = Math.min(duration, Math.floor(elapsed / dayMs));
 
         let badgeStyle = 'background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3);';
-        if (inv.status === 'Hold') badgeStyle = 'background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3);';
-        else if (inv.status === 'Suspended') badgeStyle = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);';
-        else if (inv.status === 'Completed') badgeStyle = 'background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);';
+        let badgeIcon = 'check_circle';
+        if (inv.status === 'Hold') {
+            badgeStyle = 'background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3);';
+            badgeIcon = 'pause_circle';
+        } else if (inv.status === 'Suspended') {
+            badgeStyle = 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);';
+            badgeIcon = 'block';
+        } else if (inv.status === 'Completed') {
+            badgeStyle = 'background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);';
+            badgeIcon = 'task_alt';
+        }
 
         const invJson = JSON.stringify(inv).replace(/"/g, '&quot;');
 
         return `<tr>
-            <td style="font-weight:700; color:#94a3b8;">#${inv.id}</td>
-            <td>
-                <div style="font-weight:600; color:#f8fafc;">${escapeAdminUi(inv.user_name || 'User #' + inv.user_id)}</div>
-                <small style="color:#64748b; display:block; margin-bottom:2px;">${escapeAdminUi(inv.user_email || '')}</small>
+            <td data-label="ID" style="font-weight:700; color:#94a3b8;"><span class="inv-id-badge">#${inv.id}</span></td>
+            <td data-label="User Details">
+                <div class="inv-user-name" style="font-weight:600; color:#f8fafc; display:flex; align-items:center; gap:0.4rem;">
+                    <span class="material-symbols-outlined" style="font-size:1.05rem; color:#60a5fa;">account_circle</span>
+                    <span>${escapeAdminUi(inv.user_name || 'User #' + inv.user_id)}</span>
+                </div>
+                <small class="inv-user-email" style="color:#cbd5e1; display:block; margin:2px 0 6px 0; font-size:0.78rem; font-weight:500; opacity:0.95;">${escapeAdminUi(inv.user_email || '')}</small>
                 <button type="button" class="btn-user-overview-sm" onclick="openUserFinancialOverviewModal(${inv.user_id})">
                     <span class="material-symbols-outlined" style="font-size:0.85rem;">monitoring</span>
                     <span>Financial Overview</span>
                 </button>
             </td>
-            <td>
-                <div style="font-weight:600; color:#e2e8f0;">${escapeAdminUi(inv.name)}</div>
-                <small style="color:#64748b;">Cycles: ${completedCycles} / ${duration} Days</small>
+            <td data-label="Plan Name">
+                <div style="font-weight:600; color:#e2e8f0; font-size:0.88rem;">${escapeAdminUi(inv.name)}</div>
+                <small style="color:#94a3b8; font-weight:500; display:inline-block; margin-top:2px;">Cycles: ${completedCycles} / ${duration} Days</small>
             </td>
-            <td style="font-weight:700; color:#f8fafc;">${formatUSD(amount)}</td>
-            <td style="color:#34d399; font-weight:700;">+${roi.toFixed(2)}% / day</td>
-            <td><span style="padding:0.25rem 0.65rem; border-radius:99px; font-size:0.72rem; font-weight:700; ${badgeStyle}">${escapeAdminUi(inv.status)}</span></td>
-            <td style="font-size:0.78rem; color:#94a3b8;">${escapeAdminUi(inv.start_date || '—')}</td>
-            <td style="text-align:right;">
-                <div style="display:flex; justify-content:flex-end; gap:0.35rem; flex-wrap:wrap;">
+            <td data-label="Amount" style="font-weight:700; color:#f8fafc; font-size:0.9rem;">${formatUSD(amount)}</td>
+            <td data-label="Daily ROI"><span style="color:#34d399; font-weight:700; background:rgba(16,185,129,0.1); padding:0.2rem 0.55rem; border-radius:6px; border:1px solid rgba(16,185,129,0.2); font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;"><span class="material-symbols-outlined" style="font-size:0.85rem;">trending_up</span> +${roi.toFixed(2)}% / day</span></td>
+            <td data-label="Status"><span style="padding:0.25rem 0.65rem; border-radius:99px; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:0.3rem; ${badgeStyle}"><span class="material-symbols-outlined" style="font-size:0.85rem;">${badgeIcon}</span> <span>${escapeAdminUi(inv.status)}</span></span></td>
+            <td data-label="Started" style="font-size:0.78rem; color:#94a3b8;"><span style="display:inline-flex; align-items:center; gap:0.25rem;"><span class="material-symbols-outlined" style="font-size:0.85rem; color:#64748b;">schedule</span> ${escapeAdminUi(inv.start_date || '—')}</span></td>
+            <td data-label="Actions" style="text-align:right;">
+                <div class="inv-action-buttons-wrap">
                     ${inv.status === 'Active' ? `
-                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Hold')" style="background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Hold</button>
-                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Suspended')" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Suspend</button>
+                        <button type="button" class="inv-action-btn btn-hold" onclick="changeAdminInvestmentStatus(${inv.id}, 'Hold')" title="Put on hold">
+                            <span class="material-symbols-outlined">pause_circle</span>
+                            <span>Hold</span>
+                        </button>
+                        <button type="button" class="inv-action-btn btn-suspend" onclick="changeAdminInvestmentStatus(${inv.id}, 'Suspended')" title="Suspend investment">
+                            <span class="material-symbols-outlined">block</span>
+                            <span>Suspend</span>
+                        </button>
                     ` : inv.status === 'Hold' || inv.status === 'Suspended' ? `
-                        <button type="button" onclick="changeAdminInvestmentStatus(${inv.id}, 'Active')" style="background:rgba(16,185,129,0.15); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Resume</button>
+                        <button type="button" class="inv-action-btn btn-resume" onclick="changeAdminInvestmentStatus(${inv.id}, 'Active')" title="Resume investment">
+                            <span class="material-symbols-outlined">play_circle</span>
+                            <span>Resume</span>
+                        </button>
                     ` : ''}
-                    <button type="button" onclick="openEditInvestmentModal(${invJson})" style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Edit</button>
-                    <button type="button" onclick="adminDeleteInvestment(${inv.id})" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.25); padding:0.35rem 0.65rem; border-radius:6px; font-size:0.72rem; font-weight:600; cursor:pointer;">Delete</button>
+                    <button type="button" class="inv-action-btn btn-edit" onclick="openEditInvestmentModal(${invJson})" title="Edit details">
+                        <span class="material-symbols-outlined">edit</span>
+                        <span>Edit</span>
+                    </button>
+                    <button type="button" class="inv-action-btn btn-delete" onclick="adminDeleteInvestment(${inv.id})" title="Delete investment">
+                        <span class="material-symbols-outlined">delete</span>
+                        <span>Delete</span>
+                    </button>
                 </div>
             </td>
         </tr>`;
