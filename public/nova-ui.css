@@ -3290,6 +3290,46 @@ html, body,
     }
 }
 
+/* User Investments: polished desktop table and compact mobile cards */
+#panel-investments .inv-table-card {
+    overflow: hidden;
+    border: 1px solid rgba(126,156,205,.2);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(18,30,49,.94), rgba(8,16,29,.97));
+    box-shadow: 0 18px 40px rgba(2,8,18,.22);
+}
+#panel-investments .inv-table-wrap { overflow-x: auto; }
+#panel-investments table.inv-nova-table { width: 100%; min-width: 980px; border-collapse: separate; border-spacing: 0; }
+#panel-investments table.inv-nova-table thead th {
+    position: sticky; top: 0; z-index: 2; padding: .9rem .85rem; white-space: nowrap;
+    color: #93a4bb; background: #1a283c; border-bottom: 1px solid rgba(126,156,205,.22);
+    font-size: .68rem; font-weight: 800; letter-spacing: .055em; text-transform: uppercase;
+}
+#panel-investments table.inv-nova-table tbody td {
+    padding: .85rem; vertical-align: middle; border-bottom: 1px solid rgba(126,156,205,.11);
+    color: #dbe5f2; font-size: .78rem;
+}
+#panel-investments table.inv-nova-table tbody tr:last-child td { border-bottom: 0; }
+#panel-investments table.inv-nova-table tbody tr { transition: background .18s ease; }
+#panel-investments table.inv-nova-table tbody tr:hover { background: rgba(43,76,126,.16); }
+#panel-investments .inv-user-email { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#panel-investments .inv-action-buttons-wrap { min-width: 230px; }
+#panel-investments .inv-action-btn { min-height: 36px; }
+
+@media (max-width: 991px) {
+    #panel-investments .inv-table-card { border: 0; background: transparent; box-shadow: none; }
+    #panel-investments .inv-table-wrap { overflow: visible; }
+    #panel-investments table.inv-nova-table { min-width: 0; }
+}
+
+@media (max-width: 480px) {
+    #panel-investments .my-investments-tabs { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+    #panel-investments .my-investments-tabs .inv-admin-filter-btn:last-child { grid-column: 1 / -1; }
+    #panel-investments table.inv-nova-table tbody tr { padding: .85rem !important; border-radius: 13px !important; }
+    #panel-investments table.inv-nova-table tbody tr td { font-size: .78rem !important; }
+    #panel-investments table.inv-nova-table tbody tr td:nth-child(8) .inv-action-buttons-wrap { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+
 /* Profile Active Investments Premium UI */
 .profile-investments-grid {
     display: grid;
