@@ -730,6 +730,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $amountText = number_format((float)$deposit['amount'], 2);
                 $safeRef = htmlspecialchars($deposit['txn_id']);
                 notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p>" . ($adminComment ? '<p><strong>Admin comment:</strong> ' . htmlspecialchars($adminComment) . '</p>' : '') . "<p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
+                notifyAdmins($pdo, 'Deposit review completed', "<p>Deposit <strong>{$safeRef}</strong> for <strong>\${$amountText}</strong> was marked <strong>" . strtolower($newStatus) . "</strong>.</p>" . ($adminComment ? '<p>Admin comment: ' . htmlspecialchars($adminComment) . '</p>' : ''), 'deposit');
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
                     $bonusText = number_format($referralBonusAmt, 2);
                     notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A {$depositCommissionPct}% referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
@@ -916,6 +917,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $safeComment = htmlspecialchars($comment);
             $title = $requestedStatus === 'Confirmed' ? 'Withdrawal completed' : ($requestedStatus === 'Hold' ? 'Withdrawal placed on hold' : 'Withdrawal cancelled');
             notifyUserById($pdo, $tx['user_id'], $title, "<p>Your withdrawal of <strong>\${$amountText}</strong> is now <strong>" . strtolower($requestedStatus) . "</strong>.</p>" . ($comment ? "<p><strong>Admin reason:</strong> {$safeComment}</p>" : '') . "<p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>', 'withdrawal');
+            notifyAdmins($pdo, 'Withdrawal status updated', "<p>Withdrawal <strong>" . htmlspecialchars($tx['ref']) . "</strong> for <strong>\${$amountText}</strong> was marked <strong>" . strtolower($requestedStatus) . "</strong>.</p>" . ($comment ? "<p>Admin comment: {$safeComment}</p>" : ''), 'withdrawal');
             sendJson(['message' => 'Payout status updated and user notified.']);
         }
 
