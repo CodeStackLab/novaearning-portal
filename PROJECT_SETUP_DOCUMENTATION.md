@@ -67,6 +67,12 @@
 - **From Name**: `Nova Support`
 - **SMTP Password**: Enter the `admin@novaearning.com` IONOS mailbox password in Admin Panel → SMTP Settings. It is encrypted in the database and must not be stored in this document or source control.
 
+### IONOS DNS / DKIM notes
+
+The deployment workflow uses SFTP only; it does not currently call the IONOS DNS API. No IONOS API key is stored in this repository (API keys must never be committed to source control). To resolve a Gmail DKIM warning, open IONOS → Domains & SSL → `novaearning.com` → DNS, then copy the exact DKIM selector/value shown by the IONOS Mail domain settings. Add it as a TXT record, preserving the selector and the complete `v=DKIM1; ...` value. Do not guess the value: DKIM keys are unique to the mailbox/domain.
+
+If DNS automation is required, add the API credential only as an encrypted GitHub Actions secret (for example `IONOS_API_TOKEN`) and implement a separately reviewed workflow using the official IONOS DNS API. Never put the token in `config.php`, this document, a Git remote URL, browser JavaScript, or an issue/chat message. After publishing the record, allow DNS propagation and use Admin → SMTP Settings → **Recheck DNS**. SPF and DMARC can pass while DKIM is still missing; this warning affects Gmail authentication/deliverability, not SMTP login itself.
+
 ### Email Features Integrated:
 1. **Support Tickets & Live Chat**:
    - User posts message ➔ Email notification sent to `admin@novaearning.com`.
