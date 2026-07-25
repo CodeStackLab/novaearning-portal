@@ -439,7 +439,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 5. Periodic polling to keep admin logs updated in real-time
     setInterval(async () => {
         const currentHash = window.location.hash.substring(1) || 'overview';
-        if (localStorage.getItem('nova_token')) {
+        // Keep the overview counters live without re-rendering the investment table
+        // every few seconds (which caused visible flicker and reset mobile cards).
+        if (localStorage.getItem('nova_token') && currentHash === 'overview') {
             await fetchActiveTabDetails(currentHash);
         }
     }, 5000);
