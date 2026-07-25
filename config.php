@@ -216,6 +216,10 @@ function novaEmailBody($heading, $contentHtml) {
 }
 
 function ensurePlatformFeatureTables($pdo) {
+    // Lightweight, idempotent columns used for administrator review reasons.
+    foreach (["transactions" => 'admin_comment', "deposits" => 'admin_comment'] as $table => $column) {
+        try { $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$column` TEXT DEFAULT NULL"); } catch (Exception $e) { /* already exists */ }
+    }
     $pdo->exec("CREATE TABLE IF NOT EXISTS in_app_notifications (
         id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, category VARCHAR(40) NOT NULL,
         title VARCHAR(180) NOT NULL, message TEXT NOT NULL, action_url VARCHAR(255) DEFAULT NULL,

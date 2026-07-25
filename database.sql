@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS deposits (
     screenshot_path VARCHAR(255),
     plan_name VARCHAR(255),
     status VARCHAR(50) NOT NULL,
+    admin_comment TEXT DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -51,6 +52,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     ref VARCHAR(255) UNIQUE NOT NULL,
     status VARCHAR(50) NOT NULL,
     wallet_address VARCHAR(255),
+    admin_comment TEXT DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

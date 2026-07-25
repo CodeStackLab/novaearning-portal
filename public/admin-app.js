@@ -899,8 +899,10 @@ function renderPayoutsTable(payouts) {
         let actionCell = `<span style="color:#64748b; font-size:0.8rem;">Processed</span>`;
         if (po.status === 'Pending') {
             actionCell = `
-                <button type="button" class="payout-confirm-btn" onclick="verifyPayout(${Number(po.id)}, this)">Confirm Payout</button>
+                <div class="payout-action-group"><button type="button" class="payout-confirm-btn" onclick="updatePayoutStatus(${Number(po.id)}, 'Confirmed', this)">Approve / Pay</button><button type="button" class="payout-hold-btn" onclick="updatePayoutStatus(${Number(po.id)}, 'Hold', this)">Hold</button><button type="button" class="payout-cancel-btn" onclick="updatePayoutStatus(${Number(po.id)}, 'Cancelled', this)">Cancel</button></div>
             `;
+        } else if (po.status === 'Hold') {
+            actionCell = `<div class="payout-action-group"><button type="button" class="payout-confirm-btn" onclick="updatePayoutStatus(${Number(po.id)}, 'Confirmed', this)">Approve / Pay</button><button type="button" class="payout-cancel-btn" onclick="updatePayoutStatus(${Number(po.id)}, 'Cancelled', this)">Cancel</button></div>`;
         }
 
         const payoutId = Number(po.id);
@@ -932,6 +934,18 @@ function renderPayoutsTable(payouts) {
             </tr>
         `;
     }).join('');
+}
+
+async function updatePayoutStatus(transactionId, status, button) {
+    const labels = { Confirmed:'approve and mark this payout as paid', Hold:'place this payout on hold', Cancelled:'cancel this payout' };
+    if (!confirm(`Are you sure you want to ${labels[status]}?`)) return;
+    const comment = (status === 'Confirmed') ? (prompt('Optional admin comment for the user:') || '') : (prompt(`Enter the reason for ${status.toLowerCase()}:`) || '').trim();
+    if ((status === 'Hold' || status === 'Cancelled') && !comment) { alert('A reason is required.'); return; }
+    if (button) { button.disabled = true; button.textContent = 'Saving…'; }
+    try {
+        const result = await adminRequest('/admin/payouts/update-status', { method:'POST', body:JSON.stringify({ transactionId, status, comment }) });
+        showToast(result.message || 'Payout status updated.'); await fetchActiveTabDetails('payouts'); await fetchActiveTabDetails('overview');
+    } catch (e) { alert(e.message || 'Unable to update payout.'); if (button) button.disabled = false; }
 }
 
 function copyPayoutWallet(payoutId) {
@@ -1104,6 +1118,7 @@ async function applyEditBalance() {
 
 // Verify Deposit approvals
 async function verifyDeposit(depositId, action, button = null) {
+    const comment = prompt(`Optional admin comment/reason for this ${action === 'Approve' ? 'approval' : 'rejection'}:`) || '';
     const originalLabel = button?.textContent;
     if (button) {
         button.disabled = true;
@@ -1112,7 +1127,7 @@ async function verifyDeposit(depositId, action, button = null) {
     try {
         const result = await adminRequest('/admin/deposits/verify', {
             method: 'POST',
-            body: JSON.stringify({ depositId, action })
+            body: JSON.stringify({ depositId, action, comment: comment.trim() })
         });
 
         showToast(result.message || `Deposit ${action === 'Approve' ? 'Approved' : 'Rejected'}!`);

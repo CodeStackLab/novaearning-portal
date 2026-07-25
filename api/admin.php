@@ -5,6 +5,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit();
     $userId = authenticateToken();
     requireAdmin($pdo, $userId);
+    ensurePlatformFeatureTables($pdo);
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if ($action === 'overview') {
@@ -634,6 +635,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             if ($deposit['status'] !== 'Pending') sendJson(['message' => 'Already verified'], 400);
 
             $newStatus = $act === 'Approve' ? 'Confirmed' : 'Failed';
+            $adminComment = trim($body['comment'] ?? '');
             
             $pdo->beginTransaction();
             try {
@@ -643,6 +645,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
                 $stmt = $pdo->prepare('UPDATE transactions SET status = ? WHERE ref = ?');
                 $stmt->execute([$newStatus, $deposit['txn_id']]);
+                $stmt = $pdo->prepare('UPDATE deposits SET admin_comment = ? WHERE id = ?');
+                $stmt->execute([$adminComment ?: null, $depositId]);
 
                 if ($act === 'Approve') {
                     $stmt = $pdo->prepare('SELECT balance, referred_by FROM users WHERE id = ? FOR UPDATE');
@@ -725,7 +729,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 }
                 $amountText = number_format((float)$deposit['amount'], 2);
                 $safeRef = htmlspecialchars($deposit['txn_id']);
-                notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
+                notifyUserById($pdo, $deposit['user_id'], $act === 'Approve' ? 'Deposit confirmed' : 'Deposit rejected', "<p>Your deposit of <strong>\${$amountText}</strong> has been <strong>" . strtolower($newStatus) . "</strong>.</p>" . ($adminComment ? '<p><strong>Admin comment:</strong> ' . htmlspecialchars($adminComment) . '</p>' : '') . "<p><strong>Reference:</strong> {$safeRef}</p>", 'deposit');
                 if ($act === 'Approve' && !empty($user['referred_by']) && isset($referralBonusAmt)) {
                     $bonusText = number_format($referralBonusAmt, 2);
                     notifyUserById($pdo, $user['referred_by'], 'Referral commission credited', "<p>A {$depositCommissionPct}% referral commission of <strong>\${$bonusText}</strong> was automatically added to your balance.</p>", 'referral');
@@ -884,7 +888,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             }
         }
 
-        if ($action === 'payouts' && $subaction === 'verify') {
+        if ($action === 'payouts' && in_array($subaction, ['verify', 'update-status'], true)) {
             $transactionId = $body['transactionId'] ?? null;
             if (!$transactionId) sendJson(['message' => 'Valid transaction ID required'], 400);
 
@@ -893,15 +897,26 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $tx = $stmt->fetch();
 
             if (!$tx) sendJson(['message' => 'Withdrawal not found'], 404);
-            if ($tx['status'] !== 'Pending') sendJson(['message' => 'Already processed'], 400);
+            $requestedStatus = $subaction === 'verify' ? 'Confirmed' : trim($body['status'] ?? '');
+            if ($subaction === 'update-status' && !in_array($requestedStatus, ['Confirmed', 'Hold', 'Cancelled'], true)) sendJson(['message' => 'Invalid payout status'], 400);
+            if ($tx['status'] !== 'Pending' && !($subaction === 'update-status' && $tx['status'] === 'Hold')) sendJson(['message' => 'This payout cannot be changed'], 400);
+            $comment = trim($body['comment'] ?? '');
+            if (in_array($requestedStatus, ['Hold', 'Cancelled'], true) && $comment === '') sendJson(['message' => 'A reason/comment is required for this action'], 400);
 
-            $stmt = $pdo->prepare("UPDATE transactions SET status = ? WHERE id = ? AND status = 'Pending'");
-            $stmt->execute(['Confirmed', $transactionId]);
+            $pdo->beginTransaction();
+            $stmt = $pdo->prepare("UPDATE transactions SET status = ?, admin_comment = ? WHERE id = ? AND status IN ('Pending','Hold')");
+            $stmt->execute([$requestedStatus, $comment ?: null, $transactionId]);
             if ($stmt->rowCount() !== 1) sendJson(['message' => 'Withdrawal was already processed'], 409);
-            auditAdminAction($pdo, $userId, 'withdrawal.confirmed', 'transaction', $transactionId, ['amount' => (float)$tx['amount'], 'userId' => $tx['user_id']]);
+            if ($requestedStatus === 'Cancelled') {
+                $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?'); $stmt->execute([$tx['amount'], $tx['user_id']]);
+            }
+            $pdo->commit();
+            auditAdminAction($pdo, $userId, 'withdrawal.' . strtolower($requestedStatus), 'transaction', $transactionId, ['amount' => (float)$tx['amount'], 'userId' => $tx['user_id'], 'comment' => $comment]);
             $amountText = number_format((float)$tx['amount'], 2);
-            notifyUserById($pdo, $tx['user_id'], 'Withdrawal completed', "<p>Your withdrawal of <strong>\${$amountText}</strong> has been approved and marked completed.</p><p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>', 'withdrawal');
-            sendJson(['message' => 'Withdrawal successfully approved and completed.']);
+            $safeComment = htmlspecialchars($comment);
+            $title = $requestedStatus === 'Confirmed' ? 'Withdrawal completed' : ($requestedStatus === 'Hold' ? 'Withdrawal placed on hold' : 'Withdrawal cancelled');
+            notifyUserById($pdo, $tx['user_id'], $title, "<p>Your withdrawal of <strong>\${$amountText}</strong> is now <strong>" . strtolower($requestedStatus) . "</strong>.</p>" . ($comment ? "<p><strong>Admin reason:</strong> {$safeComment}</p>" : '') . "<p><strong>Reference:</strong> " . htmlspecialchars($tx['ref']) . '</p>', 'withdrawal');
+            sendJson(['message' => 'Payout status updated and user notified.']);
         }
 
         if ($action === 'tickets' && $subaction === 'reply') {
