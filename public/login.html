@@ -427,12 +427,14 @@
                 </div>
                 <!-- Step 3 -->
                 <div class="step-pane" id="step-pane-3">
-                    <div class="pane-title">Referral (Optional)</div>
-                    <div class="pane-sub">Got a referral code? Enter it here.</div>
+                    <div class="pane-title">Verify your email</div>
+                    <div class="pane-sub">We will send a 6-digit code to your Gmail address.</div>
                     <div class="field"><label>Referral Code</label><input type="text" id="signup-ref" placeholder="e.g. JOHN1234"></div>
+                    <div class="field" id="signup-otp-field" style="display:none"><label>6-Digit Email OTP</label><input type="text" id="signup-otp" placeholder="123456" maxlength="6" inputmode="numeric"></div>
+                    <div class="otp-delivery-help"><span class="material-symbols-outlined">info</span><span>Check Gmail <strong>Spam, Promotions and All Mail</strong>; search for “Nova”. Code expires in 10 minutes.</span></div>
                     <div class="btn-row">
                         <button type="button" class="btn-secondary" onclick="prevStep(2)">← Back</button>
-                        <button type="submit" class="btn-primary" id="signup-submit-btn" style="margin-top:0;flex:2;">Create Account &amp; Sign In</button>
+                        <button type="submit" class="btn-primary" id="signup-submit-btn" style="margin-top:0;flex:2;">Send verification code</button>
                     </div>
                 </div>
             </form>
@@ -561,7 +563,8 @@
         }
     }
 
-    // --- Direct Sign Up (email OTP is reserved for Forgot Password) ---
+    // --- Email-verified Sign Up ---
+    let signupOtpSent = false;
     async function submitSignUp(e) {
         e.preventDefault();
         const name = document.getElementById('signup-name').value.trim();
@@ -572,18 +575,22 @@
         if (password.length < 6 || password !== confirmPassword) { alert(password !== confirmPassword ? 'Passwords do not match.' : 'Password must be at least 6 characters.'); showStep(2); return; }
 
         const btn = document.getElementById('signup-submit-btn');
-        if (btn) { btn.textContent = 'Creating Account...'; btn.disabled = true; }
+        if (btn) { btn.textContent = signupOtpSent ? 'Verifying…' : 'Sending code…'; btn.disabled = true; }
 
         try {
-            const res = await fetch('/api/auth/register', {
+            const payload = { name, email, password, referralCode: document.getElementById('signup-ref').value };
+            if (!signupOtpSent) {
+                const res = await fetch('/api/auth/register/send-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+                const data = await res.json(); if (!res.ok) throw new Error(data.message || 'Could not send verification code');
+                signupOtpSent = true; document.getElementById('signup-otp-field').style.display = 'block';
+                btn.textContent = 'Verify OTP & Create Account'; btn.disabled = false; alert('Verification code sent. Check Gmail Spam/Promotions if needed.'); return;
+            }
+            const otp = document.getElementById('signup-otp').value.trim();
+            if (!/^\d{6}$/.test(otp)) throw new Error('Enter the 6-digit email OTP.');
+            const res = await fetch('/api/auth/register/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    password,
-                    referralCode: document.getElementById('signup-ref').value
-                })
+                body: JSON.stringify({ email, otpCode: otp })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Registration failed');
@@ -592,7 +599,7 @@
             window.location.href = redirectTarget || '/dashboard';
         } catch (err) {
             alert(err.message);
-            if (btn) { btn.textContent = 'Create Account & Sign In'; btn.disabled = false; }
+            if (btn) { btn.textContent = signupOtpSent ? 'Verify OTP & Create Account' : 'Send verification code'; btn.disabled = false; }
         }
     }
 

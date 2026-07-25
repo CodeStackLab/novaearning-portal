@@ -53,15 +53,44 @@ function handleAuth($action, $subaction, $pdo, $body) {
 
     if ($action === 'register') {
         if ($subaction === 'send-otp') {
-            sendJson(['message' => 'Registration email verification is no longer required. Create the account directly.'], 410);
+            $name = trim($body['name'] ?? '');
+            $email = strtolower(trim($body['email'] ?? ''));
+            $password = $body['password'] ?? '';
+            $referralCode = trim($body['referralCode'] ?? '');
+            if (!$name || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 6) sendJson(['message' => 'Enter a valid name, email and password (6+ characters).'], 400);
+            $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?'); $stmt->execute([$email]);
+            if ($stmt->fetch()) sendJson(['message' => 'Email address is already registered'], 400);
+            $pdo->exec("CREATE TABLE IF NOT EXISTS registration_otps (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(190) NOT NULL UNIQUE, name VARCHAR(190) NOT NULL, password_hash VARCHAR(255) NOT NULL, referral_code VARCHAR(80) DEFAULT '', token_hash VARCHAR(255) NOT NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at DATETIME NOT NULL, INDEX(expires_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $otp = (string)random_int(100000, 999999);
+            $hash = password_hash($otp, PASSWORD_DEFAULT);
+            $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+            $stmt = $pdo->prepare('INSERT INTO registration_otps (email,name,password_hash,referral_code,token_hash,expires_at) VALUES (?,?,?,?,?,DATE_ADD(NOW(), INTERVAL 10 MINUTE)) ON DUPLICATE KEY UPDATE name=VALUES(name),password_hash=VALUES(password_hash),referral_code=VALUES(referral_code),token_hash=VALUES(token_hash),attempts=0,created_at=CURRENT_TIMESTAMP,expires_at=VALUES(expires_at)');
+            $stmt->execute([$email, $name, $passwordHash, $referralCode, $hash]);
+            $bodyHtml = "<div style='font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px'><h2 style='color:#1769e0'>Nova Portal email verification</h2><p>Hi <strong>" . htmlspecialchars($name) . "</strong>,</p><p>Use this 6-digit OTP to complete your registration:</p><div style='font-size:32px;letter-spacing:7px;text-align:center;font-weight:bold;color:#1769e0;padding:18px;background:#f0f6ff'>" . $otp . "</div><p>This code expires in 10 minutes. If you do not see it, check Gmail Spam, Promotions and All Mail, then search for <strong>Nova</strong>.</p></div>";
+            if (!sendSmtpEmail($email, $name, 'Verify your Nova Portal account', $bodyHtml, $pdo)) sendJson(['message' => 'Unable to send verification email. Check SMTP settings and Gmail Spam/Promotions.'], 503);
+            sendJson(['message' => 'Verification code sent. It expires in 10 minutes.']);
         }
 
-        $name = trim($body['name'] ?? '');
-        $email = strtolower(trim($body['email'] ?? ''));
-        $password = $body['password'] ?? '';
-        $referralCode = trim($body['referralCode'] ?? '');
+        $registrationVerified = false;
+        if ($subaction === 'verify-otp') {
+            $email = strtolower(trim($body['email'] ?? '')); $otpCode = trim($body['otpCode'] ?? '');
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match('/^\d{6}$/', $otpCode)) sendJson(['message' => 'Enter the 6-digit verification code.'], 400);
+            $pdo->exec("CREATE TABLE IF NOT EXISTS registration_otps (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(190) NOT NULL UNIQUE, name VARCHAR(190) NOT NULL, password_hash VARCHAR(255) NOT NULL, referral_code VARCHAR(80) DEFAULT '', token_hash VARCHAR(255) NOT NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at DATETIME NOT NULL, INDEX(expires_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            $stmt = $pdo->prepare('SELECT * FROM registration_otps WHERE email = ? AND expires_at >= NOW() LIMIT 1'); $stmt->execute([$email]); $pending = $stmt->fetch();
+            if (!$pending || (int)$pending['attempts'] >= 5 || !password_verify($otpCode, $pending['token_hash'])) { if ($pending) { $stmt=$pdo->prepare('UPDATE registration_otps SET attempts=attempts+1 WHERE id=?'); $stmt->execute([$pending['id']]); } sendJson(['message' => 'Invalid or expired verification code.'], 400); }
+            $stmt = $pdo->prepare('DELETE FROM registration_otps WHERE id = ?'); $stmt->execute([$pending['id']]);
+            $name = $pending['name']; $email = $pending['email']; $passwordHash = $pending['password_hash']; $referralCode = $pending['referral_code']; $registrationVerified = true;
+        }
+        if (!$registrationVerified) sendJson(['message' => 'Please verify your email before creating the account.'], 403);
 
-        if (!$name || !$email || !$password) {
+        if (!$registrationVerified) {
+            $name = trim($body['name'] ?? '');
+            $email = strtolower(trim($body['email'] ?? ''));
+            $password = $body['password'] ?? '';
+            $referralCode = trim($body['referralCode'] ?? '');
+        }
+
+        if (!$name || !$email || (!$registrationVerified && !$password)) {
             sendJson(['message' => 'Name, email, and password are required'], 400);
         }
 
@@ -92,7 +121,7 @@ function handleAuth($action, $subaction, $pdo, $body) {
         $cleanName = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $name), 0, 4));
         if (strlen($cleanName) < 2) $cleanName = 'NOVA';
         $myReferralCode = $cleanName . rand(1000, 9999);
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        $hashedPassword = $registrationVerified ? $passwordHash : password_hash($password, PASSWORD_BCRYPT);
 
         $stmt = $pdo->prepare('INSERT INTO users (name, email, username, password, balance, earnings, active_investments, role, referred_by, referral_code) VALUES (?, ?, ?, ?, ?, 0.0, 0.0, ?, ?, ?)');
         $stmt->execute([$name, $email, $email, $hashedPassword, $startBalance, 'user', $referrerId, $myReferralCode]);
