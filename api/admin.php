@@ -44,8 +44,16 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $invest = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Active' THEN amount ELSE 0 END),0) active, COALESCE(SUM(CASE WHEN status='Completed' THEN amount ELSE 0 END),0) completed, COALESCE(SUM(CASE WHEN status IN ('Hold','Suspended') THEN amount ELSE 0 END),0) held FROM investments");
             $withdraw = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Confirmed' THEN amount ELSE 0 END),0) paid, COALESCE(SUM(CASE WHEN status='Pending' THEN amount ELSE 0 END),0) pending, COALESCE(SUM(CASE WHEN status='Hold' THEN amount ELSE 0 END),0) held, COALESCE(SUM(CASE WHEN status='Cancelled' THEN amount ELSE 0 END),0) cancelled FROM transactions WHERE type='Withdrawal'");
             $comm = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN type IN ('Referral Bonus','Referral Commission') THEN amount ELSE 0 END),0) referral, COALESCE(SUM(CASE WHEN type='Daily Commission' THEN amount ELSE 0 END),0) daily FROM transactions WHERE status='Confirmed'");
-            $top = $pdo->query("SELECT u.id,u.name,u.email,u.balance,u.earnings,COUNT(DISTINCT CASE WHEN d.status='Confirmed' THEN d.id END) deposits,COALESCE(SUM(CASE WHEN d.status='Confirmed' THEN d.amount ELSE 0 END),0) deposit_total,COUNT(DISTINCT CASE WHEN u2.id IS NOT NULL THEN u2.id END) referrals FROM users u LEFT JOIN deposits d ON d.user_id=u.id LEFT JOIN users u2 ON u2.referred_by=u.id WHERE u.role='user' GROUP BY u.id ORDER BY u.balance DESC LIMIT 100")->fetchAll();
-            sendJson(['users'=>$users,'deposits'=>$deposits,'investments'=>$invest,'withdrawals'=>$withdraw,'commissions'=>$comm,'topUsers'=>$top]);
+            $top = $pdo->query("SELECT u.id,u.name,u.email,u.balance,u.earnings,
+                COALESCE((SELECT SUM(d.amount) FROM deposits d WHERE d.user_id=u.id AND d.status='Confirmed'),0) deposit_total,
+                COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.user_id=u.id AND t.type='Withdrawal' AND t.status IN ('Confirmed','Pending','Hold','Cancelled')),0) withdrawal_total,
+                COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.user_id=u.id AND t.type IN ('Referral Bonus','Referral Commission') AND t.status='Confirmed'),0) referral_earnings,
+                (SELECT COUNT(*) FROM users r WHERE r.referred_by=u.id) referrals
+                FROM users u WHERE u.role='user' ORDER BY u.id DESC LIMIT 100")->fetchAll();
+            $lifetime = $q($pdo, "SELECT COALESCE(SUM(amount),0) total FROM deposits WHERE status='Confirmed'");
+            $withdrawAll = $q($pdo, "SELECT COALESCE(SUM(amount),0) total FROM transactions WHERE type='Withdrawal' AND status IN ('Confirmed','Pending','Hold','Cancelled')");
+            $referrals = $q($pdo, "SELECT COUNT(*) total FROM users WHERE referred_by IS NOT NULL");
+            sendJson(['users'=>$users,'deposits'=>$deposits,'investments'=>$invest,'withdrawals'=>$withdraw,'commissions'=>$comm,'topUsers'=>$top,'lifetimeDeposits'=>(float)$lifetime['total'],'lifetimeWithdrawals'=>(float)$withdrawAll['total'],'totalReferrals'=>(int)$referrals['total']]);
         }
 
         if ($action === 'users') {

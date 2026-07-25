@@ -143,10 +143,10 @@ async function fetchActiveTabDetails(tabId) {
 
 function renderAdminFinancialOverview(d) {
     const m = document.getElementById('admin-financial-metrics'); if (!m) return;
-    const cards = [['Confirmed deposits',d.deposits.confirmed,'#34d399'],['Active investments',d.investments.active,'#60a5fa'],['Paid withdrawals',d.withdrawals.paid,'#f87171'],['User balances',d.users.balances,'#c084fc'],['Referral commissions',d.commissions.referral,'#fbbf24'],['Daily commissions',d.commissions.daily,'#22d3ee'],['Pending/held funds',(Number(d.deposits.pending)||0)+(Number(d.withdrawals.held)||0),'#fb923c'],['Platform net exposure',(Number(d.deposits.confirmed)||0)-(Number(d.withdrawals.paid)||0)-(Number(d.commissions.referral)||0),'#a7f3d0']];
+    const cards = [['Lifetime deposits',d.lifetimeDeposits,'#34d399'],['Active investments',d.investments.active,'#60a5fa'],['All withdrawals',d.lifetimeWithdrawals,'#f87171'],['Wallet balances',d.users.balances,'#c084fc'],['Referral earnings',d.commissions.referral,'#fbbf24'],['Daily earnings',d.commissions.daily,'#22d3ee'],['Total referrals',d.totalReferrals,'#a78bfa'],['Pending/held funds',(Number(d.deposits.pending)||0)+(Number(d.withdrawals.held)||0),'#fb923c']];
     m.innerHTML = cards.map(c=>`<article><span>${escapeAdminUi(c[0])}</span><strong style="color:${c[2]}">${formatUSD(c[1])}</strong></article>`).join('');
     const body=document.getElementById('admin-financial-users'); if (!body) return;
-    body.innerHTML=(d.topUsers||[]).map(u=>`<tr><td><strong>${escapeAdminUi(u.name||'User')}</strong><small style="display:block;color:#718096">${escapeAdminUi(u.email||'')}</small></td><td>${formatUSD(u.balance)}</td><td>${formatUSD(u.earnings)}</td><td>${formatUSD(u.deposit_total)}</td><td>${u.referrals||0}</td></tr>`).join('') || '<tr><td colspan="5">No user data</td></tr>';
+    body.innerHTML=(d.topUsers||[]).map(u=>`<tr><td><strong>${escapeAdminUi(u.name||'User')}</strong><small style="display:block;color:#718096">${escapeAdminUi(u.email||'')}</small></td><td>${formatUSD(u.balance)}</td><td>${formatUSD(u.earnings)}</td><td>${formatUSD(u.deposit_total)}</td><td>${formatUSD(u.withdrawal_total)}</td><td>${u.referrals||0}</td><td>${formatUSD(u.referral_earnings)}</td></tr>`).join('') || '<tr><td colspan="7">No user data</td></tr>';
 }
 
 async function loadAuditLog() {
