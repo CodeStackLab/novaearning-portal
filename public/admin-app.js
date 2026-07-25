@@ -722,9 +722,17 @@ function renderCommissionsTable(commissions) {
             <td>${formatUSD(item.amount)}</td>
             <td>${escapeAdminUi(item.ref || '')}</td>
             <td>${escapeAdminUi(item.status || '')}</td>
-            <td>${confirmed ? `<button type="button" class="smtp-test-btn" onclick="revokeReferralCommission(${Number(item.id)}, this)">Revoke</button>` : '<span style="color:#94a3b8;">Processed</span>'}</td>
+            <td>${confirmed ? `<button type="button" class="smtp-test-btn" onclick="updateReferralStatus(${Number(item.id)},'Hold',this)">Hold</button> <button type="button" class="smtp-test-btn" onclick="updateReferralStatus(${Number(item.id)},'Suspended',this)">Suspend</button>` : '<span style="color:#94a3b8;">Processed</span>'}</td>
         </tr>`;
     }).join('');
+}
+
+function updateReferralStatus(transactionId, status, button) {
+    openAdminReasonModal({title:`Referral reward ${status}`, required:true, help:`Enter the reason for ${status.toLowerCase()} this referral reward.`, onSubmit: async comment => {
+        if(button) button.disabled=true;
+        try { const result=await adminRequest('/admin/commissions/update-status',{method:'POST',body:JSON.stringify({transactionId,status,comment})}); showToast(result.message||'Referral updated.'); await fetchActiveTabDetails('commissions'); }
+        catch(error){showToast(error.message||'Unable to update referral.'); if(button)button.disabled=false;}
+    }});
 }
 
 async function revokeReferralCommission(transactionId, button) {

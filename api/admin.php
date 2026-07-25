@@ -920,6 +920,28 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             }
         }
 
+        if ($action === 'commissions' && $subaction === 'update-status') {
+            $transactionId = (int)($body['transactionId'] ?? 0);
+            $status = trim($body['status'] ?? '');
+            $comment = trim($body['comment'] ?? '');
+            if (!$transactionId || !in_array($status, ['Confirmed','Hold','Suspended'], true)) sendJson(['message'=>'Valid referral status required'],400);
+            if ($status !== 'Confirmed' && $comment === '') sendJson(['message'=>'A reason is required'],400);
+            $stmt = $pdo->prepare("SELECT * FROM transactions WHERE id=? AND type IN ('Referral Bonus','Referral Commission')"); $stmt->execute([$transactionId]); $tx=$stmt->fetch();
+            if (!$tx) sendJson(['message'=>'Referral reward not found'],404);
+            $old=$tx['status'];
+            $pdo->beginTransaction();
+            try {
+                if ($old === 'Confirmed' && $status !== 'Confirmed') { $pdo->prepare('UPDATE users SET balance=GREATEST(0,balance-?) WHERE id=?')->execute([$tx['amount'],$tx['user_id']]); }
+                if ($old !== 'Confirmed' && $status === 'Confirmed') { $pdo->prepare('UPDATE users SET balance=balance+? WHERE id=?')->execute([$tx['amount'],$tx['user_id']]); }
+                $pdo->prepare('UPDATE transactions SET status=?, admin_comment=? WHERE id=?')->execute([$status,$comment,$transactionId]);
+                $pdo->commit();
+                auditAdminAction($pdo,$userId,'referral.'.strtolower($status),'transaction',$transactionId,['amount'=>(float)$tx['amount'],'comment'=>$comment]);
+                notifyUserById($pdo,$tx['user_id'],'Referral reward '.strtolower($status),'<p>Your referral reward of <strong>$'.number_format($tx['amount'],2).'</strong> is now <strong>'.htmlspecialchars($status).'</strong>.</p>'.($comment?'<p>Admin note: '.htmlspecialchars($comment).'</p>':''),'referral');
+                notifyAdmins($pdo,'Referral reward updated','<p>A referral reward was marked '.htmlspecialchars($status).'.</p>','commission');
+                sendJson(['message'=>'Referral reward status updated.']);
+            } catch (Exception $e) { if($pdo->inTransaction())$pdo->rollBack(); sendJson(['message'=>'Unable to update referral reward'],500); }
+        }
+
         if ($action === 'payouts' && in_array($subaction, ['verify', 'update-status'], true)) {
             $transactionId = $body['transactionId'] ?? null;
             if (!$transactionId) sendJson(['message' => 'Valid transaction ID required'], 400);
