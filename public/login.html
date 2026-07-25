@@ -442,6 +442,7 @@
                     <div class="pane-sub">Enter the 6-digit code sent to your Gmail address.</div>
                     <div class="otp-delivery-help"><span class="material-symbols-outlined">info</span><span>Check Gmail <strong>Spam, Promotions and All Mail</strong>; search for “Nova”. Code expires in 10 minutes.</span></div>
                     <div class="field"><label>6-Digit Email OTP</label><input type="text" id="signup-otp" placeholder="123456" maxlength="6" inputmode="numeric"></div>
+                    <div id="signup-message" role="status" style="display:none;margin:.7rem 0;padding:.65rem .75rem;border-radius:9px;font-size:.72rem;line-height:1.4"></div>
                     <div class="btn-row"><button type="button" class="btn-secondary" onclick="prevStep(3)">← Back</button><button type="submit" class="btn-primary" id="signup-verify-btn" style="margin-top:0;flex:2;">Verify OTP &amp; Create Account</button></div>
                 </div>
             </form>
@@ -539,14 +540,14 @@
         if (n === 2) {
             const name = document.getElementById('signup-name').value.trim();
             const email = document.getElementById('signup-email').value.trim();
-            if (!name || !email) { alert('Please fill in Name and Email.'); return; }
-            if (!email.includes('@')) { alert('Enter a valid email.'); return; }
+            if (!name || !email) { setSignupMessage('Please fill in Name and Email.'); return; }
+            if (!email.includes('@')) { setSignupMessage('Enter a valid email.'); return; }
         }
         if (n === 3) {
             const pw = document.getElementById('signup-password').value;
             const cp = document.getElementById('signup-confirm').value;
-            if (!pw || pw.length < 6) { alert('Password must be at least 6 characters.'); return; }
-            if (pw !== cp) { alert('Passwords do not match.'); return; }
+            if (!pw || pw.length < 6) { setSignupMessage('Password must be at least 6 characters.'); return; }
+            if (pw !== cp) { setSignupMessage('Passwords do not match.'); return; }
         }
         showStep(n);
     }
@@ -581,6 +582,13 @@
 
     // --- Email-verified Sign Up ---
     let signupOtpSent = false;
+    function setSignupMessage(message, type = 'error') {
+        const el = document.getElementById('signup-message'); if (!el) return;
+        el.textContent = message; el.style.display = 'block';
+        el.style.color = type === 'success' ? '#6ee7b7' : '#fecaca';
+        el.style.background = type === 'success' ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.12)';
+        el.style.border = `1px solid ${type === 'success' ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`;
+    }
     async function submitSignUp(e) {
         e.preventDefault();
         const name = document.getElementById('signup-name').value.trim();
@@ -598,7 +606,7 @@
             if (!signupOtpSent) {
                 const res = await fetch('/api/auth/register/send-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
                 const data = await res.json(); if (!res.ok) throw new Error(data.message || 'Could not send verification code');
-                signupOtpSent = true; showStep(4); btn.textContent = 'Verify OTP & Create Account'; btn.disabled = false; alert('Verification code sent. Check Gmail Spam/Promotions if needed.'); return;
+                signupOtpSent = true; showStep(4); btn.textContent = 'Verify OTP & Create Account'; btn.disabled = false; setSignupMessage('Verification code sent. Check Gmail Spam/Promotions if needed.', 'success'); return;
             }
             const otp = document.getElementById('signup-otp').value.trim();
             if (!/^\d{6}$/.test(otp)) throw new Error('Enter the 6-digit email OTP.');
@@ -613,7 +621,7 @@
             localStorage.setItem('nova_role', 'user');
             window.location.href = redirectTarget || '/dashboard';
         } catch (err) {
-            alert(err.message);
+            setSignupMessage(err.message || 'Unable to complete signup.');
             if (btn) { btn.textContent = signupOtpSent ? 'Verify OTP & Create Account' : 'Send verification code'; btn.disabled = false; }
         }
     }
