@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3b3"/><stop offset=".42" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#8b6508"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="512" height="512" fill="#050a14"/>
+  <circle cx="256" cy="235" r="145" fill="none" stroke="url(#gold)" stroke-width="11"/>
+  <g fill="url(#gold)">
+    <path d="M170 155h38l96 116v-116h38v160h-38l-96-116v116h-38z"/>
+  </g>
+  <g fill="url(#gold)" font-family="Arial,Helvetica,sans-serif" font-size="58" font-weight="700" letter-spacing="18" text-anchor="middle">
+    <text x="256" y="430">NOVA</text>
+  </g>
+  <g stroke="#fff8d6" stroke-linecap="round" filter="url(#glow)"><path d="M390 105v42M369 126h42" stroke-width="6"/></g>
+</svg>
