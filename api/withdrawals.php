@@ -10,6 +10,7 @@ function handleWithdrawals($action, $pdo, $body) {
         $amount = $body['amount'] ?? 0;
         $withdrawAmt = (float)$amount;
         $minimumWithdrawal = getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000);
+        $withdrawalFeePct = getNumericSetting($pdo, 'withdrawal_fee_pct', 2, 0, 100);
 
         if (!$address || $withdrawAmt < $minimumWithdrawal) {
             sendJson(['message' => 'Valid address and amount (minimum $' . number_format($minimumWithdrawal, 2) . ') are required'], 400);
@@ -20,8 +21,9 @@ function handleWithdrawals($action, $pdo, $body) {
 
         $dateStr = date('M j, Y h:i A');
         $randomRef = "WD" . strtoupper(substr(md5(uniqid()), 0, 8));
-        $fee = $withdrawAmt * 0.02;
+        $fee = $withdrawAmt * ($withdrawalFeePct / 100);
         $netPayout = $withdrawAmt - $fee;
+        $feePctText = rtrim(rtrim(number_format($withdrawalFeePct, 2, '.', ''), '0'), '.');
 
         $pdo->beginTransaction();
         try {
@@ -44,9 +46,9 @@ function handleWithdrawals($action, $pdo, $body) {
             $amountText = number_format($withdrawAmt, 2);
             $netText = number_format($netPayout, 2);
             $safeRef = htmlspecialchars($randomRef);
-            notifyUserById($pdo, $userId, 'Withdrawal request received', "<p>Your withdrawal request for <strong>\${$amountText}</strong> is pending review.</p><p>Net payout after the 2% fee: <strong>\${$netText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'withdrawal');
+            notifyUserById($pdo, $userId, 'Withdrawal request received', "<p>Your withdrawal request for <strong>\${$amountText}</strong> is pending review.</p><p>Net payout after the {$feePctText}% fee: <strong>\${$netText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p>", 'withdrawal');
             notifyAdmins($pdo, 'New withdrawal awaiting approval', "<p><strong>" . htmlspecialchars($user['name'] ?: 'User') . "</strong> requested a withdrawal of <strong>\${$amountText}</strong>.</p><p><strong>Reference:</strong> {$safeRef}</p><p>Please review it in Manage Payouts.</p>", 'withdrawal');
-            sendJson(['message' => "Withdrawal request submitted — waiting for admin approval. Net payout after the 2% fee will be $" . number_format($netPayout, 2) . "."]);
+            sendJson(['message' => "Withdrawal request submitted — waiting for admin approval. Net payout after the {$feePctText}% fee will be $" . number_format($netPayout, 2) . "."]);
         } catch (Exception $e) {
             $pdo->rollBack();
             sendJson(['message' => 'Server error'], 500);

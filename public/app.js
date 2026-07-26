@@ -2,7 +2,7 @@
 
 const API_BASE = '/api';
 let selectedDepositAmount = 100.00;
-let transactionLimits = { minimumDeposit: 100, minimumWithdrawal: 50 };
+let transactionLimits = { minimumDeposit: 100, minimumWithdrawal: 50, withdrawalFeePct: 2 };
 
 // Copy to Clipboard Utility
 function copyToClipboard(text, message = "Copied to clipboard!") {
@@ -43,7 +43,7 @@ async function shareDashboardReferral() {
 
 function updateWithdrawalPreview() {
     const amount = Math.max(0, parseFloat(document.getElementById('withdraw-amount-val')?.value) || 0);
-    const fee = amount * 0.02;
+    const fee = amount * (transactionLimits.withdrawalFeePct / 100);
     const feeEl = document.getElementById('withdraw-fee-preview');
     const totalEl = document.getElementById('withdraw-total-preview');
     if (feeEl) feeEl.textContent = amount ? `- ${formatUSD(fee)}` : '—';
@@ -55,6 +55,8 @@ async function loadTransactionLimits() {
         const limits = await apiRequest('/settings/transaction-limits');
         transactionLimits.minimumDeposit = Number(limits.minimumDeposit) || 100;
         transactionLimits.minimumWithdrawal = Number(limits.minimumWithdrawal) || 50;
+        transactionLimits.withdrawalFeePct = Number.isFinite(Number(limits.withdrawalFeePct)) ? Number(limits.withdrawalFeePct) : 2;
+        const withdrawalFeeText = Number(transactionLimits.withdrawalFeePct.toFixed(2)).toString();
         const depositInput = document.getElementById('custom-deposit-amount');
         if (depositInput) {
             depositInput.min = String(transactionLimits.minimumDeposit);
@@ -66,8 +68,11 @@ async function loadTransactionLimits() {
         const withdrawalInput = document.getElementById('withdraw-amount-val');
         if (withdrawalInput) {
             withdrawalInput.min = String(transactionLimits.minimumWithdrawal);
-            withdrawalInput.placeholder = `Min. ${formatUSD(transactionLimits.minimumWithdrawal)} (2% Fee applies)`;
+            withdrawalInput.placeholder = `Min. ${formatUSD(transactionLimits.minimumWithdrawal)} (${withdrawalFeeText}% Fee applies)`;
         }
+        const withdrawalFeeLabel = document.getElementById('withdraw-fee-label');
+        if (withdrawalFeeLabel) withdrawalFeeLabel.textContent = `Fee (${withdrawalFeeText}%)`;
+        updateWithdrawalPreview();
     } catch (error) {
         console.error('Unable to load transaction limits:', error.message);
     }

@@ -646,6 +646,7 @@ async function loadTransactionLimits() {
         const limits = await adminRequest('/admin/settings/transaction-limits');
         document.getElementById('minimum-deposit-setting').value = Number(limits.minimumDeposit || 100);
         document.getElementById('minimum-withdrawal-setting').value = Number(limits.minimumWithdrawal || 50);
+        document.getElementById('withdrawal-fee-setting').value = Number.isFinite(Number(limits.withdrawalFeePct)) ? Number(limits.withdrawalFeePct) : 2;
     } catch (error) {
         showToast(error.message || 'Unable to load transaction limits.');
     }
@@ -656,10 +657,17 @@ async function saveTransactionLimits(event) {
     const button = document.getElementById('transaction-limits-save-btn');
     const payload = {
         minimumDeposit: Number(document.getElementById('minimum-deposit-setting').value),
-        minimumWithdrawal: Number(document.getElementById('minimum-withdrawal-setting').value)
+        minimumWithdrawal: Number(document.getElementById('minimum-withdrawal-setting').value),
+        withdrawalFeePct: Number(document.getElementById('withdrawal-fee-setting').value)
     };
-    if (Object.values(payload).some(value => !Number.isFinite(value) || value < 1 || value > 1000000)) {
+    if (!Number.isFinite(payload.minimumDeposit) || !Number.isFinite(payload.minimumWithdrawal) ||
+        payload.minimumDeposit < 1 || payload.minimumWithdrawal < 1 ||
+        payload.minimumDeposit > 1000000 || payload.minimumWithdrawal > 1000000) {
         showToast('Enter transaction minimums between $1 and $1,000,000.');
+        return;
+    }
+    if (!Number.isFinite(payload.withdrawalFeePct) || payload.withdrawalFeePct < 0 || payload.withdrawalFeePct > 100) {
+        showToast('Enter a withdrawal fee between 0% and 100%.');
         return;
     }
     if (button) button.disabled = true;

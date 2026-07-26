@@ -140,7 +140,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         if ($action === 'settings' && $subaction === 'transaction-limits') {
             sendJson([
                 'minimumDeposit' => getNumericSetting($pdo, 'minimum_deposit_usd', 100, 1, 1000000),
-                'minimumWithdrawal' => getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000)
+                'minimumWithdrawal' => getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000),
+                'withdrawalFeePct' => getNumericSetting($pdo, 'withdrawal_fee_pct', 2, 0, 100)
             ]);
         }
 
@@ -236,12 +237,17 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         if ($action === 'settings' && $subaction === 'transaction-limits') {
             $minimumDeposit = $body['minimumDeposit'] ?? null;
             $minimumWithdrawal = $body['minimumWithdrawal'] ?? null;
+            $withdrawalFeePct = $body['withdrawalFeePct'] ?? null;
             if (!is_numeric($minimumDeposit) || !is_numeric($minimumWithdrawal) || (float)$minimumDeposit < 1 || (float)$minimumWithdrawal < 1 || (float)$minimumDeposit > 1000000 || (float)$minimumWithdrawal > 1000000) {
                 sendJson(['message' => 'Deposit and withdrawal minimums must be between $1 and $1,000,000.'], 400);
             }
+            if (!is_numeric($withdrawalFeePct) || (float)$withdrawalFeePct < 0 || (float)$withdrawalFeePct > 100) {
+                sendJson(['message' => 'Withdrawal fee must be between 0% and 100%.'], 400);
+            }
             $values = [
                 'minimum_deposit_usd' => number_format((float)$minimumDeposit, 2, '.', ''),
-                'minimum_withdrawal_usd' => number_format((float)$minimumWithdrawal, 2, '.', '')
+                'minimum_withdrawal_usd' => number_format((float)$minimumWithdrawal, 2, '.', ''),
+                'withdrawal_fee_pct' => number_format((float)$withdrawalFeePct, 2, '.', '')
             ];
             $pdo->beginTransaction();
             try {
@@ -249,7 +255,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 foreach ($values as $key => $value) $stmt->execute([$key, $value]);
                 $pdo->commit();
                 auditAdminAction($pdo, $userId, 'transaction.limits.updated', 'settings', 'transaction-limits', $values);
-                sendJson(['message' => 'Transaction limits updated successfully.']);
+                sendJson(['message' => 'Transaction limits and withdrawal fee updated successfully.']);
             } catch (Throwable $e) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
                 sendJson(['message' => 'Unable to update transaction limits.'], 500);
