@@ -377,6 +377,88 @@ body.dark-theme {
 .smtp-security-note .material-symbols-outlined { color: #72a0fa; font-size: 1.05rem; }
 .smtp-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1rem; }
 .smtp-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; }
+
+/* Financial settings use balanced fields instead of SMTP-specific column sizes. */
+#panel-commissions {
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+}
+
+#panel-commissions .deposit-step-box {
+    width: 100%;
+    box-sizing: border-box;
+    padding: clamp(1rem, 2.4vw, 1.6rem);
+}
+
+.financial-settings-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem 1rem;
+}
+
+.financial-settings-grid .form-group-db {
+    display: flex;
+    min-width: 0;
+    margin-bottom: 0;
+    flex-direction: column;
+}
+
+.financial-settings-grid .form-label-db {
+    min-height: 2.15rem;
+    margin-bottom: .45rem;
+    line-height: 1.35;
+}
+
+.financial-settings-grid .form-input-db {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+    .financial-settings-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .financial-settings-grid .form-group-db:first-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 560px) {
+    #panel-commissions .deposit-step-box {
+        padding: 1rem;
+        border-radius: 14px !important;
+    }
+
+    .financial-settings-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: .8rem !important;
+    }
+
+    .financial-settings-grid .form-group-db,
+    .financial-settings-grid .form-group-db:first-child {
+        grid-column: 1 !important;
+    }
+
+    .financial-settings-grid .form-label-db {
+        min-height: 0;
+        margin-bottom: .4rem;
+        font-size: .78rem;
+    }
+
+    #panel-commissions .smtp-actions {
+        margin-top: .85rem;
+    }
+
+    #panel-commissions .smtp-actions button {
+        width: 100%;
+        min-height: 48px;
+        padding-inline: .8rem;
+        white-space: normal;
+    }
+}
 .smtp-test-btn { padding: .68rem 1.05rem; color: #c9d8f2; background: rgba(28, 48, 78, .65); border: 1px solid rgba(104, 145, 207, .34); border-radius: 10px; font: 650 .82rem/1 inherit; cursor: pointer; }
 .smtp-test-btn:hover { color: #fff; border-color: rgba(112,161,237,.65); background: rgba(38,67,110,.72); }
 .smtp-test-btn:disabled, #smtp-save-btn:disabled { opacity: .6; cursor: wait; }
