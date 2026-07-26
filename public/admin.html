@@ -91,6 +91,12 @@
                 </a>
             </li>
             <li>
+                <a href="#system-reset" class="sidebar-item-link" data-tab="system-reset">
+                    <span class="material-symbols-outlined sidebar-icon">warning</span>
+                    <span>System Reset</span>
+                </a>
+            </li>
+            <li>
                 <a href="#smtp" class="sidebar-item-link" data-tab="smtp">
                     <span class="material-symbols-outlined sidebar-icon">outgoing_mail</span>
                     <span>SMTP Settings</span>
@@ -726,6 +732,20 @@
                 <div id="audit-log-list" class="audit-log-list"><div class="notification-inbox-empty">Loading audit history…</div></div>
             </section>
 
+            <section id="panel-system-reset" class="dashboard-panel-view">
+                <h1 class="panel-title font-display">System Reset</h1>
+                <p class="panel-desc">Protected administration actions that permanently remove platform data.</p>
+                <div class="system-reset-card">
+                    <div class="system-reset-icon"><span class="material-symbols-outlined">delete_forever</span></div>
+                    <div class="system-reset-copy">
+                        <h2 class="font-display">Delete all non-admin users</h2>
+                        <p>This permanently deletes every user account, balance, deposit, withdrawal, investment, referral, commission, support conversation, notification, and login record. Admin accounts, plans, and platform settings remain safe.</p>
+                        <div class="system-reset-warning"><span class="material-symbols-outlined">report</span><strong>This action cannot be undone.</strong> An OTP sent to your current admin email is required.</div>
+                    </div>
+                    <button type="button" class="system-reset-open-btn" onclick="openSystemResetModal()"><span class="material-symbols-outlined">lock_reset</span> Reset all user data</button>
+                </div>
+            </section>
+
             <!-- PANEL: SMTP SETTINGS -->
             <section id="panel-smtp" class="dashboard-panel-view">
                 <h1 class="panel-title font-display">SMTP Configuration</h1>
@@ -1183,6 +1203,26 @@
         </div>
     </div>
 
+    <div id="system-reset-modal" class="system-reset-modal" role="dialog" aria-modal="true" aria-labelledby="system-reset-title" hidden>
+        <div class="system-reset-modal-card">
+            <button type="button" class="system-reset-modal-close" onclick="closeSystemResetModal()" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+            <span class="material-symbols-outlined system-reset-modal-icon">warning</span>
+            <h2 id="system-reset-title" class="font-display">Permanently reset all users?</h2>
+            <p>All non-admin accounts and their complete data will be deleted. Admin accounts will remain safe.</p>
+            <div class="system-reset-step" id="system-reset-request-step">
+                <button type="button" id="system-reset-send-otp" class="system-reset-danger-btn" onclick="requestSystemResetOtp()">Send verification OTP</button>
+            </div>
+            <form class="system-reset-step" id="system-reset-confirm-step" onsubmit="confirmSystemReset(event)" hidden>
+                <label for="system-reset-otp">6-digit OTP sent to admin email</label>
+                <input id="system-reset-otp" class="form-input-db" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+                <label for="system-reset-confirmation">Type <strong>RESET ALL USERS</strong> to confirm</label>
+                <input id="system-reset-confirmation" class="form-input-db" type="text" autocomplete="off" placeholder="RESET ALL USERS" required>
+                <label class="system-reset-check"><input id="system-reset-understood" type="checkbox" required><span>I understand this permanently deletes every non-admin user account.</span></label>
+                <button type="submit" id="system-reset-confirm-btn" class="system-reset-danger-btn"><span class="material-symbols-outlined">delete_forever</span> Permanently delete all users</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Ergonomic Mobile Bottom Navigation for Admin -->
     <nav class="mobile-bottom-nav" id="admin-mobile-bottom-nav" aria-label="Admin Mobile Navigation">
         <a href="#overview" class="mobile-nav-item active" data-tab="overview" onclick="switchTab('overview')">
@@ -1208,6 +1248,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=93.0"></script>
+    <script src="admin-app.js?v=94.0"></script>
 </body>
 </html>

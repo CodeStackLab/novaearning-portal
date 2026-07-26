@@ -202,6 +202,62 @@ async function saveNotificationSettings(event) {
     }
 }
 
+function openSystemResetModal() {
+    const modal = document.getElementById('system-reset-modal');
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('system-reset-send-otp')?.focus();
+}
+
+function closeSystemResetModal() {
+    const modal = document.getElementById('system-reset-modal');
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+}
+
+async function requestSystemResetOtp() {
+    const button = document.getElementById('system-reset-send-otp');
+    if (button) button.disabled = true;
+    try {
+        const result = await adminRequest('/admin/system-reset/request-otp', { method: 'POST', body: '{}' });
+        document.getElementById('system-reset-request-step').hidden = true;
+        document.getElementById('system-reset-confirm-step').hidden = false;
+        document.getElementById('system-reset-otp')?.focus();
+        showToast(result.message || 'Reset OTP sent to the admin email.');
+    } catch (error) {
+        showToast(error.message || 'Unable to send reset OTP.');
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function confirmSystemReset(event) {
+    event.preventDefault();
+    const otp = document.getElementById('system-reset-otp')?.value.trim() || '';
+    const confirmation = document.getElementById('system-reset-confirmation')?.value.trim() || '';
+    if (!/^\d{6}$/.test(otp) || confirmation !== 'RESET ALL USERS' || !document.getElementById('system-reset-understood')?.checked) {
+        showToast('Enter the OTP, type RESET ALL USERS exactly, and accept the warning.');
+        return;
+    }
+    const button = document.getElementById('system-reset-confirm-btn');
+    if (button) button.disabled = true;
+    try {
+        const result = await adminRequest('/admin/system-reset/confirm', { method: 'POST', body: JSON.stringify({ otp, confirmation }) });
+        closeSystemResetModal();
+        document.getElementById('system-reset-request-step').hidden = false;
+        document.getElementById('system-reset-confirm-step').hidden = true;
+        document.getElementById('system-reset-confirm-step').reset();
+        showToast(result.message || 'All non-admin users were deleted.');
+        await fetchActiveTabDetails('overview');
+    } catch (error) {
+        showToast(error.message || 'User reset failed.');
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
 async function loadSmtpSettings() {
     const status = document.getElementById('smtp-config-status');
     if (!document.getElementById('smtp-settings-form')) return;

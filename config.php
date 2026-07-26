@@ -258,6 +258,14 @@ function ensurePlatformFeatureTables($pdo) {
     foreach (["name VARCHAR(190) NOT NULL DEFAULT ''", "password_hash VARCHAR(255) NOT NULL DEFAULT ''", "referral_code VARCHAR(80) DEFAULT ''", "token_hash VARCHAR(255) NOT NULL DEFAULT ''"] as $column) {
         try { $pdo->exec("ALTER TABLE registration_otps ADD COLUMN $column"); } catch (Exception $e) {}
     }
+    $pdo->exec("CREATE TABLE IF NOT EXISTS admin_user_reset_otps (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY, admin_id INT NOT NULL,
+        token_hash VARCHAR(255) NOT NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        expires_at DATETIME NOT NULL, used_at DATETIME DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_admin_reset_otp (admin_id, expires_at),
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
 
 function recordLoginActivity($pdo, $userId) {

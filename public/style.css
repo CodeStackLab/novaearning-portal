@@ -3128,6 +3128,43 @@ body.support-image-viewer-open {
     overflow: hidden;
 }
 
+.system-reset-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.1rem;
+    padding: clamp(1rem, 2.5vw, 1.6rem);
+    background: linear-gradient(145deg, rgba(55, 13, 23, .82), rgba(24, 13, 22, .96));
+    border: 1px solid rgba(244, 63, 94, .38);
+    border-radius: 16px;
+}
+.system-reset-icon { display:grid; place-items:center; width:52px; height:52px; color:#fb7185; background:rgba(244,63,94,.14); border-radius:14px; }
+.system-reset-icon span { font-size:1.8rem; }
+.system-reset-copy h2 { margin:0 0 .4rem; color:#fff; font-size:1.05rem; }
+.system-reset-copy p { margin:0; color:#aeb8c8; font-size:.78rem; line-height:1.6; }
+.system-reset-warning { display:flex; align-items:center; gap:.45rem; margin-top:.75rem; color:#fecdd3; font-size:.72rem; }
+.system-reset-warning .material-symbols-outlined { color:#fb7185; font-size:1.05rem; }
+.system-reset-open-btn, .system-reset-danger-btn { display:inline-flex; min-height:44px; align-items:center; justify-content:center; gap:.4rem; padding:.7rem 1rem; color:#fff; background:#be123c; border:1px solid #fb7185; border-radius:9px; cursor:pointer; font-weight:750; }
+.system-reset-open-btn:hover, .system-reset-danger-btn:hover { background:#e11d48; }
+.system-reset-open-btn:disabled, .system-reset-danger-btn:disabled { opacity:.55; cursor:wait; }
+.system-reset-modal[hidden] { display:none; }
+.system-reset-modal { position:fixed; inset:0; z-index:1000000; display:grid; place-items:center; padding:1rem; background:rgba(2,6,15,.88); backdrop-filter:blur(8px); }
+.system-reset-modal-card { position:relative; width:min(500px,100%); box-sizing:border-box; padding:clamp(1.2rem,4vw,2rem); background:#111827; border:1px solid rgba(244,63,94,.4); border-radius:18px; box-shadow:0 28px 90px rgba(0,0,0,.65); text-align:center; }
+.system-reset-modal-card h2 { margin:.65rem 0 .5rem; color:#fff; font-size:1.25rem; }
+.system-reset-modal-card > p { margin:0 0 1.25rem; color:#aeb8c8; font-size:.8rem; line-height:1.55; }
+.system-reset-modal-icon { color:#fb7185; font-size:2.5rem; }
+.system-reset-modal-close { position:absolute; top:.75rem; right:.75rem; display:grid; place-items:center; width:38px; height:38px; color:#94a3b8; background:#1f2937; border:0; border-radius:50%; cursor:pointer; }
+.system-reset-step { display:grid; gap:.75rem; text-align:left; }
+.system-reset-step[hidden] { display:none; }
+.system-reset-step label { color:#cbd5e1; font-size:.75rem; }
+.system-reset-step .system-reset-danger-btn { width:100%; margin-top:.25rem; }
+.system-reset-check { display:flex; align-items:flex-start; gap:.55rem; padding:.7rem; background:rgba(244,63,94,.08); border-radius:8px; line-height:1.4; }
+.system-reset-check input { margin-top:.15rem; accent-color:#e11d48; }
+@media (max-width:700px) {
+    .system-reset-card { grid-template-columns:auto minmax(0,1fr); align-items:start; }
+    .system-reset-open-btn { grid-column:1 / -1; width:100%; }
+}
+
 @media (max-width: 600px) {
     .support-chat-image {
         width: min(170px, 100%);

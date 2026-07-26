@@ -234,6 +234,99 @@ function handleAdmin($action, $subaction, $pdo, $body) {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($action === 'system-reset' && $subaction === 'request-otp') {
+            $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ? AND role = 'admin'");
+            $stmt->execute([$userId]);
+            $admin = $stmt->fetch();
+            if (!$admin || !filter_var($admin['email'], FILTER_VALIDATE_EMAIL)) {
+                sendJson(['message' => 'The current admin account does not have a valid email address.'], 400);
+            }
+            $recent = $pdo->prepare('SELECT created_at FROM admin_user_reset_otps WHERE admin_id = ? ORDER BY id DESC LIMIT 1');
+            $recent->execute([$userId]);
+            $lastCreated = $recent->fetchColumn();
+            if ($lastCreated && time() - strtotime($lastCreated) < 60) {
+                sendJson(['message' => 'Please wait one minute before requesting another reset code.'], 429);
+            }
+            $otp = (string)random_int(100000, 999999);
+            $tokenHash = password_hash($otp, PASSWORD_DEFAULT);
+            $pdo->prepare('UPDATE admin_user_reset_otps SET used_at = NOW() WHERE admin_id = ? AND used_at IS NULL')->execute([$userId]);
+            $stmt = $pdo->prepare('INSERT INTO admin_user_reset_otps (admin_id, token_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))');
+            $stmt->execute([$userId, $tokenHash]);
+            $otpId = (int)$pdo->lastInsertId();
+            $userCount = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role <> 'admin'")->fetchColumn();
+            $emailBody = novaEmailBody(
+                'Confirm complete user reset',
+                '<p>A permanent reset of <strong>' . $userCount . ' non-admin user account(s)</strong> was requested.</p>'
+                . '<p>Enter this verification code in the Nova Admin panel:</p>'
+                . '<div style="padding:18px;text-align:center;background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;font-size:32px;font-weight:800;letter-spacing:7px;color:#be123c">' . $otp . '</div>'
+                . '<p>This code expires in 10 minutes and can be attempted no more than five times. If you did not request this, do not share the code and secure your admin account.</p>'
+            );
+            if (!sendSmtpEmail($admin['email'], $admin['name'] ?: 'Nova Admin', 'Critical action: verify complete user reset', $emailBody, $pdo)) {
+                $pdo->prepare('DELETE FROM admin_user_reset_otps WHERE id = ?')->execute([$otpId]);
+                sendJson(['message' => 'Unable to send the reset OTP. Check SMTP settings and try again.'], 503);
+            }
+            auditAdminAction($pdo, $userId, 'system.user_reset.otp_requested', 'system', 'all-users', ['userCount' => $userCount]);
+            sendJson(['message' => 'A 6-digit reset code was sent to your admin email.', 'userCount' => $userCount]);
+        }
+
+        if ($action === 'system-reset' && $subaction === 'confirm') {
+            $otp = trim((string)($body['otp'] ?? ''));
+            $confirmation = trim((string)($body['confirmation'] ?? ''));
+            if (!preg_match('/^\d{6}$/', $otp) || $confirmation !== 'RESET ALL USERS') {
+                sendJson(['message' => 'Enter the 6-digit OTP and type RESET ALL USERS exactly.'], 400);
+            }
+            $stmt = $pdo->prepare('SELECT id, token_hash, attempts FROM admin_user_reset_otps WHERE admin_id = ? AND expires_at > NOW() AND used_at IS NULL ORDER BY id DESC LIMIT 1');
+            $stmt->execute([$userId]);
+            $resetToken = $stmt->fetch();
+            if (!$resetToken) sendJson(['message' => 'Reset code is invalid or expired. Request a new code.'], 400);
+            if ((int)$resetToken['attempts'] >= 5) sendJson(['message' => 'Too many incorrect attempts. Request a new code.'], 429);
+            if (!password_verify($otp, $resetToken['token_hash'])) {
+                $pdo->prepare('UPDATE admin_user_reset_otps SET attempts = attempts + 1 WHERE id = ?')->execute([$resetToken['id']]);
+                sendJson(['message' => 'Incorrect reset verification code.'], 400);
+            }
+
+            $uploadPaths = [];
+            foreach (['SELECT screenshot_path AS path FROM deposits WHERE user_id IN (SELECT id FROM users WHERE role <> "admin")',
+                      'SELECT image_path AS path FROM tickets WHERE user_id IN (SELECT id FROM users WHERE role <> "admin")',
+                      'SELECT admin_image_path AS path FROM tickets WHERE user_id IN (SELECT id FROM users WHERE role <> "admin")'] as $pathQuery) {
+                foreach ($pdo->query($pathQuery)->fetchAll() as $row) if (!empty($row['path'])) $uploadPaths[] = $row['path'];
+            }
+
+            $pdo->beginTransaction();
+            try {
+                $lockedUsers = $pdo->query("SELECT id FROM users WHERE role <> 'admin' FOR UPDATE")->fetchAll();
+                $userCount = count($lockedUsers);
+                $pdo->exec("DELETE FROM notification_log WHERE investment_id IN (SELECT id FROM investments WHERE user_id IN (SELECT id FROM users WHERE role <> 'admin'))");
+                foreach (['in_app_notifications', 'balance_ledger', 'login_activity'] as $table) {
+                    $pdo->exec("DELETE FROM {$table} WHERE user_id IN (SELECT id FROM users WHERE role <> 'admin')");
+                }
+                foreach (['user_notification_preferences', 'password_reset_tokens', 'email_change_tokens', 'tickets', 'transactions', 'investments', 'deposits'] as $table) {
+                    $pdo->exec("DELETE FROM {$table} WHERE user_id IN (SELECT id FROM users WHERE role <> 'admin')");
+                }
+                $pdo->exec("DELETE FROM admin_audit_log WHERE target_type IN ('user','deposit','investment','transaction','commission','ticket')");
+                $pdo->exec('DELETE FROM auth_attempts');
+                $pdo->exec('DELETE FROM registration_otps');
+                $deleted = $pdo->exec("DELETE FROM users WHERE role <> 'admin'");
+                if ((int)$deleted !== $userCount) throw new RuntimeException('User count changed during reset');
+                $pdo->prepare('UPDATE admin_user_reset_otps SET used_at = NOW() WHERE id = ?')->execute([$resetToken['id']]);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                error_log('Global user reset failed: ' . $e->getMessage());
+                sendJson(['message' => 'Reset failed safely. No partial user deletion was committed.'], 500);
+            }
+
+            $uploadsRoot = realpath(__DIR__ . '/../public/uploads');
+            if ($uploadsRoot) {
+                foreach (array_unique($uploadPaths) as $relativePath) {
+                    $candidate = realpath(__DIR__ . '/../public/' . ltrim((string)$relativePath, '/'));
+                    if ($candidate && strpos($candidate, $uploadsRoot . DIRECTORY_SEPARATOR) === 0 && is_file($candidate)) @unlink($candidate);
+                }
+            }
+            auditAdminAction($pdo, $userId, 'system.user_reset.completed', 'system', 'all-users', ['deletedUsers' => $userCount]);
+            sendJson(['message' => $userCount . ' non-admin user account(s) and all associated data were permanently deleted.', 'deletedUsers' => $userCount]);
+        }
+
         if ($action === 'settings' && $subaction === 'transaction-limits') {
             $minimumDeposit = $body['minimumDeposit'] ?? null;
             $minimumWithdrawal = $body['minimumWithdrawal'] ?? null;
