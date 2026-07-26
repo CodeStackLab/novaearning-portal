@@ -1182,7 +1182,7 @@ function renderTicketsTable(tickets) {
         let userImageHtml = '';
         if (ticket.image_path) {
             const imagePath = escapeUi(ticket.image_path);
-            userImageHtml = `<a href="${imagePath}" target="_blank" rel="noopener"><img src="${imagePath}" alt="Your attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
+            userImageHtml = renderSupportChatImage(imagePath, 'Your attachment');
         }
 
         let html = '';
@@ -1210,7 +1210,7 @@ function renderTicketsTable(tickets) {
         let adminImageHtml = '';
         if (ticket.admin_image_path) {
             const adminImagePath = escapeUi(ticket.admin_image_path);
-            adminImageHtml = `<a href="${adminImagePath}" target="_blank" rel="noopener"><img src="${adminImagePath}" alt="Support attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
+            adminImageHtml = renderSupportChatImage(adminImagePath, 'Support attachment');
         }
 
         if (ticket.admin_reply) {
@@ -1238,6 +1238,51 @@ function renderTicketsTable(tickets) {
 
     // Scroll to bottom
     container.scrollTop = container.scrollHeight;
+}
+
+function renderSupportChatImage(imagePath, altText) {
+    return `
+        <button type="button" class="support-chat-image" data-image-src="${imagePath}" onclick="openSupportImage(this.dataset.imageSrc)" aria-label="View ${altText}">
+            <img src="${imagePath}" alt="${altText}" loading="lazy">
+            <span><span class="material-symbols-outlined">zoom_in</span> View image</span>
+        </button>
+    `;
+}
+
+function openSupportImage(imagePath) {
+    if (!imagePath) return;
+    let viewer = document.getElementById('support-image-viewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'support-image-viewer';
+        viewer.className = 'support-image-viewer';
+        viewer.setAttribute('role', 'dialog');
+        viewer.setAttribute('aria-modal', 'true');
+        viewer.setAttribute('aria-label', 'Support attachment preview');
+        viewer.innerHTML = `
+            <button type="button" class="support-image-viewer-close" aria-label="Close image viewer"><span class="material-symbols-outlined">close</span></button>
+            <img alt="Full-size support attachment">
+        `;
+        viewer.addEventListener('click', event => {
+            if (event.target === viewer || event.target.closest('.support-image-viewer-close')) closeSupportImage();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && viewer.classList.contains('open')) closeSupportImage();
+        });
+        document.body.appendChild(viewer);
+    }
+    viewer.querySelector('img').src = imagePath;
+    viewer.classList.add('open');
+    document.body.classList.add('support-image-viewer-open');
+    viewer.querySelector('.support-image-viewer-close').focus();
+}
+
+function closeSupportImage() {
+    const viewer = document.getElementById('support-image-viewer');
+    if (!viewer) return;
+    viewer.classList.remove('open');
+    viewer.querySelector('img').removeAttribute('src');
+    document.body.classList.remove('support-image-viewer-open');
 }
 
 function highlightPlan(planName) {

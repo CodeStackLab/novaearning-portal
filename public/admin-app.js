@@ -1304,7 +1304,7 @@ function selectAdminChatUser(userId, shouldScroll = true, openMobile = true) {
         let userImageHtml = '';
         if (ticket.image_path) {
             const imagePath = escapeUi(ticket.image_path);
-            userImageHtml = `<a href="${imagePath}" target="_blank" rel="noopener"><img src="${imagePath}" alt="User attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
+            userImageHtml = renderAdminSupportChatImage(imagePath, 'User attachment');
         }
 
         let html = '';
@@ -1332,7 +1332,7 @@ function selectAdminChatUser(userId, shouldScroll = true, openMobile = true) {
         let adminImageHtml = '';
         if (ticket.admin_image_path) {
             const adminImagePath = escapeUi(ticket.admin_image_path);
-            adminImageHtml = `<a href="${adminImagePath}" target="_blank" rel="noopener"><img src="${adminImagePath}" alt="Admin attachment" style="max-width:100%;border-radius:8px;margin-top:.5rem;display:block;"></a>`;
+            adminImageHtml = renderAdminSupportChatImage(adminImagePath, 'Admin attachment');
         }
 
         if (ticket.admin_reply) {
@@ -1361,6 +1361,51 @@ function selectAdminChatUser(userId, shouldScroll = true, openMobile = true) {
     if (shouldScroll) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
+}
+
+function renderAdminSupportChatImage(imagePath, altText) {
+    return `
+        <button type="button" class="support-chat-image" data-image-src="${imagePath}" onclick="openAdminSupportImage(this.dataset.imageSrc)" aria-label="View ${altText}">
+            <img src="${imagePath}" alt="${altText}" loading="lazy">
+            <span><span class="material-symbols-outlined">zoom_in</span> View image</span>
+        </button>
+    `;
+}
+
+function openAdminSupportImage(imagePath) {
+    if (!imagePath) return;
+    let viewer = document.getElementById('support-image-viewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'support-image-viewer';
+        viewer.className = 'support-image-viewer';
+        viewer.setAttribute('role', 'dialog');
+        viewer.setAttribute('aria-modal', 'true');
+        viewer.setAttribute('aria-label', 'Support attachment preview');
+        viewer.innerHTML = `
+            <button type="button" class="support-image-viewer-close" aria-label="Close image viewer"><span class="material-symbols-outlined">close</span></button>
+            <img alt="Full-size support attachment">
+        `;
+        viewer.addEventListener('click', event => {
+            if (event.target === viewer || event.target.closest('.support-image-viewer-close')) closeAdminSupportImage();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && viewer.classList.contains('open')) closeAdminSupportImage();
+        });
+        document.body.appendChild(viewer);
+    }
+    viewer.querySelector('img').src = imagePath;
+    viewer.classList.add('open');
+    document.body.classList.add('support-image-viewer-open');
+    viewer.querySelector('.support-image-viewer-close').focus();
+}
+
+function closeAdminSupportImage() {
+    const viewer = document.getElementById('support-image-viewer');
+    if (!viewer) return;
+    viewer.classList.remove('open');
+    viewer.querySelector('img').removeAttribute('src');
+    document.body.classList.remove('support-image-viewer-open');
 }
 
 // HTML Escape Helper

@@ -2954,6 +2954,118 @@ body.dark-theme .pagination-btn.num-btn.active {
     color: #64748b;
 }
 
+.support-chat-image {
+    display: block;
+    width: min(220px, 100%);
+    margin-top: .55rem;
+    padding: 0;
+    overflow: hidden;
+    color: #e5efff;
+    background: rgba(5, 10, 20, .48);
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 10px;
+    cursor: zoom-in;
+    text-align: left;
+}
+
+.support-chat-image img {
+    display: block;
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    background: #080d16;
+}
+
+.support-chat-image > span {
+    display: flex;
+    min-height: 32px;
+    padding: .35rem .55rem;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+.support-chat-image > span .material-symbols-outlined {
+    font-size: 1rem;
+}
+
+.support-chat-image:hover,
+.support-chat-image:focus-visible {
+    border-color: #8bb5ff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, .2);
+}
+
+.support-image-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 1000000;
+    display: none;
+    padding: clamp(1rem, 4vw, 3rem);
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 15, .94);
+    backdrop-filter: blur(8px);
+}
+
+.support-image-viewer.open {
+    display: flex;
+}
+
+.support-image-viewer img {
+    display: block;
+    max-width: min(1200px, 94vw);
+    max-height: 88dvh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .65);
+}
+
+.support-image-viewer-close {
+    position: fixed;
+    top: max(1rem, env(safe-area-inset-top));
+    right: max(1rem, env(safe-area-inset-right));
+    z-index: 1;
+    display: flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgba(24, 33, 49, .92);
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+body.support-image-viewer-open {
+    overflow: hidden;
+}
+
+@media (max-width: 600px) {
+    .support-chat-image {
+        width: min(170px, 100%);
+    }
+
+    .support-chat-image img {
+        height: 120px;
+    }
+
+    .support-image-viewer {
+        padding: .75rem;
+    }
+
+    .support-image-viewer img {
+        max-width: calc(100vw - 1.5rem);
+        max-height: 84dvh;
+        border-radius: 9px;
+    }
+}
+
 .chat-input-area {
     padding: 1rem 1.5rem;
     background-color: #171d2c;
