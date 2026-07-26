@@ -715,13 +715,10 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         }
                     }
 
-                    // Referral commission is also a one-time reward: only the first
-                    // confirmed deposit for the referred user is eligible.
-                    $isFirstConfirmedDeposit = false;
-                    $firstCheck = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
-                    $firstCheck->execute([$deposit['user_id']]);
-                    $isFirstConfirmedDeposit = ((int)$firstCheck->fetchColumn() === 1);
-                    if ($user && $user['referred_by'] && $depositCommissionPct > 0 && $isFirstConfirmedDeposit) {
+                    // Deposit commission is paid to the referrer for every
+                    // approved deposit. The referred-member bonus above remains
+                    // strictly limited to the first approved deposit.
+                    if ($user && $user['referred_by'] && $depositCommissionPct > 0) {
                         $referralBonusAmt = $deposit['amount'] * ($depositCommissionPct / 100);
                         $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                         $stmt->execute([$referralBonusAmt, $user['referred_by']]);
@@ -847,13 +844,10 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         $stmt->execute([$targetUserId, $dateStr, 'First Deposit Bonus', $firstBonus, 'FIRST-BONUS-' . $depCode, 'Confirmed']);
                     }
                 }
-                // Referral commission is also a one-time reward: only the first
-                // confirmed deposit for the referred user is eligible.
-                $isFirstConfirmedDeposit = false;
-                $firstCheck = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
-                $firstCheck->execute([$targetUserId]);
-                $isFirstConfirmedDeposit = ((int)$firstCheck->fetchColumn() === 1);
-                if ($uInfo && $uInfo['referred_by'] && $depositCommissionPct > 0 && $isFirstConfirmedDeposit) {
+                // Deposit commission is paid to the referrer for every
+                // approved deposit. The referred-member bonus above remains
+                // strictly limited to the first approved deposit.
+                if ($uInfo && $uInfo['referred_by'] && $depositCommissionPct > 0) {
                     $refBonus = $amount * ($depositCommissionPct / 100);
                     $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                     $stmt->execute([$refBonus, $uInfo['referred_by']]);
