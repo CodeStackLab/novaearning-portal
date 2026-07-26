@@ -3158,8 +3158,21 @@ body.support-image-viewer-open {
 .system-reset-step[hidden] { display:none; }
 .system-reset-step label { color:#cbd5e1; font-size:.75rem; }
 .system-reset-step .system-reset-danger-btn { width:100%; margin-top:.25rem; }
-.system-reset-check { display:flex; align-items:flex-start; gap:.55rem; padding:.7rem; background:rgba(244,63,94,.08); border-radius:8px; line-height:1.4; }
-.system-reset-check input { margin-top:.15rem; accent-color:#e11d48; }
+.system-reset-check { display:flex; align-items:flex-start; justify-content:flex-start; gap:.55rem; padding:.7rem; background:rgba(244,63,94,.08); border-radius:8px; line-height:1.4; cursor:pointer; }
+.system-reset-check input {
+    appearance: auto !important;
+    width: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    margin: .05rem 0 0 !important;
+    padding: 0 !important;
+    flex: 0 0 18px !important;
+    accent-color: #e11d48;
+    box-shadow: none !important;
+}
+.system-reset-check span { flex:1; min-width:0; }
 @media (max-width:700px) {
     .system-reset-card { grid-template-columns:auto minmax(0,1fr); align-items:start; }
     .system-reset-open-btn { grid-column:1 / -1; width:100%; }
