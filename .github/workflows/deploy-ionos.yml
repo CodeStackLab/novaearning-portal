@@ -44,6 +44,7 @@ jobs:
           IONOS_SFTP_PORT: ${{ secrets.IONOS_SFTP_PORT }}
           IONOS_SFTP_USER: ${{ secrets.IONOS_SFTP_USER }}
           IONOS_SFTP_PASSWORD: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          IONOS_CRON_TOKEN: ${{ secrets.IONOS_CRON_TOKEN }}
         run: |
           for name in IONOS_SFTP_HOST IONOS_SFTP_PORT IONOS_SFTP_USER IONOS_SFTP_PASSWORD; do
             if [ -z "${!name}" ]; then
@@ -55,6 +56,7 @@ jobs:
       - name: Prepare deployment package
         env:
           IONOS_SOURCE_SECRET: ${{ secrets.IONOS_SFTP_PASSWORD }}
+          IONOS_CRON_TOKEN: ${{ secrets.IONOS_CRON_TOKEN }}
         run: |
           mkdir -p dist
           cp -r public/* dist/
@@ -73,7 +75,7 @@ jobs:
           cp migrate.php dist/
           cp database.sql dist/
           cp PROJECT_SETUP_DOCUMENTATION.md dist/
-          php -r '$token = hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET")); file_put_contents("dist/cron-auth.php", "<?php define(\"NOVA_CRON_TOKEN_HASH\", \"" . hash("sha256", $token) . "\");");'
+          php -r '$token = getenv("IONOS_CRON_TOKEN") ?: hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET")); file_put_contents("dist/cron-auth.php", "<?php define(\"NOVA_CRON_TOKEN_HASH\", \"" . hash("sha256", $token) . "\");");'
 
       - name: Deploy to IONOS via SFTP
         env:
@@ -104,9 +106,10 @@ jobs:
 
       - name: Run protected commission scheduler smoke test
         env:
+          IONOS_CRON_TOKEN: ${{ secrets.IONOS_CRON_TOKEN }}
           IONOS_SOURCE_SECRET: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
-          TOKEN="$(php -r 'echo hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET"));')"
+          TOKEN="${IONOS_CRON_TOKEN:-$(php -r 'echo hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET"));')}"
           curl --fail --silent --show-error --retry 2 --max-time 90 \
             -H "X-Nova-Cron-Token: $TOKEN" \
             https://novaearning.com/cron.php

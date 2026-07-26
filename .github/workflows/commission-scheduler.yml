@@ -16,9 +16,10 @@ jobs:
     steps:
       - name: Run protected production scheduler
         env:
+          IONOS_CRON_TOKEN: ${{ secrets.IONOS_CRON_TOKEN }}
           IONOS_SOURCE_SECRET: ${{ secrets.IONOS_SFTP_PASSWORD }}
         run: |
-          TOKEN="$(php -r 'echo hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET"));')"
+          TOKEN="${IONOS_CRON_TOKEN:-$(php -r 'echo hash_hmac("sha256", "nova-cron-v1", getenv("IONOS_SOURCE_SECRET"));')}"
           curl --fail --silent --show-error --retry 2 --max-time 90 \
             -H "X-Nova-Cron-Token: $TOKEN" \
             https://novaearning.com/cron.php

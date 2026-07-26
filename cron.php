@@ -6,7 +6,8 @@ require_once 'config.php';
 // Direct CLI cron jobs remain supported by IONOS control-panel scheduling.
 if (PHP_SAPI !== 'cli') {
     $authFile = __DIR__ . '/cron-auth.php';
-    $providedToken = $_SERVER['HTTP_X_NOVA_CRON_TOKEN'] ?? '';
+    // IONOS WebCron can send a query token but cannot add custom headers.
+    $providedToken = $_SERVER['HTTP_X_NOVA_CRON_TOKEN'] ?? ($_GET['token'] ?? '');
     if (!is_file($authFile)) {
         http_response_code(503);
         exit('Cron authentication is not configured.');
