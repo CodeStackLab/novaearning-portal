@@ -2065,7 +2065,9 @@ function renderFinancialOverview(period = 'monthly') {
         withdrawals: sumType(type => type === 'Withdrawal')
     };
     const totalEarnings = totals.commissions + totals.referrals;
-    const net = totals.deposits + totals.commissions + totals.referrals - totals.invested - totals.withdrawals;
+    // Investment entries are internal allocation transfers, not a cash loss.
+    // Net cash flow therefore excludes invested principal.
+    const net = totals.deposits + totals.commissions + totals.referrals - totals.withdrawals;
     ['deposits', 'invested', 'commissions', 'referrals', 'withdrawals'].forEach(key => {
         const node = document.getElementById(`fin-${key}`); if (node) node.textContent = formatUSD(totals[key]);
     });
