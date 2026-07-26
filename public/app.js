@@ -1074,6 +1074,7 @@ function renderActiveInvestmentsTracking(investments) {
             const investmentAmount = Number(inv.amount) || 0;
             const dailyProfitPct = Number(inv.daily_profit_pct) || 0;
             const estReturns = investmentAmount * (dailyProfitPct / 100);
+            const creditedEarnings = dashboardTransactions.filter(tx => String(tx.ref || '').startsWith(`DAILY-${Number(inv.id)}-`) && tx.status === 'Confirmed').reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
             let started = Number(inv.created_at) || Date.parse(inv.start_date || '') || Date.now();
             if (started < 1000000000000) started *= 1000;
             const elapsed = Math.max(0, Date.now() - started);
@@ -1110,6 +1111,10 @@ function renderActiveInvestmentsTracking(investments) {
                         <div class="profile-inv-metric-item">
                             <span>Est. Return</span>
                             <strong class="est-returns">+$${estReturns.toFixed(2)}</strong>
+                        </div>
+                        <div class="profile-inv-metric-item">
+                            <span>Credited earnings</span>
+                            <strong class="est-returns">${formatUSD(creditedEarnings)}</strong>
                         </div>
                     </div>
 
@@ -1946,6 +1951,7 @@ function renderMyInvestments(investments) {
         else if (isSuspended) { statusClass = 'suspended'; statusText = 'Suspended'; }
 
         const isSoon = !isCompleted && !isHold && !isSuspended && hours <= 23;
+        const creditedEarnings = dashboardTransactions.filter(tx => String(tx.ref || '').startsWith(`DAILY-${Number(inv.id)}-`) && tx.status === 'Confirmed').reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
 
         return `<article class="my-investment-card tone-${((myInvestmentsPage - 1) * MY_INVESTMENTS_PER_PAGE + index) % 4} ${isSoon ? 'upcoming-highlight' : ''}">
             <div class="my-investment-title">
@@ -1965,6 +1971,7 @@ function renderMyInvestments(investments) {
                 <div><span>Principal</span><strong>${formatUSD(amount)}</strong></div>
                 <div><span>Daily ROI</span><strong>+${roi.toFixed(2)}%</strong></div>
                 <div><span>Daily commission</span><strong>${formatUSD(amount * roi / 100)}</strong></div>
+                <div><span>Credited earnings</span><strong class="credit-value">${formatUSD(creditedEarnings)}</strong></div>
                 <div><span>Cycles</span><strong>${completedCycles} / ${duration}</strong></div>
             </div>
 
