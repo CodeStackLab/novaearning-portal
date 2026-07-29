@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-pwa-cache-v6';
+const CACHE_NAME = 'nova-pwa-cache-v7';
 const urlsToCache = [
   '/login',
   '/login.html',
@@ -39,6 +39,20 @@ self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request).then(response => response || caches.match('/login.html')))
+    );
+    return;
+  }
+
+  // Application code and styles must always prefer the newest deployment.
+  if (['script', 'style'].includes(event.request.destination)) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
