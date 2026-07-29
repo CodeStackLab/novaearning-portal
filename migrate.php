@@ -81,6 +81,13 @@ try {
     $pdo->exec("DELETE FROM password_reset_tokens WHERE expires_at < DATE_SUB(NOW(), INTERVAL 1 DAY) OR used_at IS NOT NULL");
     $pdo->exec("UPDATE settings SET value = 'admin@novaearning.com' WHERE `key` IN ('smtp_username', 'smtp_from_email') AND LOWER(value) = 'contact@novaearning.com'");
     $pdo->exec("UPDATE settings SET value = 'smtp.ionos.co.uk' WHERE `key` = 'smtp_host' AND LOWER(value) = 'smtp.ionos.com'");
+    $pdo->exec("UPDATE settings SET value = '100.00' WHERE `key` = 'minimum_withdrawal_usd' AND (CAST(value AS DECIMAL(10,2)) < 100 OR value = '50.00')");
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN referral_deposit_commission_paid TINYINT(1) NOT NULL DEFAULT 0 AFTER referred_by");
+    } catch (PDOException $e) {
+        // The column already exists on installations that previously ran this migration.
+    }
+    $pdo->exec("UPDATE users u SET u.referral_deposit_commission_paid = 1 WHERE u.referred_by IS NOT NULL AND EXISTS (SELECT 1 FROM deposits d WHERE d.user_id = u.id AND d.status = 'Confirmed')");
 
     // Re-enable foreign key checks
     $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");

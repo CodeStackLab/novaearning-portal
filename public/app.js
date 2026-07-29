@@ -2,7 +2,8 @@
 
 const API_BASE = '/api';
 let selectedDepositAmount = 100.00;
-let transactionLimits = { minimumDeposit: 100, minimumWithdrawal: 50, withdrawalFeePct: 2 };
+let transactionLimits = { minimumDeposit: 100, minimumWithdrawal: 100, withdrawalFeePct: 2 };
+let currentUserBalance = null;
 
 // Copy to Clipboard Utility
 function copyToClipboard(text, message = "Copied to clipboard!") {
@@ -42,19 +43,87 @@ async function shareDashboardReferral() {
 }
 
 function updateWithdrawalPreview() {
-    const amount = Math.max(0, parseFloat(document.getElementById('withdraw-amount-val')?.value) || 0);
-    const fee = amount * (transactionLimits.withdrawalFeePct / 100);
+    const amountInput = document.getElementById('withdraw-amount-val');
+    const addressInput = document.getElementById('withdraw-wallet-addr');
+    const warningEl = document.getElementById('withdraw-amount-warning');
+    const submitBtn = document.getElementById('withdraw-submit-btn');
+
+    const amountRaw = amountInput ? amountInput.value.trim() : '';
+    const amount = parseFloat(amountRaw);
+    const address = addressInput ? addressInput.value.trim() : '';
+
+    const minWithdrawal = transactionLimits.minimumWithdrawal || 100;
+    const feePct = transactionLimits.withdrawalFeePct ?? 2;
+
+    const fee = (!isNaN(amount) && amount > 0) ? amount * (feePct / 100) : 0;
     const feeEl = document.getElementById('withdraw-fee-preview');
     const totalEl = document.getElementById('withdraw-total-preview');
-    if (feeEl) feeEl.textContent = amount ? `- ${formatUSD(fee)}` : '—';
-    if (totalEl) totalEl.textContent = amount ? formatUSD(amount - fee) : '—';
+    if (feeEl) feeEl.textContent = (!isNaN(amount) && amount > 0) ? `- ${formatUSD(fee)}` : '—';
+    if (totalEl) totalEl.textContent = (!isNaN(amount) && amount > 0) ? formatUSD(Math.max(0, amount - fee)) : '—';
+
+    let isValidAmount = true;
+    let warningMsg = '';
+    let warningType = 'warning';
+
+    if (!amountRaw || isNaN(amount) || amount <= 0) {
+        isValidAmount = false;
+        warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">info</span> Minimum withdrawal amount is ${formatUSD(minWithdrawal)}. Please enter ${formatUSD(minWithdrawal)} or more.`;
+        warningType = 'warning';
+        if (amountInput) amountInput.style.borderColor = '';
+    } else if (amount < minWithdrawal) {
+        isValidAmount = false;
+        warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">warning</span> Minimum withdrawal amount is ${formatUSD(minWithdrawal)}. You entered ${formatUSD(amount)}. Enter ${formatUSD(minWithdrawal)} or more to activate request button.`;
+        warningType = 'warning';
+        if (amountInput) amountInput.style.borderColor = 'rgba(245, 158, 11, 0.65)';
+    } else if (currentUserBalance !== null && amount > currentUserBalance) {
+        isValidAmount = false;
+        warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">error</span> Insufficient balance! Your available balance is ${formatUSD(currentUserBalance)}.`;
+        warningType = 'error';
+        if (amountInput) amountInput.style.borderColor = 'rgba(239, 68, 68, 0.65)';
+    } else {
+        isValidAmount = true;
+        if (amountInput) amountInput.style.borderColor = 'rgba(16, 185, 129, 0.55)';
+        if (!address) {
+            warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">contact_page</span> Amount valid (${formatUSD(amount)}). Please enter destination TRC20 wallet address.`;
+            warningType = 'warning';
+        } else if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)) {
+            warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">error</span> Please enter a valid TRC20 wallet address.`;
+            warningType = 'warning';
+        } else {
+            warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">check_circle</span> Valid withdrawal amount and destination address. Ready to submit!`;
+            warningType = 'success';
+        }
+    }
+
+    if (warningEl) {
+        if (warningMsg) {
+            warningEl.style.display = 'flex';
+            warningEl.className = `withdraw-warning-box ${warningType}`;
+            warningEl.innerHTML = warningMsg;
+        } else {
+            warningEl.style.display = 'none';
+        }
+    }
+
+    const isAddressValid = /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address);
+    const hasLoadedBalance = currentUserBalance !== null;
+    const canSubmit = isValidAmount && isAddressValid && hasLoadedBalance;
+
+    if (submitBtn) {
+        submitBtn.disabled = !canSubmit;
+        if (canSubmit) {
+            submitBtn.classList.remove('disabled');
+        } else {
+            submitBtn.classList.add('disabled');
+        }
+    }
 }
 
 async function loadTransactionLimits() {
     try {
         const limits = await apiRequest('/settings/transaction-limits');
         transactionLimits.minimumDeposit = Number(limits.minimumDeposit) || 100;
-        transactionLimits.minimumWithdrawal = Number(limits.minimumWithdrawal) || 50;
+        transactionLimits.minimumWithdrawal = Number(limits.minimumWithdrawal) || 100;
         transactionLimits.withdrawalFeePct = Number.isFinite(Number(limits.withdrawalFeePct)) ? Number(limits.withdrawalFeePct) : 2;
         const withdrawalFeeText = Number(transactionLimits.withdrawalFeePct.toFixed(2)).toString();
         const depositInput = document.getElementById('custom-deposit-amount');
@@ -332,8 +401,10 @@ async function fetchAllDashboardData() {
         const dbTotalBalance = document.getElementById('db-total-balance');
         if (dbTotalBalance) dbTotalBalance.textContent = formatUSD(profile.balance);
 
+        currentUserBalance = Number(profile.balance) || 0;
         const withdrawAvailable = document.getElementById('withdraw-available-balance');
         if (withdrawAvailable) withdrawAvailable.textContent = formatUSD(profile.balance);
+        updateWithdrawalPreview();
         
         const dbTodayProfit = document.getElementById('db-today-profit');
         if (dbTodayProfit) dbTodayProfit.textContent = formatUSD(profile.today_profit || 0.00);
@@ -438,6 +509,7 @@ async function fetchAllDashboardData() {
 // Initialize Application Routing & Listeners
 document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('withdraw-amount-val')?.addEventListener('input', updateWithdrawalPreview);
+    document.getElementById('withdraw-wallet-addr')?.addEventListener('input', updateWithdrawalPreview);
     await loadTransactionLimits();
     // 1. Session Auth check
     const token = localStorage.getItem('nova_token');
@@ -780,14 +852,21 @@ async function requestWithdrawal() {
 
     const address = addressInput.value.trim();
     const amount = parseFloat(amountInput.value);
+    const submitBtn = document.getElementById('withdraw-submit-btn');
 
-    if (address === '') {
-        alert("Please enter your destination TRON wallet address (TRC20).");
+    updateWithdrawalPreview();
+
+    if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)) {
+        alert("Please enter a valid destination TRON wallet address (TRC20).");
         return;
     }
 
     if (isNaN(amount) || amount < transactionLimits.minimumWithdrawal) {
         alert(`Minimum withdrawal limit is ${formatUSD(transactionLimits.minimumWithdrawal)}.`);
+        return;
+    }
+    if (currentUserBalance === null || amount > currentUserBalance || submitBtn?.disabled) {
+        alert('Please check the withdrawal amount and your available balance.');
         return;
     }
 

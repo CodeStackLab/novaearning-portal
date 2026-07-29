@@ -140,7 +140,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
         if ($action === 'settings' && $subaction === 'transaction-limits') {
             sendJson([
                 'minimumDeposit' => getNumericSetting($pdo, 'minimum_deposit_usd', 100, 1, 1000000),
-                'minimumWithdrawal' => getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000),
+                'minimumWithdrawal' => max(100, getNumericSetting($pdo, 'minimum_withdrawal_usd', 100, 1, 1000000)),
                 'withdrawalFeePct' => getNumericSetting($pdo, 'withdrawal_fee_pct', 2, 0, 100)
             ]);
         }
@@ -331,8 +331,8 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $minimumDeposit = $body['minimumDeposit'] ?? null;
             $minimumWithdrawal = $body['minimumWithdrawal'] ?? null;
             $withdrawalFeePct = $body['withdrawalFeePct'] ?? null;
-            if (!is_numeric($minimumDeposit) || !is_numeric($minimumWithdrawal) || (float)$minimumDeposit < 1 || (float)$minimumWithdrawal < 1 || (float)$minimumDeposit > 1000000 || (float)$minimumWithdrawal > 1000000) {
-                sendJson(['message' => 'Deposit and withdrawal minimums must be between $1 and $1,000,000.'], 400);
+            if (!is_numeric($minimumDeposit) || !is_numeric($minimumWithdrawal) || (float)$minimumDeposit < 1 || (float)$minimumWithdrawal < 100 || (float)$minimumDeposit > 1000000 || (float)$minimumWithdrawal > 1000000) {
+                sendJson(['message' => 'Deposit minimum must be at least $1 and withdrawal minimum must be at least $100.'], 400);
             }
             if (!is_numeric($withdrawalFeePct) || (float)$withdrawalFeePct < 0 || (float)$withdrawalFeePct > 100) {
                 sendJson(['message' => 'Withdrawal fee must be between 0% and 100%.'], 400);
@@ -767,7 +767,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $stmt->execute([$adminComment ?: null, $depositId]);
 
                 if ($act === 'Approve') {
-                    $stmt = $pdo->prepare('SELECT balance, referred_by FROM users WHERE id = ? FOR UPDATE');
+                    $stmt = $pdo->prepare('SELECT balance, referred_by, referral_deposit_commission_paid FROM users WHERE id = ? FOR UPDATE');
                     $stmt->execute([$deposit['user_id']]);
                     $user = $stmt->fetch();
                     if (!$user) throw new Exception('Deposit user was not found');
@@ -801,10 +801,11 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     // Configurable first-deposit reward and referrer commission.
                     $firstDepositBonusPct = getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100);
                     $depositCommissionPct = getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100);
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+                    $stmt->execute([$deposit['user_id']]);
+                    $isFirstApprovedDeposit = (int)$stmt->fetchColumn() === 1;
                     if ($user && $user['referred_by'] && $firstDepositBonusPct > 0) {
-                        $stmt = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
-                        $stmt->execute([$deposit['user_id']]);
-                        if ((int)$stmt->fetchColumn() === 1) {
+                        if ($isFirstApprovedDeposit) {
                             $firstDepositBonusAmt = (float)$deposit['amount'] * ($firstDepositBonusPct / 100);
                             $firstBonusRef = 'FIRST-BONUS-' . (int)$depositId;
                             $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
@@ -814,10 +815,15 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         }
                     }
 
-                    // Deposit commission is paid to the referrer for every
-                    // approved deposit. The referred-member bonus above remains
-                    // strictly limited to the first approved deposit.
-                    if ($user && $user['referred_by'] && $depositCommissionPct > 0) {
+                    // A referrer can receive the deposit commission only once:
+                    // when this referred user gets their first deposit approved.
+                    $shouldCreditDepositCommission = false;
+                    if ($user && $user['referred_by'] && $isFirstApprovedDeposit && !(int)$user['referral_deposit_commission_paid']) {
+                        $stmt = $pdo->prepare('UPDATE users SET referral_deposit_commission_paid = 1 WHERE id = ? AND referral_deposit_commission_paid = 0');
+                        $stmt->execute([$deposit['user_id']]);
+                        $shouldCreditDepositCommission = $stmt->rowCount() === 1;
+                    }
+                    if ($shouldCreditDepositCommission && $depositCommissionPct > 0) {
                         $referralBonusAmt = $deposit['amount'] * ($depositCommissionPct / 100);
                         $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                         $stmt->execute([$referralBonusAmt, $user['referred_by']]);
@@ -888,7 +894,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
             $pdo->beginTransaction();
             try {
-                $balanceStmt = $pdo->prepare('SELECT balance FROM users WHERE id = ? FOR UPDATE');
+                $balanceStmt = $pdo->prepare('SELECT balance, referred_by, referral_deposit_commission_paid FROM users WHERE id = ? FOR UPDATE');
                 $balanceStmt->execute([$targetUserId]);
                 $targetUser = $balanceStmt->fetch();
                 if (!$targetUser) throw new Exception('User not found');
@@ -927,15 +933,14 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 }
 
                 // 5. Configurable first-deposit reward and referral commission
-                $rStmt = $pdo->prepare('SELECT referred_by FROM users WHERE id = ?');
-                $rStmt->execute([$targetUserId]);
-                $uInfo = $rStmt->fetch();
+                $uInfo = $targetUser;
                 $firstDepositBonusPct = getNumericSetting($pdo, 'referral_first_deposit_bonus_pct', 5, 0, 100);
                 $depositCommissionPct = getNumericSetting($pdo, 'referral_deposit_commission_pct', 5, 0, 100);
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
+                $stmt->execute([$targetUserId]);
+                $isFirstApprovedDeposit = (int)$stmt->fetchColumn() === 1;
                 if ($uInfo && $uInfo['referred_by'] && $firstDepositBonusPct > 0) {
-                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
-                    $stmt->execute([$targetUserId]);
-                    if ((int)$stmt->fetchColumn() === 1) {
+                    if ($isFirstApprovedDeposit) {
                         $firstBonus = $amount * ($firstDepositBonusPct / 100);
                         $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                         $stmt->execute([$firstBonus, $targetUserId]);
@@ -943,10 +948,14 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                         $stmt->execute([$targetUserId, $dateStr, 'First Deposit Bonus', $firstBonus, 'FIRST-BONUS-' . $depCode, 'Confirmed']);
                     }
                 }
-                // Deposit commission is paid to the referrer for every
-                // approved deposit. The referred-member bonus above remains
-                // strictly limited to the first approved deposit.
-                if ($uInfo && $uInfo['referred_by'] && $depositCommissionPct > 0) {
+                // Manual deposits follow the same one-time first-deposit rule.
+                $shouldCreditDepositCommission = false;
+                if ($uInfo && $uInfo['referred_by'] && $isFirstApprovedDeposit && !(int)$uInfo['referral_deposit_commission_paid']) {
+                    $stmt = $pdo->prepare('UPDATE users SET referral_deposit_commission_paid = 1 WHERE id = ? AND referral_deposit_commission_paid = 0');
+                    $stmt->execute([$targetUserId]);
+                    $shouldCreditDepositCommission = $stmt->rowCount() === 1;
+                }
+                if ($shouldCreditDepositCommission && $depositCommissionPct > 0) {
                     $refBonus = $amount * ($depositCommissionPct / 100);
                     $stmt = $pdo->prepare('UPDATE users SET balance = balance + ? WHERE id = ?');
                     $stmt->execute([$refBonus, $uInfo['referred_by']]);

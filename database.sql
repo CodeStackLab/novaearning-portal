@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(50) DEFAULT 'user',
     account_status VARCHAR(30) NOT NULL DEFAULT 'Active',
     referred_by INT DEFAULT NULL,
+    referral_deposit_commission_paid TINYINT(1) NOT NULL DEFAULT 0,
     referral_code VARCHAR(255) UNIQUE,
     username VARCHAR(255) UNIQUE,
     FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL
@@ -165,7 +166,7 @@ INSERT IGNORE INTO plans (name, price, daily_profit_pct, duration_days, image_ur
 -- Seed Settings
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('tron_deposit_address', 'TQdJg7h5P6r8xkLyGk9Y8yq8eL5t3mZ6tX');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('minimum_deposit_usd', '100.00');
-INSERT IGNORE INTO settings (`key`, `value`) VALUES ('minimum_withdrawal_usd', '50.00');
+INSERT IGNORE INTO settings (`key`, `value`) VALUES ('minimum_withdrawal_usd', '100.00');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('withdrawal_fee_pct', '2.00');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_host', 'smtp.ionos.co.uk');
 INSERT IGNORE INTO settings (`key`, `value`) VALUES ('smtp_port', '587');

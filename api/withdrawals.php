@@ -9,7 +9,7 @@ function handleWithdrawals($action, $pdo, $body) {
         $address = $body['address'] ?? '';
         $amount = $body['amount'] ?? 0;
         $withdrawAmt = (float)$amount;
-        $minimumWithdrawal = getNumericSetting($pdo, 'minimum_withdrawal_usd', 50, 1, 1000000);
+        $minimumWithdrawal = max(100, getNumericSetting($pdo, 'minimum_withdrawal_usd', 100, 1, 1000000));
         $withdrawalFeePct = getNumericSetting($pdo, 'withdrawal_fee_pct', 2, 0, 100);
 
         if (!$address || $withdrawAmt < $minimumWithdrawal) {

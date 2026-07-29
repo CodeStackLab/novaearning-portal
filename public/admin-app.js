@@ -701,7 +701,7 @@ async function loadTransactionLimits() {
     try {
         const limits = await adminRequest('/admin/settings/transaction-limits');
         document.getElementById('minimum-deposit-setting').value = Number(limits.minimumDeposit || 100);
-        document.getElementById('minimum-withdrawal-setting').value = Number(limits.minimumWithdrawal || 50);
+        document.getElementById('minimum-withdrawal-setting').value = Number(limits.minimumWithdrawal || 100);
         document.getElementById('withdrawal-fee-setting').value = Number.isFinite(Number(limits.withdrawalFeePct)) ? Number(limits.withdrawalFeePct) : 2;
     } catch (error) {
         showToast(error.message || 'Unable to load transaction limits.');
@@ -717,9 +717,9 @@ async function saveTransactionLimits(event) {
         withdrawalFeePct: Number(document.getElementById('withdrawal-fee-setting').value)
     };
     if (!Number.isFinite(payload.minimumDeposit) || !Number.isFinite(payload.minimumWithdrawal) ||
-        payload.minimumDeposit < 1 || payload.minimumWithdrawal < 1 ||
+        payload.minimumDeposit < 1 || payload.minimumWithdrawal < 100 ||
         payload.minimumDeposit > 1000000 || payload.minimumWithdrawal > 1000000) {
-        showToast('Enter transaction minimums between $1 and $1,000,000.');
+        showToast('Deposit minimum must be at least $1 and withdrawal minimum must be at least $100.');
         return;
     }
     if (!Number.isFinite(payload.withdrawalFeePct) || payload.withdrawalFeePct < 0 || payload.withdrawalFeePct > 100) {

@@ -220,6 +220,14 @@ function ensurePlatformFeatureTables($pdo) {
     foreach (["transactions" => 'admin_comment', "deposits" => 'admin_comment'] as $table => $column) {
         try { $pdo->exec("ALTER TABLE `$table` ADD COLUMN `$column` TEXT DEFAULT NULL"); } catch (Exception $e) { /* already exists */ }
     }
+    try {
+        $pdo->exec("ALTER TABLE users ADD COLUMN referral_deposit_commission_paid TINYINT(1) NOT NULL DEFAULT 0 AFTER referred_by");
+    } catch (Exception $e) { /* column already exists */ }
+    try {
+        // Existing referred users with an approved deposit have already passed
+        // their one eligible commission event.
+        $pdo->exec("UPDATE users u SET u.referral_deposit_commission_paid = 1 WHERE u.referred_by IS NOT NULL AND EXISTS (SELECT 1 FROM deposits d WHERE d.user_id = u.id AND d.status = 'Confirmed')");
+    } catch (Exception $e) { /* schema migration will report persistent failures */ }
     $pdo->exec("CREATE TABLE IF NOT EXISTS in_app_notifications (
         id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, category VARCHAR(40) NOT NULL,
         title VARCHAR(180) NOT NULL, message TEXT NOT NULL, action_url VARCHAR(255) DEFAULT NULL,
