@@ -551,7 +551,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $direction = trim((string)($body['direction'] ?? ''));
             $amount = $body['amount'] ?? null;
             $reason = trim((string)($body['reason'] ?? ''));
-            $allowedCategories = ['wallet', 'deposit', 'active_investment', 'withdrawal', 'referral_earning', 'daily_earning', 'referral_count', 'pending_held'];
+            $allowedCategories = ['wallet', 'lifetime_earning', 'deposit', 'active_investment', 'withdrawal', 'referral_earning', 'daily_earning', 'referral_count', 'pending_held'];
 
             if ($targetUserId < 1 || !in_array($category, $allowedCategories, true) || !in_array($direction, ['increase', 'decrease'], true)) {
                 sendJson(['message' => 'Valid user, category, and adjustment direction are required.'], 400);
@@ -577,6 +577,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
 
                 $baseQueries = [
                     'wallet' => "SELECT balance FROM users WHERE id = ?",
+                    'lifetime_earning' => "SELECT earnings FROM users WHERE id = ?",
                     'deposit' => "SELECT COALESCE(SUM(amount),0) FROM deposits WHERE user_id = ? AND status='Confirmed'",
                     'active_investment' => "SELECT COALESCE(SUM(amount),0) FROM investments WHERE user_id = ? AND status='Active'",
                     'withdrawal' => "SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_id = ? AND type='Withdrawal' AND status IN ('Confirmed','Pending','Hold','Cancelled')",
@@ -588,7 +589,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 $baseStmt = $pdo->prepare($baseQueries[$category]);
                 $baseStmt->execute($category === 'pending_held' ? [$targetUserId, $targetUserId] : [$targetUserId]);
                 $currentValue = (float)$baseStmt->fetchColumn();
-                if ($category !== 'wallet') {
+                if (!in_array($category, ['wallet', 'lifetime_earning'], true)) {
                     $adjStmt = $pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE user_id = ? AND category = ?');
                     $adjStmt->execute([$targetUserId, $category]);
                     $currentValue += (float)$adjStmt->fetchColumn();
@@ -605,7 +606,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     $stmt->execute([$newValue, $targetUserId]);
                     $ledger = $pdo->prepare('INSERT INTO balance_ledger (user_id, transaction_ref, entry_type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?, ?)');
                     $ledger->execute([$targetUserId, $reference, 'admin_adjustment', $signedAmount, $currentValue, $newValue, $reason]);
-                } elseif ($category === 'daily_earning') {
+                } elseif (in_array($category, ['lifetime_earning', 'daily_earning'], true)) {
                     $stmt = $pdo->prepare("UPDATE users SET earnings = GREATEST(0, earnings + ?) WHERE id = ? AND role = 'user'");
                     $stmt->execute([$signedAmount, $targetUserId]);
                 }
@@ -619,7 +620,7 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             }
 
             $categoryLabels = [
-                'wallet' => 'wallet balance', 'deposit' => 'lifetime deposits', 'active_investment' => 'active investments',
+                'wallet' => 'wallet balance', 'lifetime_earning' => 'lifetime earnings', 'deposit' => 'lifetime deposits', 'active_investment' => 'active investments',
                 'withdrawal' => 'withdrawals', 'referral_earning' => 'referral earnings', 'daily_earning' => 'daily earnings',
                 'referral_count' => 'referral count', 'pending_held' => 'pending/held funds'
             ];

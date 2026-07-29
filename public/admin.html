@@ -852,14 +852,16 @@
                 <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Financial Category</label>
                 <select id="edit-financial-category" class="modal-text-input" style="width: 100%; margin-bottom: 1rem; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
                     <option value="wallet">Wallet Balance</option>
-                    <option value="deposit">Lifetime Deposits</option>
-                    <option value="active_investment">Active Investments</option>
-                    <option value="withdrawal">All Withdrawals</option>
+                    <option value="lifetime_earning">Lifetime Earnings</option>
+                    <option value="deposit">Deposit Balance / Lifetime Deposits</option>
+                    <option value="active_investment">Active Investments (global total)</option>
+                    <option value="withdrawal">Withdrawals / All Withdrawals</option>
                     <option value="referral_earning">Referral Earnings</option>
                     <option value="daily_earning">Daily Earnings</option>
-                    <option value="referral_count">Referral Count</option>
-                    <option value="pending_held">Pending / Held Funds</option>
+                    <option value="referral_count">Referrals / Total Referrals</option>
+                    <option value="pending_held">Pending / Held Funds (global total)</option>
                 </select>
+                <p style="margin:-0.45rem 0 1rem;color:#718096;font-size:0.72rem;line-height:1.45;">The selected user's value and its matching Financial Overview total will update automatically.</p>
 
                 <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Adjustment</label>
                 <select id="edit-balance-type" class="modal-text-input" style="width: 100%; margin-bottom: 1rem; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
@@ -1262,6 +1264,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=95.0"></script>
+    <script src="admin-app.js?v=96.0"></script>
 </body>
 </html>
