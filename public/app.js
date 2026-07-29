@@ -65,10 +65,9 @@ function updateWithdrawalPreview() {
     let warningMsg = '';
     let warningType = 'warning';
 
-    if (!amountRaw || isNaN(amount) || amount <= 0) {
+    if (!amountRaw || isNaN(amount)) {
         isValidAmount = false;
-        warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">info</span> Minimum withdrawal amount is ${formatUSD(minWithdrawal)}. Please enter ${formatUSD(minWithdrawal)} or more.`;
-        warningType = 'warning';
+        warningMsg = '';
         if (amountInput) amountInput.style.borderColor = '';
     } else if (amount < minWithdrawal) {
         isValidAmount = false;
