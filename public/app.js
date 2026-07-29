@@ -132,8 +132,7 @@ async function loadTransactionLimits() {
             if ((parseFloat(depositInput.value) || 0) < transactionLimits.minimumDeposit) depositInput.value = String(transactionLimits.minimumDeposit);
             currentSelectedDepositAmount = parseFloat(depositInput.value);
         }
-        const depositHelp = document.getElementById('deposit-minimum-help');
-        if (depositHelp) depositHelp.textContent = `Minimum deposit: ${formatUSD(transactionLimits.minimumDeposit)} USDT.`;
+        updateDepositAmount(depositInput?.value || '');
         const withdrawalInput = document.getElementById('withdraw-amount-val');
         if (withdrawalInput) {
             withdrawalInput.min = String(transactionLimits.minimumWithdrawal);
@@ -1512,8 +1511,30 @@ function applyCustomAmount() {
 }
 
 function updateDepositAmount(val) {
+    const amountInput = document.getElementById('custom-deposit-amount');
+    const helpEl = document.getElementById('deposit-minimum-help');
+    const submitBtn = document.getElementById('deposit-submit-btn');
+    const amountRaw = String(val ?? '').trim();
     const parsed = parseFloat(val);
-    if (!isNaN(parsed) && parsed > 0) {
+    const minimumText = `$${Number(transactionLimits.minimumDeposit).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    const isBelowMinimum = amountRaw !== '' && (isNaN(parsed) || parsed < transactionLimits.minimumDeposit);
+
+    if (helpEl) {
+        if (isBelowMinimum) {
+            helpEl.className = 'withdraw-warning-box error deposit-minimum-warning';
+            helpEl.innerHTML = `<span class="material-symbols-outlined" style="font-size:1.15rem;">error</span> Minimum deposit is ${minimumText}. Enter ${minimumText} or more to continue.`;
+        } else {
+            helpEl.className = 'deposit-minimum-help';
+            helpEl.textContent = `Minimum deposit: ${minimumText} USDT.`;
+        }
+    }
+    if (amountInput) {
+        amountInput.style.borderColor = isBelowMinimum ? 'rgba(239, 68, 68, 0.65)' : '';
+    }
+    if (submitBtn) {
+        submitBtn.disabled = amountRaw === '' || isNaN(parsed) || parsed < transactionLimits.minimumDeposit;
+    }
+    if (!isNaN(parsed) && parsed >= transactionLimits.minimumDeposit) {
         currentSelectedDepositAmount = parsed;
     }
 }

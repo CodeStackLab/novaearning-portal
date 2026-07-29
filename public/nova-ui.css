@@ -3707,6 +3707,23 @@ html, body,
     color: #6ee7b7;
 }
 
+.deposit-minimum-help {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.deposit-minimum-warning {
+    margin-top: 0.15rem;
+}
+
+#deposit-submit-btn:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+    box-shadow: none !important;
+}
+
 .withdraw-action-row .form-btn-db:disabled,
 .withdraw-action-row .form-btn-db.disabled {
     opacity: 0.45 !important;
