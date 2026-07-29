@@ -71,9 +71,10 @@ function updateWithdrawalPreview() {
         if (amountInput) amountInput.style.borderColor = '';
     } else if (amount < minWithdrawal) {
         isValidAmount = false;
-        warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">warning</span> Minimum withdrawal amount is ${formatUSD(minWithdrawal)}. You entered ${formatUSD(amount)}. Enter ${formatUSD(minWithdrawal)} or more to activate request button.`;
-        warningType = 'warning';
-        if (amountInput) amountInput.style.borderColor = 'rgba(245, 158, 11, 0.65)';
+        const minimumText = `$${Number(minWithdrawal).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+        warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">error</span> Minimum withdrawal is ${minimumText}. Enter ${minimumText} or more to continue.`;
+        warningType = 'error';
+        if (amountInput) amountInput.style.borderColor = 'rgba(239, 68, 68, 0.65)';
     } else if (currentUserBalance !== null && amount > currentUserBalance) {
         isValidAmount = false;
         warningMsg = `<span class="material-symbols-outlined" style="font-size:1.15rem;">error</span> Insufficient balance! Your available balance is ${formatUSD(currentUserBalance)}.`;
