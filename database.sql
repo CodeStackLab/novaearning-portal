@@ -112,6 +112,16 @@ CREATE TABLE IF NOT EXISTS balance_ledger (
     UNIQUE KEY unique_ledger_ref_type (transaction_ref, entry_type), INDEX idx_ledger_user (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS financial_adjustments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, admin_id INT NOT NULL,
+    category VARCHAR(40) NOT NULL, amount DECIMAL(15,2) NOT NULL,
+    reason VARCHAR(255) NOT NULL, reference VARCHAR(80) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_fin_adjust_user_category (user_id, category, created_at),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS login_activity (
     id BIGINT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, ip_address VARCHAR(64),
     user_agent VARCHAR(255), login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

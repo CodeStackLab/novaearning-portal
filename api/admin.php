@@ -12,13 +12,13 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->query("SELECT COUNT(*) as uCount FROM users WHERE role = 'user'");
             $totalUsers = $stmt->fetch()['uCount'];
 
-            $stmt = $pdo->query("SELECT SUM(amount) as dSum FROM deposits WHERE status = 'Confirmed'");
+            $stmt = $pdo->query("SELECT (SELECT COALESCE(SUM(amount),0) FROM deposits WHERE status = 'Confirmed') + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category = 'deposit') as dSum");
             $totalDeposits = $stmt->fetch()['dSum'];
 
             $stmt = $pdo->query("SELECT COUNT(*) as wCount FROM transactions WHERE type = 'Withdrawal' AND status = 'Pending'");
             $pendingWithdrawals = $stmt->fetch()['wCount'];
 
-            $stmt = $pdo->query("SELECT SUM(amount) as iSum FROM investments WHERE status = 'Active'");
+            $stmt = $pdo->query("SELECT (SELECT COALESCE(SUM(amount),0) FROM investments WHERE status = 'Active') + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category = 'active_investment') as iSum");
             $activeInvestmentsSum = $stmt->fetch()['iSum'];
 
             $stmt = $pdo->query("SELECT COUNT(DISTINCT user_id) as activeUsers FROM investments WHERE status = 'Active'");
@@ -41,19 +41,20 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $q = static function($pdo, $sql) { $row = $pdo->query($sql)->fetch(); return $row ?: []; };
             $users = $q($pdo, "SELECT COUNT(*) users, COALESCE(SUM(balance),0) balances, COALESCE(SUM(earnings),0) earnings FROM users WHERE role='user'");
             $deposits = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Confirmed' THEN amount ELSE 0 END),0) confirmed, COALESCE(SUM(CASE WHEN status='Pending' THEN amount ELSE 0 END),0) pending, COALESCE(SUM(CASE WHEN status IN ('Failed','Rejected') THEN amount ELSE 0 END),0) rejected FROM deposits");
-            $invest = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Active' THEN amount ELSE 0 END),0) active, COALESCE(SUM(CASE WHEN status='Completed' THEN amount ELSE 0 END),0) completed, COALESCE(SUM(CASE WHEN status IN ('Hold','Suspended') THEN amount ELSE 0 END),0) held FROM investments");
+            $invest = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Active' THEN amount ELSE 0 END),0) + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category='active_investment') active, COALESCE(SUM(CASE WHEN status='Completed' THEN amount ELSE 0 END),0) completed, COALESCE(SUM(CASE WHEN status IN ('Hold','Suspended') THEN amount ELSE 0 END),0) held FROM investments");
             $withdraw = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN status='Confirmed' THEN amount ELSE 0 END),0) paid, COALESCE(SUM(CASE WHEN status='Pending' THEN amount ELSE 0 END),0) pending, COALESCE(SUM(CASE WHEN status='Hold' THEN amount ELSE 0 END),0) held, COALESCE(SUM(CASE WHEN status='Cancelled' THEN amount ELSE 0 END),0) cancelled FROM transactions WHERE type='Withdrawal'");
-            $comm = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN type IN ('Referral Bonus','Referral Commission') THEN amount ELSE 0 END),0) referral, COALESCE(SUM(CASE WHEN type='Daily Commission' THEN amount ELSE 0 END),0) daily FROM transactions WHERE status='Confirmed'");
+            $comm = $q($pdo, "SELECT COALESCE(SUM(CASE WHEN type IN ('Referral Bonus','Referral Commission') THEN amount ELSE 0 END),0) + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category='referral_earning') referral, COALESCE(SUM(CASE WHEN type='Daily Commission' THEN amount ELSE 0 END),0) + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category='daily_earning') daily FROM transactions WHERE status='Confirmed'");
             $top = $pdo->query("SELECT u.id,u.name,u.email,u.balance,u.earnings,
-                COALESCE((SELECT SUM(d.amount) FROM deposits d WHERE d.user_id=u.id AND d.status='Confirmed'),0) deposit_total,
-                COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.user_id=u.id AND t.type='Withdrawal' AND t.status IN ('Confirmed','Pending','Hold','Cancelled')),0) withdrawal_total,
-                COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.user_id=u.id AND t.type IN ('Referral Bonus','Referral Commission') AND t.status='Confirmed'),0) referral_earnings,
-                (SELECT COUNT(*) FROM users r WHERE r.referred_by=u.id) referrals
+                COALESCE((SELECT SUM(d.amount) FROM deposits d WHERE d.user_id=u.id AND d.status='Confirmed'),0) + COALESCE((SELECT SUM(f.amount) FROM financial_adjustments f WHERE f.user_id=u.id AND f.category='deposit'),0) deposit_total,
+                COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.user_id=u.id AND t.type='Withdrawal' AND t.status IN ('Confirmed','Pending','Hold','Cancelled')),0) + COALESCE((SELECT SUM(f.amount) FROM financial_adjustments f WHERE f.user_id=u.id AND f.category='withdrawal'),0) withdrawal_total,
+                COALESCE((SELECT SUM(t.amount) FROM transactions t WHERE t.user_id=u.id AND t.type IN ('Referral Bonus','Referral Commission') AND t.status='Confirmed'),0) + COALESCE((SELECT SUM(f.amount) FROM financial_adjustments f WHERE f.user_id=u.id AND f.category='referral_earning'),0) referral_earnings,
+                (SELECT COUNT(*) FROM users r WHERE r.referred_by=u.id) + COALESCE((SELECT SUM(f.amount) FROM financial_adjustments f WHERE f.user_id=u.id AND f.category='referral_count'),0) referrals
                 FROM users u WHERE u.role='user' ORDER BY u.id DESC LIMIT 100")->fetchAll();
-            $lifetime = $q($pdo, "SELECT COALESCE(SUM(amount),0) total FROM deposits WHERE status='Confirmed'");
-            $withdrawAll = $q($pdo, "SELECT COALESCE(SUM(amount),0) total FROM transactions WHERE type='Withdrawal' AND status IN ('Confirmed','Pending','Hold','Cancelled')");
-            $referrals = $q($pdo, "SELECT COUNT(*) total FROM users WHERE referred_by IS NOT NULL");
-            sendJson(['users'=>$users,'deposits'=>$deposits,'investments'=>$invest,'withdrawals'=>$withdraw,'commissions'=>$comm,'topUsers'=>$top,'lifetimeDeposits'=>(float)$lifetime['total'],'lifetimeWithdrawals'=>(float)$withdrawAll['total'],'totalReferrals'=>(int)$referrals['total']]);
+            $lifetime = $q($pdo, "SELECT (SELECT COALESCE(SUM(amount),0) FROM deposits WHERE status='Confirmed') + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category='deposit') total");
+            $withdrawAll = $q($pdo, "SELECT (SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='Withdrawal' AND status IN ('Confirmed','Pending','Hold','Cancelled')) + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category='withdrawal') total");
+            $referrals = $q($pdo, "SELECT (SELECT COUNT(*) FROM users WHERE referred_by IS NOT NULL) + (SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE category='referral_count') total");
+            $pendingAdjustment = $q($pdo, "SELECT COALESCE(SUM(amount),0) total FROM financial_adjustments WHERE category='pending_held'");
+            sendJson(['users'=>$users,'deposits'=>$deposits,'investments'=>$invest,'withdrawals'=>$withdraw,'commissions'=>$comm,'topUsers'=>$top,'lifetimeDeposits'=>(float)$lifetime['total'],'lifetimeWithdrawals'=>(float)$withdrawAll['total'],'totalReferrals'=>(int)$referrals['total'],'pendingHeldAdjustment'=>(float)$pendingAdjustment['total']]);
         }
 
         if ($action === 'users') {
@@ -99,10 +100,16 @@ function handleAdmin($action, $subaction, $pdo, $body) {
             $stmt = $pdo->prepare("SELECT SUM(amount) as dSum FROM deposits WHERE user_id = ? AND status = 'Confirmed'");
             $stmt->execute([$targetUserId]);
             $totalDeposits = (float)($stmt->fetch()['dSum'] ?? 0);
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE user_id = ? AND category = 'deposit'");
+            $stmt->execute([$targetUserId]);
+            $totalDeposits += (float)$stmt->fetchColumn();
 
             $stmt = $pdo->prepare("SELECT SUM(amount) as wSum FROM transactions WHERE user_id = ? AND type = 'Withdrawal' AND status = 'Confirmed'");
             $stmt->execute([$targetUserId]);
             $totalWithdrawals = (float)($stmt->fetch()['wSum'] ?? 0);
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE user_id = ? AND category = 'withdrawal'");
+            $stmt->execute([$targetUserId]);
+            $totalWithdrawals += (float)$stmt->fetchColumn();
 
             $stmt = $pdo->prepare("SELECT * FROM investments WHERE user_id = ? ORDER BY id DESC");
             $stmt->execute([$targetUserId]);
@@ -114,6 +121,9 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                     $activeCapital += (float)$inv['amount'];
                 }
             }
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE user_id = ? AND category = 'active_investment'");
+            $stmt->execute([$targetUserId]);
+            $activeCapital += (float)$stmt->fetchColumn();
 
             $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 100");
             $stmt->execute([$targetUserId]);
@@ -533,6 +543,95 @@ function handleAdmin($action, $subaction, $pdo, $body) {
                 if ($pdo->inTransaction()) $pdo->rollBack();
                 sendJson(['message' => 'Unable to save notification preferences.'], 500);
             }
+        }
+
+        if ($action === 'users' && $subaction === 'financial-adjustment') {
+            $targetUserId = (int)($body['userId'] ?? 0);
+            $category = trim((string)($body['category'] ?? ''));
+            $direction = trim((string)($body['direction'] ?? ''));
+            $amount = $body['amount'] ?? null;
+            $reason = trim((string)($body['reason'] ?? ''));
+            $allowedCategories = ['wallet', 'deposit', 'active_investment', 'withdrawal', 'referral_earning', 'daily_earning', 'referral_count', 'pending_held'];
+
+            if ($targetUserId < 1 || !in_array($category, $allowedCategories, true) || !in_array($direction, ['increase', 'decrease'], true)) {
+                sendJson(['message' => 'Valid user, category, and adjustment direction are required.'], 400);
+            }
+            if (!is_numeric($amount) || !is_finite((float)$amount) || (float)$amount <= 0 || (float)$amount > 9999999999999.99) {
+                sendJson(['message' => 'Enter a valid adjustment amount greater than zero.'], 400);
+            }
+            if (strlen($reason) < 5 || strlen($reason) > 255) {
+                sendJson(['message' => 'A reason between 5 and 255 characters is required.'], 400);
+            }
+            if ($category === 'referral_count' && floor((float)$amount) !== (float)$amount) {
+                sendJson(['message' => 'Referral count adjustments must be whole numbers.'], 400);
+            }
+
+            $signedAmount = round((float)$amount * ($direction === 'increase' ? 1 : -1), 2);
+            ensurePlatformFeatureTables($pdo);
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare("SELECT id, name, balance, earnings FROM users WHERE id = ? AND role = 'user' FOR UPDATE");
+                $stmt->execute([$targetUserId]);
+                $target = $stmt->fetch();
+                if (!$target) throw new RuntimeException('USER_NOT_FOUND');
+
+                $baseQueries = [
+                    'wallet' => "SELECT balance FROM users WHERE id = ?",
+                    'deposit' => "SELECT COALESCE(SUM(amount),0) FROM deposits WHERE user_id = ? AND status='Confirmed'",
+                    'active_investment' => "SELECT COALESCE(SUM(amount),0) FROM investments WHERE user_id = ? AND status='Active'",
+                    'withdrawal' => "SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_id = ? AND type='Withdrawal' AND status IN ('Confirmed','Pending','Hold','Cancelled')",
+                    'referral_earning' => "SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_id = ? AND type IN ('Referral Bonus','Referral Commission') AND status='Confirmed'",
+                    'daily_earning' => "SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_id = ? AND type='Daily Commission' AND status='Confirmed'",
+                    'referral_count' => "SELECT COUNT(*) FROM users WHERE referred_by = ?",
+                    'pending_held' => "SELECT (SELECT COALESCE(SUM(amount),0) FROM deposits WHERE user_id=? AND status='Pending') + (SELECT COALESCE(SUM(amount),0) FROM transactions WHERE user_id=? AND type='Withdrawal' AND status='Hold')"
+                ];
+                $baseStmt = $pdo->prepare($baseQueries[$category]);
+                $baseStmt->execute($category === 'pending_held' ? [$targetUserId, $targetUserId] : [$targetUserId]);
+                $currentValue = (float)$baseStmt->fetchColumn();
+                if ($category !== 'wallet') {
+                    $adjStmt = $pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM financial_adjustments WHERE user_id = ? AND category = ?');
+                    $adjStmt->execute([$targetUserId, $category]);
+                    $currentValue += (float)$adjStmt->fetchColumn();
+                }
+                $newValue = round($currentValue + $signedAmount, 2);
+                if ($newValue < 0) throw new RuntimeException('NEGATIVE_TOTAL');
+
+                $reference = 'FIN-' . strtoupper(bin2hex(random_bytes(6)));
+                $stmt = $pdo->prepare('INSERT INTO financial_adjustments (user_id, admin_id, category, amount, reason, reference) VALUES (?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$targetUserId, $userId, $category, $signedAmount, $reason, $reference]);
+
+                if ($category === 'wallet') {
+                    $stmt = $pdo->prepare("UPDATE users SET balance = ? WHERE id = ? AND role = 'user'");
+                    $stmt->execute([$newValue, $targetUserId]);
+                    $ledger = $pdo->prepare('INSERT INTO balance_ledger (user_id, transaction_ref, entry_type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                    $ledger->execute([$targetUserId, $reference, 'admin_adjustment', $signedAmount, $currentValue, $newValue, $reason]);
+                } elseif ($category === 'daily_earning') {
+                    $stmt = $pdo->prepare("UPDATE users SET earnings = GREATEST(0, earnings + ?) WHERE id = ? AND role = 'user'");
+                    $stmt->execute([$signedAmount, $targetUserId]);
+                }
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                if ($e->getMessage() === 'USER_NOT_FOUND') sendJson(['message' => 'User not found or protected.'], 404);
+                if ($e->getMessage() === 'NEGATIVE_TOTAL') sendJson(['message' => 'This decrease would make the selected total negative.'], 400);
+                error_log('Financial adjustment failed: ' . $e->getMessage());
+                sendJson(['message' => 'Unable to apply financial adjustment.'], 500);
+            }
+
+            $categoryLabels = [
+                'wallet' => 'wallet balance', 'deposit' => 'lifetime deposits', 'active_investment' => 'active investments',
+                'withdrawal' => 'withdrawals', 'referral_earning' => 'referral earnings', 'daily_earning' => 'daily earnings',
+                'referral_count' => 'referral count', 'pending_held' => 'pending/held funds'
+            ];
+            auditAdminAction($pdo, $userId, 'user.financial.adjusted', 'user', $targetUserId, [
+                'category' => $category, 'direction' => $direction, 'amount' => abs($signedAmount),
+                'reason' => $reason, 'before' => $currentValue, 'after' => $newValue, 'reference' => $reference
+            ]);
+            $adjustmentText = $category === 'referral_count'
+                ? number_format(abs($signedAmount), 0) . ' referral(s)'
+                : '$' . number_format(abs($signedAmount), 2);
+            notifyUserById($pdo, $targetUserId, 'Account financial adjustment', '<p>An administrator ' . ($signedAmount > 0 ? 'increased' : 'decreased') . ' your <strong>' . htmlspecialchars($categoryLabels[$category]) . '</strong> by <strong>' . $adjustmentText . '</strong>.</p><p><strong>Reason:</strong> ' . htmlspecialchars($reason) . '</p><p><strong>Reference:</strong> ' . htmlspecialchars($reference) . '</p>', 'account');
+            sendJson(['message' => ucfirst($categoryLabels[$category]) . ' updated successfully.', 'newValue' => $newValue, 'reference' => $reference]);
         }
 
         if ($action === 'users' && $subaction === 'balance') {

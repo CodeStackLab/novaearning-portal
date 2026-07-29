@@ -246,7 +246,7 @@
             <section id="panel-financial-overview" class="dashboard-panel-view">
                 <h1 class="panel-title font-display">Financial Overview</h1><p class="panel-desc">Track platform deposits, investments, withdrawals, commissions, balances and referral exposure.</p>
                 <div class="admin-financial-grid" id="admin-financial-metrics"></div>
-                <div class="recent-deposits-section admin-financial-table-card"><h3 class="recent-deposits-title">Lifetime user financial exposure</h3><div class="table-responsive-box"><table class="deposits-table-list"><thead><tr><th>User</th><th>Wallet balance</th><th>Lifetime earnings</th><th>Deposit balance</th><th>Withdrawals</th><th>Referrals</th><th>Referral earnings</th></tr></thead><tbody id="admin-financial-users"></tbody></table></div></div>
+                <div class="recent-deposits-section admin-financial-table-card"><h3 class="recent-deposits-title">Lifetime user financial exposure</h3><div class="table-responsive-box"><table class="deposits-table-list"><thead><tr><th>User</th><th>Wallet balance</th><th>Lifetime earnings</th><th>Deposit balance</th><th>Withdrawals</th><th>Referrals</th><th>Referral earnings</th><th>Action</th></tr></thead><tbody id="admin-financial-users"></tbody></table></div></div>
             </section>
 
             <!-- PANEL: MANAGE USERS -->
@@ -840,7 +840,7 @@
     <div id="edit-balance-modal" class="modal-overlay">
         <div class="modal-content-box" style="max-width: 450px;">
             <div class="modal-header">
-                <h3 class="modal-title font-display">Manage User Funds</h3>
+                <h3 class="modal-title font-display">Financial Adjustment</h3>
                 <button class="modal-close-btn" onclick="closeEditBalanceModal()">
                     <span class="material-symbols-outlined">close</span>
                 </button>
@@ -849,18 +849,32 @@
             <div class="modal-form-group">
                 <p id="edit-balance-user-info" style="font-size: 0.9rem; color: #f8fafc; font-weight: 600; margin-bottom: 1rem; padding: 0.75rem; background: rgba(59,130,246,0.1); border-radius: 8px; border: 1px solid rgba(59,130,246,0.2);"></p>
                 
-                <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Action Type</label>
+                <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Financial Category</label>
+                <select id="edit-financial-category" class="modal-text-input" style="width: 100%; margin-bottom: 1rem; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
+                    <option value="wallet">Wallet Balance</option>
+                    <option value="deposit">Lifetime Deposits</option>
+                    <option value="active_investment">Active Investments</option>
+                    <option value="withdrawal">All Withdrawals</option>
+                    <option value="referral_earning">Referral Earnings</option>
+                    <option value="daily_earning">Daily Earnings</option>
+                    <option value="referral_count">Referral Count</option>
+                    <option value="pending_held">Pending / Held Funds</option>
+                </select>
+
+                <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Adjustment</label>
                 <select id="edit-balance-type" class="modal-text-input" style="width: 100%; margin-bottom: 1rem; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
-                    <option value="set">Set Exact Balance (=)</option>
-                    <option value="add">Add Bonus Funds (+)</option>
-                    <option value="deduct">Deduct / Hold Funds (-)</option>
+                    <option value="increase">Increase (+)</option>
+                    <option value="decrease">Decrease (-)</option>
                 </select>
 
                 <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Amount (USDT)</label>
-                <input type="number" id="edit-balance-val" step="0.01" min="0" placeholder="e.g. 50.00" class="modal-text-input" style="width: 100%; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; font-weight: 700;">
+                <input type="number" id="edit-balance-val" step="0.01" min="0.01" placeholder="e.g. 50.00" class="modal-text-input" style="width: 100%; margin-bottom: 1rem; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc; font-weight: 700;">
+
+                <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Reason (required)</label>
+                <textarea id="edit-financial-reason" maxlength="255" rows="3" placeholder="Explain why this adjustment is required" class="modal-text-input" style="width:100%;resize:vertical;background:#0c0f1a;border:1px solid #1e2538;padding:0.75rem;border-radius:6px;color:#f8fafc;"></textarea>
             </div>
             
-            <button onclick="applyEditBalance()" class="modal-submit-btn" style="background-color: #3b82f6; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700;">Update Balance</button>
+            <button onclick="applyEditBalance()" class="modal-submit-btn" style="background-color: #3b82f6; width: 100%; padding: 0.85rem; border-radius: 8px; font-weight: 700;">Apply Adjustment</button>
         </div>
     </div>
 
@@ -1248,6 +1262,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=94.0"></script>
+    <script src="admin-app.js?v=95.0"></script>
 </body>
 </html>

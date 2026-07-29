@@ -143,10 +143,11 @@ async function fetchActiveTabDetails(tabId) {
 
 function renderAdminFinancialOverview(d) {
     const m = document.getElementById('admin-financial-metrics'); if (!m) return;
-    const cards = [['Lifetime deposits',d.lifetimeDeposits,'#34d399'],['Active investments',d.investments.active,'#60a5fa'],['All withdrawals',d.lifetimeWithdrawals,'#f87171'],['Wallet balances',d.users.balances,'#c084fc'],['Referral earnings',d.commissions.referral,'#fbbf24'],['Daily earnings',d.commissions.daily,'#22d3ee'],['Total referrals',d.totalReferrals,'#a78bfa'],['Pending/held funds',(Number(d.deposits.pending)||0)+(Number(d.withdrawals.held)||0),'#fb923c']];
-    m.innerHTML = cards.map(c=>`<article><span>${escapeAdminUi(c[0])}</span><strong style="color:${c[2]}">${formatUSD(c[1])}</strong></article>`).join('');
+    const cards = [['Lifetime deposits',d.lifetimeDeposits,'#34d399','currency'],['Active investments',d.investments.active,'#60a5fa','currency'],['All withdrawals',d.lifetimeWithdrawals,'#f87171','currency'],['Wallet balances',d.users.balances,'#c084fc','currency'],['Referral earnings',d.commissions.referral,'#fbbf24','currency'],['Daily earnings',d.commissions.daily,'#22d3ee','currency'],['Total referrals',d.totalReferrals,'#a78bfa','count'],['Pending/held funds',(Number(d.deposits.pending)||0)+(Number(d.withdrawals.held)||0)+(Number(d.pendingHeldAdjustment)||0),'#fb923c','currency']];
+    m.innerHTML = cards.map(c=>`<article><span>${escapeAdminUi(c[0])}</span><strong style="color:${c[2]}">${c[3] === 'count' ? Math.max(0, Math.round(Number(c[1]) || 0)).toLocaleString('en-US') : formatUSD(c[1])}</strong></article>`).join('');
     const body=document.getElementById('admin-financial-users'); if (!body) return;
-    body.innerHTML=(d.topUsers||[]).map(u=>`<tr><td><strong>${escapeAdminUi(u.name||'User')}</strong><small style="display:block;color:#718096">${escapeAdminUi(u.email||'')}</small></td><td>${formatUSD(u.balance)}</td><td>${formatUSD(u.earnings)}</td><td>${formatUSD(u.deposit_total)}</td><td>${formatUSD(u.withdrawal_total)}</td><td>${u.referrals||0}</td><td>${formatUSD(u.referral_earnings)}</td></tr>`).join('') || '<tr><td colspan="7">No user data</td></tr>';
+    window.adminFinancialOverviewUsers = d.topUsers || [];
+    body.innerHTML=(d.topUsers||[]).map(u=>`<tr><td><strong>${escapeAdminUi(u.name||'User')}</strong><small style="display:block;color:#718096">${escapeAdminUi(u.email||'')}</small></td><td>${formatUSD(u.balance)}</td><td>${formatUSD(u.earnings)}</td><td>${formatUSD(u.deposit_total)}</td><td>${formatUSD(u.withdrawal_total)}</td><td>${Math.max(0,Math.round(Number(u.referrals)||0))}</td><td>${formatUSD(u.referral_earnings)}</td><td><button class="admin-user-action" type="button" onclick="openEditBalanceModal(${Number(u.id)})" title="Financial Adjustment" style="background:rgba(59,130,246,.14);border:1px solid rgba(96,165,250,.35);color:#60a5fa;padding:.4rem .65rem;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem"><span class="material-symbols-outlined" style="font-size:1rem">tune</span> Adjust</button></td></tr>`).join('') || '<tr><td colspan="8">No user data</td></tr>';
 }
 
 async function loadAuditLog() {
@@ -683,7 +684,7 @@ function renderUsersTable(serverUsers) {
                 <div class="admin-user-actions" style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                     <button class="admin-user-action" data-action-label="Referrals" aria-label="View referred members" title="View Referred Members" onclick="viewReferredMembers(${numericId})" style="background-color: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">group</span></button>
                     <button class="admin-user-action" data-action-label="Edit User" aria-label="Edit profile and status" title="Edit Profile/Status" onclick="openEditUserModal(${numericId})" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">edit</span></button>
-                    <button class="admin-user-action" data-action-label="Balance" aria-label="Edit user balance" title="Edit Balance" onclick="openEditBalanceModal(${numericId})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
+                    <button class="admin-user-action" data-action-label="Financials" aria-label="Adjust user financials" title="Financial Adjustment" onclick="openEditBalanceModal(${numericId})" style="background-color: #1e2538; border: 1px solid #2e384e; color: #f1f5f9; padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">account_balance_wallet</span></button>
                     <button class="admin-user-action" data-action-label="Send Alert" aria-label="Send alert or ticket" title="Send Alert/Ticket" onclick="openSendAlertModal(${numericId})" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">mark_email_unread</span></button>
                     <button class="admin-user-action" data-action-label="Delete" aria-label="Delete user" title="Delete User" onclick="adminDeleteUser(${numericId})" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><span class="material-symbols-outlined" style="font-size: 1rem;">delete</span></button>
                 </div>
@@ -1166,7 +1167,7 @@ function closeAdminMobileChat() {
 let activeEditUserCurrentBalance = 0;
 
 function openEditBalanceModal(userId) {
-    const user = findManagedUser(userId);
+    const user = findManagedUser(userId) || (window.adminFinancialOverviewUsers || []).find(item => Number(item.id) === Number(userId));
     if (!user) { showToast('User details are no longer available.'); return; }
     const userName = user.name || user.email;
     const currentBalance = Number(user.balance) || 0;
@@ -1174,8 +1175,10 @@ function openEditBalanceModal(userId) {
     activeEditUserCurrentBalance = parseFloat(currentBalance) || 0;
     
     document.getElementById('edit-balance-user-info').textContent = `User: ${userName} | Current Balance: ${formatUSD(currentBalance)}`;
-    document.getElementById('edit-balance-type').value = 'set';
-    document.getElementById('edit-balance-val').value = currentBalance;
+    document.getElementById('edit-financial-category').value = 'wallet';
+    document.getElementById('edit-balance-type').value = 'increase';
+    document.getElementById('edit-balance-val').value = '';
+    document.getElementById('edit-financial-reason').value = '';
     document.getElementById('edit-balance-modal').classList.add('active');
 }
 
@@ -1185,36 +1188,34 @@ function closeEditBalanceModal() {
 }
 
 async function applyEditBalance() {
-    const actionType = document.getElementById('edit-balance-type').value;
+    const category = document.getElementById('edit-financial-category').value;
+    const direction = document.getElementById('edit-balance-type').value;
     const amountInput = parseFloat(document.getElementById('edit-balance-val').value);
+    const reason = document.getElementById('edit-financial-reason').value.trim();
 
-    if (activeEditUserId === null || isNaN(amountInput) || amountInput < 0) {
-        alert('Please enter a valid amount.');
+    if (activeEditUserId === null || !Number.isFinite(amountInput) || amountInput <= 0) {
+        alert('Please enter an adjustment amount greater than zero.');
+        return;
+    }
+    if (reason.length < 5) {
+        alert('Please enter a clear reason with at least 5 characters.');
+        return;
+    }
+    if (category === 'referral_count' && !Number.isInteger(amountInput)) {
+        alert('Referral count must be a whole number.');
         return;
     }
 
-    let finalBalance = activeEditUserCurrentBalance;
-
-    if (actionType === 'set') {
-        finalBalance = amountInput;
-    } else if (actionType === 'add') {
-        finalBalance += amountInput;
-    } else if (actionType === 'deduct') {
-        if (amountInput > finalBalance) {
-            alert('Cannot deduct more than the current balance.');
-            return;
-        }
-        finalBalance -= amountInput;
-    }
-
     try {
-        const result = await adminRequest('/admin/users/balance', { method:'POST', body:JSON.stringify({ userId:activeEditUserId, newBalance:finalBalance }) });
-        showToast(result.message || `User balance updated to ${formatUSD(finalBalance)}`);
+        const result = await adminRequest('/admin/users/financial-adjustment', {
+            method:'POST',
+            body:JSON.stringify({ userId:activeEditUserId, category, direction, amount:amountInput, reason })
+        });
+        showToast(result.message || 'Financial adjustment applied successfully.');
     } catch (error) { alert(error.message); return; }
     closeEditBalanceModal();
-    
-    // Refresh the table
-    await fetchActiveTabDetails('users');
+    const activeTab = (window.location.hash || '').replace('#', '');
+    await fetchActiveTabDetails(activeTab === 'financial-overview' ? 'financial-overview' : 'users');
 }
 
 // Verify Deposit approvals
