@@ -3736,6 +3736,14 @@ html, body,
     transform: none !important;
 }
 
+.user-dashboard-body #panel-withdraw #withdraw-submit-btn:disabled {
+    opacity: 1 !important;
+    color: #e2e8f0 !important;
+    background: linear-gradient(135deg, #24364f, #1b2b43) !important;
+    border-color: rgba(148, 163, 184, 0.24) !important;
+    -webkit-text-fill-color: #e2e8f0 !important;
+}
+
 .withdraw-action-row .form-btn-db:not(:disabled):not(.disabled) {
     opacity: 1 !important;
     cursor: pointer !important;
