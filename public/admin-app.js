@@ -143,8 +143,8 @@ async function fetchActiveTabDetails(tabId) {
 
 function renderAdminFinancialOverview(d) {
     const m = document.getElementById('admin-financial-metrics'); if (!m) return;
-    const cards = [['Lifetime deposits',d.lifetimeDeposits,'#34d399','currency'],['Active investments',d.investments.active,'#60a5fa','currency'],['All withdrawals',d.lifetimeWithdrawals,'#f87171','currency'],['Wallet balances',d.users.balances,'#c084fc','currency'],['Referral earnings',d.commissions.referral,'#fbbf24','currency'],['Daily earnings',d.commissions.daily,'#22d3ee','currency'],['Total referrals',d.totalReferrals,'#a78bfa','count'],['Pending/held funds',(Number(d.deposits.pending)||0)+(Number(d.withdrawals.held)||0)+(Number(d.pendingHeldAdjustment)||0),'#fb923c','currency']];
-    m.innerHTML = cards.map(c=>`<article><span>${escapeAdminUi(c[0])}</span><strong style="color:${c[2]}">${c[3] === 'count' ? Math.max(0, Math.round(Number(c[1]) || 0)).toLocaleString('en-US') : formatUSD(c[1])}</strong></article>`).join('');
+    const cards = [['Lifetime deposits',d.lifetimeDeposits,'#34d399','currency','deposit'],['Active investments',d.investments.active,'#60a5fa','currency','active_investment'],['All withdrawals',d.lifetimeWithdrawals,'#f87171','currency','withdrawal'],['Wallet balances',d.users.balances,'#c084fc','currency','wallet'],['Referral earnings',d.commissions.referral,'#fbbf24','currency','referral_earning'],['Daily earnings',d.commissions.daily,'#22d3ee','currency','daily_earning'],['Total referrals',d.totalReferrals,'#a78bfa','count','referral_count'],['Pending/held funds',(Number(d.deposits.pending)||0)+(Number(d.withdrawals.held)||0)+(Number(d.pendingHeldAdjustment)||0),'#fb923c','currency','pending_held']];
+    m.innerHTML = cards.map(c=>`<article role="button" tabindex="0" onclick="openGlobalFinancialAdjustment('${c[4]}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGlobalFinancialAdjustment('${c[4]}')}" title="Adjust ${escapeAdminUi(c[0])}" style="cursor:pointer;position:relative"><span>${escapeAdminUi(c[0])}</span><strong style="color:${c[2]}">${c[3] === 'count' ? Math.max(0, Math.round(Number(c[1]) || 0)).toLocaleString('en-US') : formatUSD(c[1])}</strong><span class="material-symbols-outlined" style="position:absolute;right:.75rem;top:.65rem;color:#64748b;font-size:1rem">edit</span></article>`).join('');
     const body=document.getElementById('admin-financial-users'); if (!body) return;
     window.adminFinancialOverviewUsers = d.topUsers || [];
     body.innerHTML=(d.topUsers||[]).map(u=>`<tr><td><strong>${escapeAdminUi(u.name||'User')}</strong><small style="display:block;color:#718096">${escapeAdminUi(u.email||'')}</small></td><td>${formatUSD(u.balance)}</td><td>${formatUSD(u.earnings)}</td><td>${formatUSD(u.deposit_total)}</td><td>${formatUSD(u.withdrawal_total)}</td><td>${Math.max(0,Math.round(Number(u.referrals)||0))}</td><td>${formatUSD(u.referral_earnings)}</td><td><button class="admin-user-action" type="button" onclick="openEditBalanceModal(${Number(u.id)})" title="Financial Adjustment" style="background:rgba(59,130,246,.14);border:1px solid rgba(96,165,250,.35);color:#60a5fa;padding:.4rem .65rem;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:.3rem"><span class="material-symbols-outlined" style="font-size:1rem">tune</span> Adjust</button></td></tr>`).join('') || '<tr><td colspan="8">No user data</td></tr>';
@@ -1174,12 +1174,41 @@ function openEditBalanceModal(userId) {
     activeEditUserId = userId;
     activeEditUserCurrentBalance = parseFloat(currentBalance) || 0;
     
-    document.getElementById('edit-balance-user-info').textContent = `User: ${userName} | Current Balance: ${formatUSD(currentBalance)}`;
+    populateFinancialAdjustmentUsers(userId);
+    document.getElementById('edit-balance-user-info').textContent = `User: ${userName} | Selected adjustments update this user and matching global totals.`;
     document.getElementById('edit-financial-category').value = 'wallet';
     document.getElementById('edit-balance-type').value = 'increase';
     document.getElementById('edit-balance-val').value = '';
     document.getElementById('edit-financial-reason').value = '';
     document.getElementById('edit-balance-modal').classList.add('active');
+}
+
+function populateFinancialAdjustmentUsers(selectedUserId) {
+    const select = document.getElementById('edit-financial-user-select');
+    if (!select) return;
+    const source = (window.adminFinancialOverviewUsers && window.adminFinancialOverviewUsers.length)
+        ? window.adminFinancialOverviewUsers
+        : globalUsersList;
+    select.innerHTML = (source || []).map(user => `<option value="${Number(user.id)}">${escapeAdminUi(user.name || user.email || 'User')} — ${escapeAdminUi(user.email || `ID #${user.id}`)}</option>`).join('');
+    select.value = String(selectedUserId);
+}
+
+function selectFinancialAdjustmentUser(userId) {
+    const user = findManagedUser(userId) || (window.adminFinancialOverviewUsers || []).find(item => Number(item.id) === Number(userId));
+    if (!user) return;
+    activeEditUserId = Number(user.id);
+    activeEditUserCurrentBalance = Number(user.balance) || 0;
+    document.getElementById('edit-balance-user-info').textContent = `User: ${user.name || user.email || `ID #${user.id}`} | Selected adjustments update this user and matching global totals.`;
+}
+
+function openGlobalFinancialAdjustment(category) {
+    const users = window.adminFinancialOverviewUsers || [];
+    if (!users.length) {
+        showToast('No users are available for adjustment.');
+        return;
+    }
+    openEditBalanceModal(Number(users[0].id));
+    document.getElementById('edit-financial-category').value = category;
 }
 
 function closeEditBalanceModal() {

@@ -848,6 +848,9 @@
             
             <div class="modal-form-group">
                 <p id="edit-balance-user-info" style="font-size: 0.9rem; color: #f8fafc; font-weight: 600; margin-bottom: 1rem; padding: 0.75rem; background: rgba(59,130,246,0.1); border-radius: 8px; border: 1px solid rgba(59,130,246,0.2);"></p>
+
+                <label class="modal-input-label" style="display:block;margin-bottom:0.5rem;">User</label>
+                <select id="edit-financial-user-select" class="modal-text-input" onchange="selectFinancialAdjustmentUser(this.value)" style="width:100%;margin-bottom:1rem;background:#0c0f1a;border:1px solid #1e2538;padding:0.75rem;border-radius:6px;color:#f8fafc;"></select>
                 
                 <label class="modal-input-label" style="display: block; margin-bottom: 0.5rem;">Financial Category</label>
                 <select id="edit-financial-category" class="modal-text-input" style="width: 100%; margin-bottom: 1rem; background: #0c0f1a; border: 1px solid #1e2538; padding: 0.75rem; border-radius: 6px; color: #f8fafc;">
@@ -1264,6 +1267,6 @@
     </nav>
 
     <!-- Admin Panel Javascript -->
-    <script src="admin-app.js?v=96.0"></script>
+    <script src="admin-app.js?v=97.0"></script>
 </body>
 </html>
